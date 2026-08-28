@@ -66,14 +66,17 @@ def screen_ask():
     with left:
         st.markdown("<div class='card'><span class='kicker'>For professionals</span><h3 style='margin:4px 0'>Start from your job</h3><span class='muted'>See which of your tasks change under each scenario, where forecasters disagree, and what's in your control.</span></div>", unsafe_allow_html=True)
         title = st.text_input("Your job title", placeholder="Product manager, paralegal, registered nurse…", key="title_in")
+        about = st.text_input("What do you actually do? (optional — titles are ambiguous, tasks aren't)", placeholder="e.g. own a software roadmap, write requirements, prioritize with engineers, run user research", key="about_in")
         if st.button("Find my occupation", type="secondary") and title.strip():
             from tools.resolve import resolve
-            with st.spinner("Matching your title to the official occupation list…"): S.candidates = resolve(title.strip(), k=3)
+            with st.spinner("Matching your work to the official occupation list…"): S.candidates = resolve(title.strip(), about.strip(), k=3)
         if S.candidates:
             r = S.candidates; st.caption(r["explanation"])
-            opts = {f"{m['title']} · SOC {m['soc']}" + (f" · similarity {m['similarity']:.2f}" if "similarity" in m else " · listed title"): m for m in r["matches"]}
+            opts = {f"{m['title']} · {m['onet_soc']}" + (" · closest by tasks" if m.get("curated") else f" · similarity {m['similarity']:.2f}" if m.get("similarity") is not None else " · O*NET lists this title here"): m for m in r["matches"]}
             pick = st.radio("Which is you?", list(opts), index=0); m = opts[pick]
-            if not r["confident"] and r["tier"] == 2: st.warning("No official category lists this title — I matched by meaning. Please confirm, don't let me guess.")
+            if r["tier"] == 0: st.warning("Your title has no official category — these are the closest task lists. Please pick; don't let me guess.")
+            elif not r["confident"] and r["tier"] == 2: st.warning("No official category lists this title — I matched by meaning. Please confirm, don't let me guess.")
+            if m.get("description"): st.caption(m["description"])
             S.persona = {"soc": m["soc"], "onet_soc": m.get("onet_soc") or f"{m['soc']}.00", "title": m["title"], "matched_via": f"tier {r['tier']}: {title.strip()}", "horizon": 2030}
     with right:
         st.markdown(f"<div class='card' style='border-color:{C['student']}55'><span class='kicker' style='color:{C['student']}'>For students</span><h3 style='margin:4px 0'>Start from the whole map</h3><span class='muted'>867 occupations, sized by how many people do them. Find fields that grow under every scenario, not just the likely one.</span></div>", unsafe_allow_html=True)

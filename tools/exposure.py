@@ -1,5 +1,6 @@
 """Exposure gatherer's data: AIOE (Felten), Anthropic Economic Index, O*NET tasks. All local files in data/raw/."""
 from pathlib import Path
+import re
 import pandas as pd
 from functools import lru_cache
 from .schema import Card, SourceResult
@@ -59,7 +60,7 @@ def anthropic_index(soc: str) -> SourceResult:
 
 def onet_task_diff(soc: str) -> SourceResult:
     """Every task for the occupation, joined to AEI task penetration. Raw material for the task-diff board."""
-    t = _onet_tasks(); rows = t[t.soc == soc[:7]]
+    t = _onet_tasks(); rows = t[t.onet_soc == soc] if re.fullmatch(r"\d{2}-\d{4}\.\d{2}", soc or "") and not soc.endswith(".00") else t[t.soc == soc[:7]]   # detailed code (e.g. 15-1299.09) → only its tasks
     if rows.empty: return SourceResult(source="O*NET", ok=True, cards=[], unknowns=[f"task list for {soc}"])
     pen = _aei_tasks().drop_duplicates("task").set_index("task")["penetration"]
     cards = []

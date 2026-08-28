@@ -121,7 +121,7 @@ def gather_forecasts(inp: dict) -> dict:
 
 def gather_exposure(inp: dict) -> dict:
     p = inp["persona"]; soc = p["soc"]; onet = p.get("onet_soc") or f"{soc}.00"
-    res = [("AIOE", _call("AIOE", exposure.aioe_lookup, soc)), ("Anthropic Economic Index", _call("Anthropic Economic Index", exposure.anthropic_index, soc)), ("O*NET tasks", _call("O*NET tasks", exposure.onet_task_diff, soc)), ("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, onet))]
+    res = [("AIOE", _call("AIOE", exposure.aioe_lookup, soc)), ("Anthropic Economic Index", _call("Anthropic Economic Index", exposure.anthropic_index, soc)), ("O*NET tasks", _call("O*NET tasks", exposure.onet_task_diff, onet)), ("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, onet))]
     _say(f"Exposure: {sum(len(r.cards) for _, r in res)} cards (scores + {len(res[2][1].cards)} tasks) for {p['title']}")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 4)
 

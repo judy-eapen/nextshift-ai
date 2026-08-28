@@ -1,0 +1,27 @@
+{
+  "_comment": "Curated resolver overrides for titles the SOC taxonomy does not have. Checked before exact-title lookup. Candidates are O*NET-SOC codes; first = default.",
+  "entries": [
+    {
+      "titles": [
+        "product manager",
+        "software product manager",
+        "technical product manager",
+        "product owner",
+        "senior product manager",
+        "group product manager",
+        "head of product",
+        "director of product",
+        "vp product",
+        "chief product officer",
+        "cpo",
+        "product lead"
+      ],
+      "candidates": [
+        "15-1299.09",
+        "13-1082.00",
+        "11-2021.00"
+      ],
+      "note": "There is no official US category for software product management. By task list, Information Technology Project Managers is closest (customer needs and priorities, deliverables, plan changes, cross-team coordination); Project Management Specialists is the general version; Marketing Managers is where O*NET files the title “Product Manager” (pricing, campaigns, market research). Pick the one whose tasks look like your week."
+    }
+  ]
+}

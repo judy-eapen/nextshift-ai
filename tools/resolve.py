@@ -18,11 +18,11 @@ def _embed(texts: list[str]) -> np.ndarray:
 @lru_cache(maxsize=1)
 def _occ_index():
     occ = pd.read_csv(RAW / "onet_occupation_data.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Title": "title", "Description": "desc"})
-    occ = occ[occ.onet_soc.str.endswith(".00") & ~occ.title.str.contains("All Other")].reset_index(drop=True); occ["soc"] = occ.onet_soc.str[:7]  # residual categories match anything — exclude
+    occ = occ[~occ.title.str.contains("All Other")].reset_index(drop=True); occ["soc"] = occ.onet_soc.str[:7]  # keep detailed codes (15-1299.09 IT Project Managers…); residual "All Other" categories match anything — exclude
     jt = pd.read_csv(RAW / "onet_job_titles.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Job Title": "alias"})
     aliases = jt.groupby("onet_soc").alias.apply(lambda a: "; ".join(a.head(25))).to_dict()   # fold known lay titles into each occupation's text
     occ["text"] = [f"{t}. {d} Also called: {aliases.get(o, '')}" for t, d, o in zip(occ.title, occ.desc, occ.onet_soc)]
-    cache = PROC / "occupation_embeddings_v2.npy"
+    cache = PROC / "occupation_embeddings_v3.npy"
     if cache.exists() and np.load(cache).shape[0] == len(occ): vecs = np.load(cache)
     else:
         vecs = _embed(list(occ.text)); np.save(cache, vecs)
@@ -45,13 +45,28 @@ def semantic_match(text: str, k: int = 5) -> list[dict]:
     sims = vecs @ q; top = np.argsort(-sims)[:k]
     return [{"soc": occ.soc[i], "onet_soc": occ.onet_soc[i], "title": occ.title[i], "similarity": float(sims[i]), "description": occ.desc[i][:160]} for i in top]
 
+OVERRIDES = json.loads((RAW.parent / "title_overrides.json").read_text()) if (RAW.parent / "title_overrides.json").exists() else {}
+
+def _curated(title: str) -> dict | None:
+    key = title.strip().lower()
+    for entry in OVERRIDES.get("entries", []):
+        if key in entry["titles"]:
+            occ, _ = _occ_index(); rows = {r.onet_soc: r for r in occ.itertuples()}
+            matches = [{"soc": c[:7], "onet_soc": c, "title": rows[c].title if c in rows else c, "description": (rows[c].desc[:160] if c in rows else ""), "curated": True} for c in entry["candidates"]]
+            return {"tier": 0, "confident": False, "matches": matches, "explanation": entry["note"]}
+    return None
+
 def resolve(title: str, about: str = "", k: int = 3) -> dict:
-    """Returns {tier, matches:[...], confident:bool, explanation}. Tier 3 hook left for web research."""
+    """Returns {tier, matches:[...], confident:bool, explanation}. Tier 0 curated · 1 exact title · 2 semantic (always when `about` is given) · 3 web hook."""
+    if not about.strip() and (cur := _curated(title)): return cur
     exact = search_occupations(title, k)
-    if exact and exact[0]["exact"]:
+    if exact and exact[0]["exact"] and not about.strip():
         return {"tier": 1, "confident": True, "matches": exact, "explanation": f"“{title}” is a listed job title under {exact[0]['title']} (O*NET)."}
-    desc = describe_title(title, about); sem = semantic_match(f"{title}. {desc}", k)
+    desc = describe_title(title, about); sem = semantic_match(f"{title}. {about or desc}", k)
     conf = sem[0]["similarity"] >= 0.60 and (sem[0]["similarity"] - sem[1]["similarity"]) >= 0.03
     expl = (f"No official category lists “{title}”. By meaning it is closest to {sem[0]['title']} (similarity {sem[0]['similarity']:.2f})"
             + (f", then {sem[1]['title']} ({sem[1]['similarity']:.2f})" if len(sem) > 1 else "") + ". Confirm which fits.")
+    if about.strip() and exact and exact[0]["exact"]:   # merge: what O*NET files the title under, after what the description matches
+        seen = {m["onet_soc"] for m in sem}; sem += [dict(e, similarity=None) for e in exact[:2] if e["onet_soc"] not in seen]
+        expl = f"Matched on what you do, not the title alone (O*NET files “{title}” under {exact[0]['title']}, shown too). " + expl
     return {"tier": 2, "confident": conf, "matches": sem, "explanation": expl, "inferred_description": desc, "needs_web_research": not conf}

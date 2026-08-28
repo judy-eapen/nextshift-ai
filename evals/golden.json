@@ -1,5 +1,5 @@
 [
-  {"id": "g01", "soc": "11-2021", "occupation": "Marketing Managers (Product Manager)", "horizon": 2030, "question": "What happens to product managers if AGI arrives by 2030?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
+  {"id": "g01", "soc": "15-1299.09", "occupation": "Information Technology Project Managers (closest to Product Manager)", "horizon": 2030, "question": "What happens to product managers if AGI arrives by 2030?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
   {"id": "g02", "soc": "15-1252", "occupation": "Software Developers", "horizon": 2030, "question": "Will software development jobs shrink by 2030?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
   {"id": "g03", "soc": "29-1141", "occupation": "Registered Nurses", "horizon": 2035, "question": "How exposed is nursing to AI over the next decade?", "expect": {"min_cards": 5, "low_exposure_expected": true}},
   {"id": "g04", "soc": "43-4051", "occupation": "Customer Service Representatives", "horizon": 2030, "question": "What happens to customer service jobs?", "expect": {"min_cards": 6}},

@@ -19,9 +19,9 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--soc", default="11-2021"); ap.add_argument("--horizon", type=int, default=2030)
     ap.add_argument("--question", default=None); ap.add_argument("--door", default="professional"); ap.add_argument("--auto", action="store_true")
     ap.add_argument("--edit-horizon", type=int, default=None); ap.add_argument("--thread", default=None); a = ap.parse_args()
-    import pandas as pd; land = pd.read_parquet("data/processed/landscape.parquet"); row = land[land.soc == a.soc]
-    title = row.title.iloc[0] if len(row) else a.soc
-    persona = {"soc": a.soc, "onet_soc": f"{a.soc}.00", "title": title, "matched_via": "soc", "horizon": a.horizon}
+    import pandas as pd; occ = pd.read_csv("data/raw/onet_occupation_data.csv"); onet = a.soc if "." in a.soc else f"{a.soc}.00"
+    row = occ[occ["O*NET-SOC Code"] == onet]; title = row.Title.iloc[0] if len(row) else a.soc
+    persona = {"soc": onet[:7], "onet_soc": onet, "title": title, "matched_via": "soc", "horizon": a.horizon}
     q = a.question or f"What happens to {persona['title']} by {a.horizon}, and what should I do about it?"
     graph = build_graph(); cfg = {"configurable": {"thread_id": a.thread or str(uuid.uuid4())}}; t0 = time.time()
     print(f"NextShift AI\n▶ {persona['title']} (SOC {persona['soc']}) · {a.horizon} · thread {cfg['configurable']['thread_id'][:8]}\n  Q: {q}")

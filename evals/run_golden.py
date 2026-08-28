@@ -12,8 +12,8 @@ from graph.build import build_graph
 ROOT = Path(__file__).resolve().parents[1]
 
 def run_one(graph, g: dict) -> dict:
-    land = pd.read_parquet(ROOT / "data/processed/landscape.parquet"); row = land[land.soc == g["soc"]]
-    persona = {"soc": g["soc"], "onet_soc": f"{g['soc']}.00", "title": row.title.iloc[0] if len(row) else g["occupation"], "matched_via": "golden", "horizon": g["horizon"]}
+    occ = pd.read_csv(ROOT / "data/raw/onet_occupation_data.csv"); onet = g["soc"] if "." in g["soc"] else f"{g['soc']}.00"; row = occ[occ["O*NET-SOC Code"] == onet]
+    persona = {"soc": onet[:7], "onet_soc": onet, "title": row.Title.iloc[0] if len(row) else g["occupation"], "matched_via": "golden", "horizon": g["horizon"]}
     cfg = {"configurable": {"thread_id": f"golden-{g['id']}-{uuid.uuid4().hex[:6]}"}}; t0 = time.time(); err = None
     try:
         for _ in graph.stream({"question": g["question"], "door": "professional", "persona": persona, "thread_id": cfg["configurable"]["thread_id"]}, cfg, stream_mode="updates"): pass
