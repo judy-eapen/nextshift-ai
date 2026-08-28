@@ -1,0 +1,13 @@
+langgraph>=0.4
+langgraph-checkpoint-sqlite
+langchain-core
+langchain-anthropic
+langchain-openai
+langsmith
+streamlit
+plotly
+httpx
+pandas
+pyarrow
+pydantic>=2
+python-dotenv

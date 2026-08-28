@@ -1,0 +1,12 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "1 · Ask — two doors" },
+    { "file": "ScenarioTree.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 900, "title": "4 · Scenario tree + horizon slider" },
+    { "file": "TaskDiff.dc.html", "x": 0, "y": 1060, "w": 1440, "h": 900, "title": "How your work changes — task-diff board" },
+    { "file": "SinceYouLastLooked.dc.html", "x": 1560, "y": 1060, "w": 1440, "h": 900, "title": "6 · Since you last looked" }
+  ],
+  "annotations": [
+    { "id": "note-direction", "x": 0, "y": -200, "w": 520, "text": "Instrument panel direction. All numbers are illustrative samples for layout — the real build pulls them live (Metaculus, Polymarket, Anthropic Economic Index, AIOE, BLS, FRED). Amber = human attention (gates, movement, what's in your control). Branch colors: blue Slow · coral Fast · violet AGI · green Brake." }
+  ],
+  "launch": { "view": "canvas" }
+}

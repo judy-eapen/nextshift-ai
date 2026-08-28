@@ -1,0 +1,82 @@
+flowchart TB
+  subgraph UI["Streamlit web app"]
+    direction LR
+    ASK["Ask<br/>question · occupation · horizon<br/>(professional / student door)"]
+    THINK["Decomposition panel<br/>(agent thinks in public)"]
+    TREE["Scenario tree · horizon slider<br/>disagreement overlay · task-diff board · landscape"]
+    BRIEF["Brief preview / export"]
+  end
+
+  subgraph GRAPH["LangGraph supervisor · SQLite checkpointer · LangSmith tracing"]
+    ORCH["Orchestrator<br/>decompose into measurable sub-questions"]
+    subgraph GATHER["Evidence gatherers (parallel, isolated context)"]
+      direction LR
+      GF["Forecasts"]
+      GE["Exposure"]
+      GS["Statistics"]
+      GR["Research"]
+    end
+    REC["Reconciler<br/>merge cards · flag disagreement · mark unknowns"]
+    HITL1{{"Interrupt 1 · worldview gate<br/>human edits / approves assumptions"}}
+    SCEN["Scenario Builder<br/>3–4 branches · forecast-derived ranges"]
+    DIFF["Task-diff<br/>disappears / AI-supervised / grows"]
+    SKEP["Skeptic<br/>attack every claim · strip uncited · count"]
+    HITL2{{"Interrupt 2 · publish gate<br/>human approves brief"}}
+    RECD["Recorder<br/>evidence snapshot + profile"]
+  end
+
+  subgraph SRC["Live sources (read-only tools)"]
+    direction LR
+    subgraph S1["Forecasts"]
+      MET["Metaculus API"]
+      POLY["Polymarket Gamma"]
+    end
+    subgraph S2["Exposure"]
+      AIOE["AIOE CSV"]
+      AEI["Anthropic Economic Index"]
+      ONET["O*NET tasks"]
+    end
+    subgraph S3["Statistics"]
+      BLS["BLS OES + projections"]
+      FRED["FRED series"]
+    end
+    subgraph S4["Research"]
+      EPOCH["Epoch AI models CSV"]
+    end
+  end
+
+  subgraph MEM["Memory"]
+    direction LR
+    SNAP[("Snapshot store<br/>cards + scenarios per run")]
+    PROF[("User profile<br/>occupation · horizon · door")]
+  end
+
+  NEB["Nebius Token Factory<br/>evidence-card extraction · question matching"]
+
+  ASK --> ORCH
+  ORCH --> GF & GE & GS & GR
+  GF --> S1
+  GE --> S2
+  GS --> S3
+  GR --> S4
+  GF & GE -.-> NEB
+  GF & GE & GS & GR --> REC
+  REC --> THINK
+  REC --> HITL1
+  HITL1 -->|approved| SCEN
+  SCEN --> DIFF --> SKEP
+  SKEP -->|"uncited > 30%: rebuild once"| SCEN
+  SKEP -->|pass| TREE
+  TREE --> HITL2
+  HITL2 -->|approved| BRIEF
+  HITL2 --> RECD
+  RECD --> SNAP & PROF
+  SNAP -.->|"next run: since you last looked"| ORCH
+  PROF -.-> ORCH
+
+  classDef human fill:#FDE9C4,stroke:#C77D12,color:#3A2A00
+  classDef mem fill:#E4E8FF,stroke:#2F4BD6,color:#141C2B
+  classDef ui fill:#F4F6F8,stroke:#8A94A6,color:#141C2B
+  class HITL1,HITL2 human
+  class SNAP,PROF mem
+  class ASK,THINK,TREE,BRIEF ui
