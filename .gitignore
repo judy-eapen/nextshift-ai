@@ -7,3 +7,5 @@ data/raw/
 *.db
 .streamlit/secrets.toml
 .DS_Store
+data/briefs/
+evals/results/*.log

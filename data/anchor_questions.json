@@ -1,0 +1,108 @@
+{
+  "_comment": "Forecast anchors. {horizon} is replaced at runtime. `branch` = which scenario's probability range this anchor defines (null = context only). `platforms` limits tool calls (budget: 25/run). Queries were chosen by surveying live search results on 2026-08-28 (see graph/DESIGN.md).",
+  "anchors": [
+    {
+      "id": "A1",
+      "topic": "AGI (AI matching expert humans on most cognitive tasks) exists by {horizon}",
+      "branch": "AGI by horizon",
+      "platforms": [
+        "manifold",
+        "polymarket",
+        "metaculus"
+      ],
+      "queries": {
+        "manifold": "artificial general intelligence {horizon}",
+        "polymarket": "AGI",
+        "metaculus": "human-machine intelligence parity"
+      }
+    },
+    {
+      "id": "A2",
+      "topic": "AI systems that can do most remote knowledge work ('drop-in remote AI workers') exist by the late 2020s (before {horizon})",
+      "branch": "Fast diffusion",
+      "platforms": [
+        "manifold",
+        "metaculus"
+      ],
+      "queries": {
+        "manifold": "remote AI workers",
+        "metaculus": "AI automation of jobs"
+      }
+    },
+    {
+      "id": "A3",
+      "topic": "AI causes US unemployment to reach 10% or more before {horizon}",
+      "branch": null,
+      "platforms": [
+        "manifold"
+      ],
+      "queries": {
+        "manifold": "AI unemployment {horizon}"
+      }
+    },
+    {
+      "id": "A4",
+      "topic": "US enacts binding federal AI safety law / frontier-model pause before {horizon}",
+      "branch": "Regulatory brake",
+      "platforms": [
+        "polymarket",
+        "manifold",
+        "metaculus"
+      ],
+      "queries": {
+        "polymarket": "AI safety bill",
+        "manifold": "AI pause",
+        "metaculus": "AI safety federal statute"
+      }
+    },
+    {
+      "id": "A5",
+      "topic": "AI has trillion-dollar-scale economic impact / mass enterprise adoption by {horizon}",
+      "branch": null,
+      "platforms": [
+        "manifold"
+      ],
+      "queries": {
+        "manifold": "AI trillion dollar impact {horizon}"
+      }
+    },
+    {
+      "id": "A6",
+      "topic": "White-collar layoffs or hiring declines explicitly attributed to AI",
+      "branch": null,
+      "platforms": [],
+      "queries": {},
+      "_note": "no platform has a clean market as of 2026-08 — kept so the brief reports it as a known unknown"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Slow diffusion",
+      "color": "#7FB3D5",
+      "task_multiplier": 0.6,
+      "residual": true,
+      "gist": "AI capability keeps improving but adoption is gradual; tools assist, workflows change slowly."
+    },
+    {
+      "name": "Fast diffusion",
+      "color": "#E07A5F",
+      "task_multiplier": 1.2,
+      "anchor": "A2",
+      "gist": "Current AI is deployed aggressively across knowledge work; many routine tasks are handed to agents within a few years."
+    },
+    {
+      "name": "AGI by horizon",
+      "color": "#B48CFF",
+      "task_multiplier": 1.6,
+      "anchor": "A1",
+      "gist": "Systems matching expert humans on most cognitive tasks arrive before the horizon; the job is redefined, not just assisted."
+    },
+    {
+      "name": "Regulatory brake",
+      "color": "#8FBF9F",
+      "task_multiplier": 0.8,
+      "anchor": "A4",
+      "gist": "Regulation, liability or a pause slows deployment in regulated sectors; capability outruns permitted use."
+    }
+  ]
+}
