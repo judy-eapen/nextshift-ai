@@ -1,0 +1,12 @@
+[
+  {"id": "g01", "soc": "11-2021", "occupation": "Marketing Managers (Product Manager)", "horizon": 2030, "question": "What happens to product managers if AGI arrives by 2030?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
+  {"id": "g02", "soc": "15-1252", "occupation": "Software Developers", "horizon": 2030, "question": "Will software development jobs shrink by 2030?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
+  {"id": "g03", "soc": "29-1141", "occupation": "Registered Nurses", "horizon": 2035, "question": "How exposed is nursing to AI over the next decade?", "expect": {"min_cards": 5, "low_exposure_expected": true}},
+  {"id": "g04", "soc": "43-4051", "occupation": "Customer Service Representatives", "horizon": 2030, "question": "What happens to customer service jobs?", "expect": {"min_cards": 6}},
+  {"id": "g05", "soc": "23-2011", "occupation": "Paralegals and Legal Assistants", "horizon": 2030, "question": "Should I still train as a paralegal?", "expect": {"min_cards": 5}},
+  {"id": "g06", "soc": "53-3032", "occupation": "Heavy and Tractor-Trailer Truck Drivers", "horizon": 2035, "question": "Will trucking be automated by 2035?", "expect": {"min_cards": 5}},
+  {"id": "g07", "soc": "13-2011", "occupation": "Accountants and Auditors", "horizon": 2030, "question": "How much of accounting work changes by 2030?", "expect": {"min_cards": 6}},
+  {"id": "g08", "soc": "25-2021", "occupation": "Elementary School Teachers", "horizon": 2035, "question": "What does AI do to teaching?", "expect": {"min_cards": 5, "low_exposure_expected": true}},
+  {"id": "g09", "soc": "27-3043", "occupation": "Writers and Authors", "horizon": 2030, "question": "Is writing still a viable career?", "expect": {"min_cards": 6, "must_surface_disagreement": true}},
+  {"id": "g10", "soc": "11-9199", "occupation": "Managers, All Other", "horizon": 2030, "question": "What about a job with almost no forecast coverage?", "expect": {"min_cards": 3, "must_report_unknowns": true}}
+]
