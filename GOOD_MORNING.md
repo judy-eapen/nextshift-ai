@@ -1,4 +1,4 @@
-# Good morning — what got built overnight (Aug 27→28)
+# NextShift AI — Good morning: what got built overnight (Aug 27→28)
 
 **Built and tested (all committed):**
 - `tools/schema.py` — `Card` + `SourceResult`: the message contract every gatherer returns. Tools never raise; errors are data.

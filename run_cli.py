@@ -24,7 +24,7 @@ def main():
     persona = {"soc": a.soc, "onet_soc": f"{a.soc}.00", "title": title, "matched_via": "soc", "horizon": a.horizon}
     q = a.question or f"What happens to {persona['title']} by {a.horizon}, and what should I do about it?"
     graph = build_graph(); cfg = {"configurable": {"thread_id": a.thread or str(uuid.uuid4())}}; t0 = time.time()
-    print(f"▶ {persona['title']} (SOC {persona['soc']}) · {a.horizon} · thread {cfg['configurable']['thread_id'][:8]}\n  Q: {q}")
+    print(f"NextShift AI\n▶ {persona['title']} (SOC {persona['soc']}) · {a.horizon} · thread {cfg['configurable']['thread_id'][:8]}\n  Q: {q}")
     payload = stream(graph, {"question": q, "door": a.door, "persona": persona, "thread_id": cfg["configurable"]["thread_id"]}, cfg)
 
     # ⏸ gate 1

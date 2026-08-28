@@ -1,4 +1,4 @@
-# Graph design — proposal for Judy's design conversation (NOT implemented; do that with Claude Code)
+# NextShift AI — Graph design (proposal + AS BUILT below)
 
 Everything below is a starting point to argue with. The tools layer (`tools/`) is built and tested; the graph is yours.
 

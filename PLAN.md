@@ -1,4 +1,5 @@
-# AI Futures Explorer — Week 3 Build Plan
+# NextShift AI — Week 3 Build Plan
+**Name:** NextShift AI (renamed Fri 2026-08-28; was "AI Futures Explorer"). Tagline: *What AI does to your work, with receipts.*
 **Locked:** Thu 2026-08-27 evening · **Due:** Sun 2026-08-30 11:59pm PT · **Course:** Maven Mastering Agentic AI, Week 3 "Build Your AI Agent"
 **Spec / roadmap:** `~/Desktop/Areas/Ideas/ideas/006-ai-futures-explorer.md` (everything not in this file is post-Sunday)
 

@@ -341,7 +341,7 @@ def render(state: State) -> dict:
     footer = "\n\n---\n### Evidence\n" + "\n".join(f"- [{inv[c.id]}] {c.claim} — {c.source}{', ' + c.as_of if c.as_of else ''}{' · ' + c.url if c.url else ''}" for c in cards if c.id in inv)
     fc = [c for c in cards if c.family == "forecasts" and c.value is not None]; years = sorted({c.as_of[:4] for c in cards if c.as_of})
     evidence_line = f"_Evidence: {len(cards)} cards from {len({c.source for c in cards})} sources · {len(fc)} forecast market(s) with prices on {', '.join(sorted({c.source for c in fc})) or 'none'} · data {years[0]}–{years[-1]}_" if years else ""
-    header = f"# {state['worldview']['title']} · horizon {state['worldview']['horizon']}\n{evidence_line}\n" + (("> " + " · ".join(badges) + "\n\n") if badges else "\n")
+    header = f"# {state['worldview']['title']} · horizon {state['worldview']['horizon']}\n_NextShift AI brief — what AI does to your work, with receipts_  \n{evidence_line}\n" + (("> " + " · ".join(badges) + "\n\n") if badges else "\n")
     views = {"tree": [{k: s[k] for k in ("name", "color", "prob_low", "prob_high", "prob_note", "gist")} for s in state["scenarios"]],
              "board": {k: v for k, v in state["task_diff"].items() if not k.startswith("_")}, "bands": state["disagreements"], "deltas": state.get("deltas", []),
              "badges": badges, "cards_by_family": {f: [c.model_dump() for c in cards if c.family == f] for f in FAMILIES}, "source_status": state.get("source_status", {}),
