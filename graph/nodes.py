@@ -121,12 +121,21 @@ def gather_forecasts(inp: dict) -> dict:
 
 def gather_exposure(inp: dict) -> dict:
     p = inp["persona"]; soc = p["soc"]; onet = p.get("onet_soc") or f"{soc}.00"
+    if p.get("composite"):   # no SOC category exists: tasks come from the composite; job-level scores are honestly 'no official statistics'
+        from tools import composite
+        res = [("AIOE", composite.no_official_stats("AIOE", p)), ("Anthropic Economic Index", composite.no_official_stats("Anthropic Economic Index", p)), ("O*NET tasks", composite.task_cards(p))]
+        _say(f"Exposure: composite occupation — {len(res[2][1].cards)} tasks drawn from {len(p.get('source_occupations', []))} official occupations; no job-level scores exist")
+        return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 1)
     res = [("AIOE", _call("AIOE", exposure.aioe_lookup, soc)), ("Anthropic Economic Index", _call("Anthropic Economic Index", exposure.anthropic_index, soc)), ("O*NET tasks", _call("O*NET tasks", exposure.onet_task_diff, onet)), ("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, onet))]
     _say(f"Exposure: {sum(len(r.cards) for _, r in res)} cards (scores + {len(res[2][1].cards)} tasks) for {p['title']}")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 4)
 
 def gather_stats(inp: dict) -> dict:
     p = inp["persona"]
+    if p.get("composite"):
+        from tools import composite
+        res = [("BLS", composite.no_official_stats("BLS", p)), ("FRED", _call("FRED", fred.fred_series, "UNRATE")), ("FRED", _call("FRED", fred.fred_series, "OPHNFB"))]
+        _say("Statistics: no BLS series for a composite occupation; national FRED series only"); return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 2)
     res = [("BLS", _call("BLS", bls.bls_occupation, p["soc"])), ("FRED", _call("FRED", fred.fred_series, "UNRATE")), ("FRED", _call("FRED", fred.fred_series, "OPHNFB"))]
     _say(f"Statistics: BLS {'ok' if res[0][1].ok else 'unavailable'}, FRED {'ok' if res[1][1].ok else 'unavailable'}")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 3)
@@ -162,7 +171,7 @@ def reconcile(state: State) -> dict:
     # exposure disagreement: AIOE percentile vs Anthropic observed exposure pointing different ways is worth surfacing as text, handled in render
     a1 = [c for c in deduped if c.subq_id == "A1" and c.value is not None]
     anchor_q = a1[0].claim if a1 else f"No open market gives a probability for AGI by {state['persona']['horizon']}"
-    user = f"Person: {state['persona']['title']} (SOC {state['persona']['soc']}), horizon {state['persona']['horizon']}. Question: {state['question']}\n\nEvidence table:\n{_table(deduped, refs)}\n\nUnknowns: {state.get('unknowns')}"
+    user = f"Person: {state['persona']['title']} ({'composite occupation — no official SOC category; tasks drawn from ' + ', '.join(state['persona'].get('source_occupations', [])[:6]) if state['persona'].get('composite') else 'SOC ' + state['persona']['soc']}), horizon {state['persona']['horizon']}. Question: {state['question']}\n\nEvidence table:\n{_table(deduped, refs)}\n\nUnknowns: {state.get('unknowns')}"
     try:
         out, cost = llm.chat_json("planner", ASSUMPTIONS_SYS, user, max_tokens=700); claims = [c for c in out.get("claims", []) if isinstance(c, str)][:6]
     except Exception as e:
@@ -369,7 +378,7 @@ def after_publish(state: State) -> str: return "record" if state["approvals"]["p
 # ───────────────────────────── record (the ONLY node with write tools) ─────────────────────────────
 def record(state: State) -> dict:
     p = state["persona"]; out_dir = ROOT / "data" / "briefs"; out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"{p['soc']}_{p['horizon']}_{time.strftime('%Y%m%d-%H%M%S')}.md"; path.write_text(state["brief_md"])
+    path = out_dir / f"{re.sub(r'[^A-Za-z0-9.-]+', '_', p['soc'])}_{p['horizon']}_{time.strftime('%Y%m%d-%H%M%S')}.md"; path.write_text(state["brief_md"])
     sid = memory.save_snapshot(state["thread_id"], p["soc"], p["horizon"], state["evidence"], state["scenarios"], p)
     _say(f"Exported {path.name}; snapshot #{sid} saved for next time")
     return {"exported_path": str(path)}

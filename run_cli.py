@@ -18,10 +18,14 @@ def stream(graph, inp, cfg):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--soc", default="11-2021"); ap.add_argument("--horizon", type=int, default=2030)
     ap.add_argument("--question", default=None); ap.add_argument("--door", default="professional"); ap.add_argument("--auto", action="store_true")
-    ap.add_argument("--edit-horizon", type=int, default=None); ap.add_argument("--thread", default=None); a = ap.parse_args()
+    ap.add_argument("--edit-horizon", type=int, default=None); ap.add_argument("--thread", default=None); ap.add_argument("--composite", default=None, help="job title with no SOC category, e.g. 'Product Manager'"); ap.add_argument("--about", default=""); a = ap.parse_args()
     import pandas as pd; occ = pd.read_csv("data/raw/onet_occupation_data.csv"); onet = a.soc if "." in a.soc else f"{a.soc}.00"
     row = occ[occ["O*NET-SOC Code"] == onet]; title = row.Title.iloc[0] if len(row) else a.soc
     persona = {"soc": onet[:7], "onet_soc": onet, "title": title, "matched_via": "soc", "horizon": a.horizon}
+    if a.composite:
+        from tools import composite
+        comp = composite.curated(a.composite) if not a.about else composite.from_description(a.composite, a.about)
+        assert comp, f"no curated composite for {a.composite!r}; pass --about to build one"; persona = composite.persona_from(comp, a.horizon)
     q = a.question or f"What happens to {persona['title']} by {a.horizon}, and what should I do about it?"
     graph = build_graph(); cfg = {"configurable": {"thread_id": a.thread or str(uuid.uuid4())}}; t0 = time.time()
     print(f"NextShift AI\n▶ {persona['title']} (SOC {persona['soc']}) · {a.horizon} · thread {cfg['configurable']['thread_id'][:8]}\n  Q: {q}")

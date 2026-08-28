@@ -56,6 +56,14 @@ def _curated(title: str) -> dict | None:
             return {"tier": 0, "confident": False, "matches": matches, "explanation": entry["note"]}
     return None
 
+def with_composites(result: dict, title: str, about: str = "") -> dict:
+    """Prepend composite options: a curated one if this title has it, and a description-built one if the person described their work."""
+    from . import composite
+    comps = []
+    if (c := composite.curated(title)): comps.append(c)
+    if about.strip() and len(about.strip()) > 20: comps.append(composite.from_description(title, about))
+    result["composites"] = comps; return result
+
 def resolve(title: str, about: str = "", k: int = 3) -> dict:
     """Returns {tier, matches:[...], confident:bool, explanation}. Tier 0 curated · 1 exact title · 2 semantic (always when `about` is given) · 3 web hook."""
     if not about.strip() and (cur := _curated(title)): return cur
