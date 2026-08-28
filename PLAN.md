@@ -147,3 +147,11 @@ textColor = "#E6EAF0"
 font = "sans serif"
 ```
 Plotly: `template="plotly_dark"`, paper/plot bg `#0B0F14`/`#121821`, branch colors Slow `#7FB3D5` · Fast `#E07A5F` · AGI `#B48CFF` · Brake `#8FBF9F`. Use `st.status`/`st.empty` containers for the "agent thinks in public" panel (stream graph events); `st.session_state["thread_id"]` for interrupt resume.
+
+## Model decision (2026-08-27): Nebius-only
+No Anthropic key; all LLM calls go through Nebius Token Factory (OpenAI-compatible, `langchain-openai` with `base_url`). Routing in `.env`:
+- `PLANNER_MODEL=Qwen/Qwen3-235B-A22B-Instruct-2507` — orchestrator, scenario builder (strongest instruct)
+- `SKEPTIC_MODEL=Qwen/Qwen3-Next-80B-A3B-Thinking` — a *different* model family/mode for the skeptic, so reflection doesn't share the planner's blind spots (Lesson 29)
+- `EXTRACTOR_MODEL=Qwen/Qwen3-30B-A3B-Instruct-2507` — evidence-card extraction, question matching (cheap, high volume)
+Write-up line: "runs entirely on open-weight models; planner and skeptic deliberately differ."
+Setup status 2026-08-27 night: repo scaffolded + committed; FRED, BLS, LangSmith, Nebius keys saved and smoke-tested; O*NET Web Services pending email (public Task Statements download is the fallback); datasets still to download into data/raw/.
