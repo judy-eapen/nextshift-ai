@@ -54,3 +54,11 @@ Use `Send("gather_forecasts", state)` etc. from a conditional edge after `decomp
 2. Where the persona resolution lives (graph node with interrupt vs UI step before the graph). Proposed: UI step — keeps the graph's two interrupts clean.
 3. Whether `task_diff` needs an LLM at all — the penetration values may be enough with thresholds; an LLM only for the "grows" column (judgment tasks not observed in AI usage).
 4. Cross-platform question matching: embedding similarity (Nebius Qwen3-Embedding-8B is available) vs LLM pairwise — embeddings are cheaper and deterministic.
+
+## Occupation resolver (built 2026-08-28 early hours — `tools/resolve.py`)
+Judy's ask: when a title isn't in the files, don't say "not found" — have an agent work out what the job is.
+- **Tier 1** exact/alias match over 54K O*NET lay titles (`tools/occupations.py`). Deterministic.
+- **Tier 2** (built): cheap LLM (EXTRACTOR_MODEL) writes a 2-sentence BLS-style description of the title → Nebius `Qwen3-Embedding-8B` → cosine vs 790 O*NET occupations (title + description + top aliases; "All Other" residuals excluded). Returns top-k with similarity + `confident` flag (≥0.60 and a 0.03 margin).
+- **Tier 3** (Saturday, needs a search key — you.com from the course, or Tavily): when `needs_web_research`, search the title → read 2–3 job postings → extract duties → re-run tier 2 with that text → present "how I decided" + top 2 → **human confirms** (a small interrupt, or a UI step before the graph). A real ReAct loop: search → read → extract → match → ask.
+- UI copy when tier ≥ 2: "No official category lists “{title}”. By meaning it's closest to {A} ({sim}) and {B} — which is you?" Never silently pick.
+- Note for the write-up: the US taxonomy (SOC 2018, ~870 categories) has no Product Owner / Head of Product / Chief Product Officer — a small piece of evidence for the product's own thesis that official statistics lag how modern work is organized.

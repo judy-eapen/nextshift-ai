@@ -8,6 +8,8 @@
 - `evals/golden.json` — 10 (occupation, horizon, question) triples for the success measure.
 - `graph/DESIGN.md` — proposed State/nodes/edges/caps + 4 things to argue about. **Not implemented on purpose** — that's your design conversation.
 
+- `tools/resolve.py` — **occupation resolver** (your idea): exact/alias → LLM-described title → embedding match over O*NET descriptions+aliases, with a confidence gate that flags weak matches for the tier-3 web-research fallback (Saturday; needs a you.com/Tavily key). `resolve('product owner')` → Project Management Specialists / Marketing Managers, asks you to confirm. See graph/DESIGN.md.
+
 **Your two 2-minute tasks before the design conversation:**
 1. Metaculus token: metaculus.com → sign up → Settings → API token → paste into `.env` as `METACULUS_TOKEN=`.
 2. Download https://www.bls.gov/emp/ind-occ-matrix/occupation.xlsx in a browser → save as `data/raw/bls_occupation_projections.xlsx` → re-run `python data/build_landscape.py`.

@@ -18,15 +18,29 @@ def _embed(texts: list[str]) -> np.ndarray:
 @lru_cache(maxsize=1)
 def _occ_index():
     occ = pd.read_csv(RAW / "onet_occupation_data.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Title": "title", "Description": "desc"})
-    occ = occ[occ.onet_soc.str.endswith(".00")].reset_index(drop=True); occ["soc"] = occ.onet_soc.str[:7]
-    cache = PROC / "occupation_embeddings.npy"
+    occ = occ[occ.onet_soc.str.endswith(".00") & ~occ.title.str.contains("All Other")].reset_index(drop=True); occ["soc"] = occ.onet_soc.str[:7]  # residual categories match anything — exclude
+    jt = pd.read_csv(RAW / "onet_job_titles.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Job Title": "alias"})
+    aliases = jt.groupby("onet_soc").alias.apply(lambda a: "; ".join(a.head(25))).to_dict()   # fold known lay titles into each occupation's text
+    occ["text"] = [f"{t}. {d} Also called: {aliases.get(o, '')}" for t, d, o in zip(occ.title, occ.desc, occ.onet_soc)]
+    cache = PROC / "occupation_embeddings_v2.npy"
     if cache.exists() and np.load(cache).shape[0] == len(occ): vecs = np.load(cache)
     else:
-        vecs = _embed([f"{t}. {d}" for t, d in zip(occ.title, occ.desc)]); np.save(cache, vecs)
+        vecs = _embed(list(occ.text)); np.save(cache, vecs)
     return occ, vecs
 
+def describe_title(title: str, about: str = "") -> str:
+    """Cheap LLM step: turn a bare title into a 2-sentence description of the work, so the embedder has something to match."""
+    key = os.environ["NEBIUS_API_KEY"]; base = os.environ.get("NEBIUS_BASE_URL", "https://api.studio.nebius.com/v1/").rstrip("/")
+    model = os.environ.get("EXTRACTOR_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507")
+    prompt = (f"Job title: {title}. " + (f"The person says: {about}. " if about else "") +
+              "In two plain sentences, describe the day-to-day work of this job in the style of a US Bureau of Labor Statistics occupation description "
+              "(what they plan, direct, analyze, coordinate, build). No preamble.")
+    r = httpx.post(f"{base}/chat/completions", headers={"Authorization": f"Bearer {key}"},
+                   json={"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 120, "temperature": 0.2}, timeout=60)
+    r.raise_for_status(); return r.json()["choices"][0]["message"]["content"].strip()
+
 def semantic_match(text: str, k: int = 5) -> list[dict]:
-    """text = a job title and/or a sentence about what the person does."""
+    """text = a description of the work (use describe_title first for bare titles)."""
     occ, vecs = _occ_index(); q = _embed([text])[0]
     sims = vecs @ q; top = np.argsort(-sims)[:k]
     return [{"soc": occ.soc[i], "onet_soc": occ.onet_soc[i], "title": occ.title[i], "similarity": float(sims[i]), "description": occ.desc[i][:160]} for i in top]
@@ -36,8 +50,8 @@ def resolve(title: str, about: str = "", k: int = 3) -> dict:
     exact = search_occupations(title, k)
     if exact and exact[0]["exact"]:
         return {"tier": 1, "confident": True, "matches": exact, "explanation": f"“{title}” is a listed job title under {exact[0]['title']} (O*NET)."}
-    sem = semantic_match(f"{title}. {about}".strip(), k)
+    desc = describe_title(title, about); sem = semantic_match(f"{title}. {desc}", k)
     conf = sem[0]["similarity"] >= 0.60 and (sem[0]["similarity"] - sem[1]["similarity"]) >= 0.03
     expl = (f"No official category lists “{title}”. By meaning it is closest to {sem[0]['title']} (similarity {sem[0]['similarity']:.2f})"
             + (f", then {sem[1]['title']} ({sem[1]['similarity']:.2f})" if len(sem) > 1 else "") + ". Confirm which fits.")
-    return {"tier": 2, "confident": conf, "matches": sem, "explanation": expl, "needs_web_research": not conf}
+    return {"tier": 2, "confident": conf, "matches": sem, "explanation": expl, "inferred_description": desc, "needs_web_research": not conf}
