@@ -61,6 +61,14 @@ def fan_out(state: State) -> list[Send]:
             for fam in FAMILIES if any(s["family"] == fam for s in subs)]
 
 # ───────────────────────────── gatherers ─────────────────────────────
+def _disabled(name: str) -> bool:
+    """Failure demo: DISABLE_SOURCES="Polymarket,BLS" in the environment (or the UI toggle) makes a source report itself down."""
+    import os; return name.lower() in {x.strip().lower() for x in os.environ.get("DISABLE_SOURCES", "").split(",") if x.strip()}
+
+def _call(name: str, fn, *args) -> SourceResult:
+    if _disabled(name): return SourceResult(source=name, ok=False, error="source disabled for failure demo (DISABLE_SOURCES)", unknowns=[])
+    return fn(*args)
+
 def _collect(results: list[tuple[str, SourceResult]], subq_id: str | None, calls: int) -> dict:
     """Turn SourceResults into a state update. Errors are data; a down source becomes a badge, never an exception."""
     cards, unknowns, errors, status = [], [], [], {}
@@ -88,7 +96,7 @@ def gather_forecasts(inp: dict) -> dict:
         topic = a["topic"].format(horizon=h); got = []
         for plat in a["platforms"]:
             if calls >= inp.get("budget", 8) + 6: break   # forecasts get a bigger slice: 3 platforms × 6 anchors is the main spend
-            r = fn[plat](a["queries"][plat].format(horizon=h), 4); calls += 1
+            r = _call(plat.capitalize(), fn[plat], a["queries"][plat].format(horizon=h), 4); calls += 1
             src = r.source; status[src] = "unavailable" if not r.ok else ("ok" if r.cards else status.get(src, "partial"))
             if not r.ok: errors.append(f"{src}: {r.error}")
             got += r.cards
@@ -113,18 +121,18 @@ def gather_forecasts(inp: dict) -> dict:
 
 def gather_exposure(inp: dict) -> dict:
     p = inp["persona"]; soc = p["soc"]; onet = p.get("onet_soc") or f"{soc}.00"
-    res = [("AIOE", exposure.aioe_lookup(soc)), ("Anthropic Economic Index", exposure.anthropic_index(soc)), ("O*NET tasks", exposure.onet_task_diff(soc)), ("O*NET Web Services", onet_ws.onet_occupation(onet))]
+    res = [("AIOE", _call("AIOE", exposure.aioe_lookup, soc)), ("Anthropic Economic Index", _call("Anthropic Economic Index", exposure.anthropic_index, soc)), ("O*NET tasks", _call("O*NET tasks", exposure.onet_task_diff, soc)), ("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, onet))]
     _say(f"Exposure: {sum(len(r.cards) for _, r in res)} cards (scores + {len(res[2][1].cards)} tasks) for {p['title']}")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 4)
 
 def gather_stats(inp: dict) -> dict:
     p = inp["persona"]
-    res = [("BLS", bls.bls_occupation(p["soc"])), ("FRED", fred.fred_series("UNRATE")), ("FRED", fred.fred_series("OPHNFB"))]
+    res = [("BLS", _call("BLS", bls.bls_occupation, p["soc"])), ("FRED", _call("FRED", fred.fred_series, "UNRATE")), ("FRED", _call("FRED", fred.fred_series, "OPHNFB"))]
     _say(f"Statistics: BLS {'ok' if res[0][1].ok else 'unavailable'}, FRED {'ok' if res[1][1].ok else 'unavailable'}")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 3)
 
 def gather_research(inp: dict) -> dict:
-    res = [("Epoch AI", epoch.epoch_recent())]
+    res = [("Epoch AI", _call("Epoch AI", epoch.epoch_recent))]
     _say(f"Research: {len(res[0][1].cards)} Epoch cards")
     return _collect(res, inp["subquestions"][0]["id"] if inp["subquestions"] else None, 1)
 
