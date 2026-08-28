@@ -13,7 +13,7 @@
 **Done this morning:** O*NET Web Services key saved and tested (`tools/onet_ws.py` — live description, Bright Outlook tag, technology skills). Smoke test now covers 10 sources.
 
 **Your two 2-minute tasks before the design conversation:**
-1. Metaculus token: metaculus.com → sign up → Settings → API token → paste into `.env` as `METACULUS_TOKEN=`.
+1. ~~Metaculus token~~ done — but Metaculus gates **aggregate community predictions** behind a separate data-access approval (values come back null even with a valid token; the download endpoint says "restricted… see metaculus.com/api for requesting access"). Request access via the form/contact on https://www.metaculus.com/api (mention: student project, non-commercial, Maven agentic-AI course). Until approved, the Metaculus tool returns honest metadata cards (question + forecaster count, value unknown) and Polymarket + Manifold carry the forecast values.
 2. Download https://www.bls.gov/emp/ind-occ-matrix/occupation.xlsx in a browser → save as `data/raw/bls_occupation_projections.xlsx` → re-run `python data/build_landscape.py`.
 
 **Opening prompt for Claude Code (in this folder):**
