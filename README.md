@@ -11,4 +11,6 @@ python -m evals.run_golden                          # 10-occupation golden set
 python -m tools.smoke_test 11-2021                  # hit every data source once
 ```
 
+First run builds two embedding caches with Nebius (occupations, and all 18K O*NET task statements — ~5 min, a few cents); they are gitignored under `data/processed/*.npy`.
+
 Docs: `PLAN.md` (scope + contract) · `graph/DESIGN.md` (architecture, as built) · `GOOD_MORNING.md` (tools layer notes).
