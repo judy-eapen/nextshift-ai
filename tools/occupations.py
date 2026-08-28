@@ -8,7 +8,8 @@ RAW = Path(__file__).resolve().parents[1] / "data" / "raw"
 def _index() -> pd.DataFrame:
     occ = pd.read_csv(RAW / "onet_occupation_data.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Title": "title"})
     rep = pd.read_csv(RAW / "onet_reported_titles.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Title": "title", "Reported Job Title": "alias"})
-    a = pd.concat([occ.assign(alias=occ.title)[["onet_soc", "title", "alias"]], rep[["onet_soc", "title", "alias"]]])
+    jt = pd.read_csv(RAW / "onet_job_titles.csv").rename(columns={"O*NET-SOC Code": "onet_soc", "Title": "title", "Job Title": "alias"})  # 54K lay titles
+    a = pd.concat([occ.assign(alias=occ.title)[["onet_soc", "title", "alias"]], rep[["onet_soc", "title", "alias"]], jt[["onet_soc", "title", "alias"]]])
     a["soc"] = a.onet_soc.str[:7]; a["alias_l"] = a.alias.str.lower()
     return a.drop_duplicates(["soc", "alias_l"])
 
