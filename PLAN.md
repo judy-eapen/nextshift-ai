@@ -130,6 +130,7 @@ class State(TypedDict):
 
 ---
 ## Design assets (2026-08-27)
+- **GitHub repo:** https://github.com/judy-eapen/nextshift-ai (public, personal account)
 - **Architecture diagram — shareable PNG on Google Drive:** https://drive.google.com/open?id=12IR2hhy5Oq-Z6OOuCHO6ar7QL1VzixbQ (anyone-with-link) · folder **AI Futures Explorer**: https://drive.google.com/drive/folders/12zGSKE5kmVqjKf6ma4XafeIsC_LAvOb0 (also holds the Mermaid source `.mmd`). Local: `design/architecture-diagram.png` (3968×2776), source `design/architecture.mmd`; re-render with `npx -y -p @mermaid-js/mermaid-cli mmdc -i architecture.mmd -o architecture-diagram.png -c mmdc.json -b white -s 2 -w 2000`. FigJam version (needs Figma share settings): https://www.figma.com/board/mjfPRt4jVertJlpz9P4gtc
 - **Mockups (design canvas, "Instrument panel" direction):** https://claude.ai/code/artifact/cc0c6a71-55a8-4e80-b2fa-b3be5ca5240e — 4 screens: Ask (two doors) · Scenario tree + horizon slider · Task-diff board · Since you last looked. Working files in `design/*.dc.html`. Numbers are illustrative samples.
 - **Palette:** bg #0B0F14 · surface #121821 · line #1F2833/#2A3544 · ink #E6EAF0 · muted #8A94A6 · amber (human/attention) #E5A24A · student door #7FC8E8 · branches: Slow #7FB3D5 · Fast #E07A5F · AGI #B48CFF · Brake #8FBF9F. Type: Archivo (display) · IBM Plex Sans (body) · IBM Plex Mono (numbers).
