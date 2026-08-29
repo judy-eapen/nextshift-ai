@@ -95,3 +95,83 @@ def resolve_refs(line: str, profile_refs: dict) -> dict:
         quotes.append(m.group(1) if m else src.split(": ", 1)[-1])
     text = TAG.sub("", CREF.sub("", PREF.sub("", line or ""))).strip()
     return {"text": text, "quotes": [q for q in quotes if q], "interpretation": "[interpretation]" in (line or "")}
+
+
+# ───────────────────────────── What NextShift currently understands (interview) ─────────────────────────────
+UNDERSTAND_SECTIONS = [("Interests", ["interests"]), ("Activities that energize you", ["energizing_activities"]), ("Demonstrated strengths", ["demonstrated_strengths", "claimed_strengths"]),
+                       ("Skills you want to build", ["growth_areas", "not_yet_learned"]), ("Things you prefer to avoid", ["dislikes"]), ("Work preferences", ["work_preferences", "pidth"]),
+                       ("Values and desired impact", ["values", "desired_impact", "lifestyle_preferences"]), ("Practical constraints", ["education_constraints", "financial_constraints", "location_constraints", "time_constraints"]),
+                       ("Existing career ideas", ["existing_career_ideas"]), ("Remaining uncertainties", ["uncertainties", "contradictions"])]
+PIDTH_LABEL = {"people": "people", "ideas": "ideas", "data": "data", "technology": "technology", "hands_on": "working with your hands"}
+
+def understands_sections(profile: dict) -> list[dict]:
+    """[{title, items:[{value, quote, turn, tag}]}] from the structured profile already in state. No model call; values/quotes are the student's own."""
+    out = []
+    for title, fields in UNDERSTAND_SECTIONS:
+        items = []
+        for f in fields:
+            if f == "pidth":
+                p = profile.get("pidth") or {}; lean = [PIDTH_LABEL[k] for k, v in sorted(p.items(), key=lambda kv: -kv[1]) if k in PIDTH_LABEL and v > 0.2]
+                if lean: items.append({"value": "Leaning toward " + ", ".join(lean), "quote": "", "turn": None, "tag": "from several answers"})
+                continue
+            if f == "contradictions":
+                for c in profile.get("contradictions") or []:
+                    if c.get("status") == "open" and c.get("note"): items.append({"value": c["note"], "quote": "", "turn": c.get("turn"), "tag": "two answers pull in different directions"})
+                continue
+            for e in profile.get(f) or []:
+                tag = {"claimed_strengths": "you said", "not_yet_learned": "not tried yet", "growth_areas": "hard now, want to improve", "demonstrated_strengths": "with an example"}.get(f, "")
+                if e.get("kind") == "inferred": tag = (tag + " · " if tag else "") + "our reading"
+                items.append({"value": e.get("value", ""), "quote": e.get("quote", ""), "turn": e.get("source_turn"), "tag": tag})
+        out.append({"title": title, "items": items})
+    return out
+
+# ───────────────────────────── Why this appeared (career card) ─────────────────────────────
+RATIONALE_LABEL = {"matches_interests": "Matches what interests you", "uses_strengths": "Uses strengths you showed", "fits_preferences": "Fits how you like to work", "constraints_ok": "Works with your constraints",
+                   "why_included": "Why it made the list", "constraints_conflict": "May conflict with what you said", "poor_fit_if": "Might not fit if"}
+
+def resolution_label(candidate: dict) -> dict:
+    """Exact / closest / composite, from the resolver's own record — never inferred from the card text."""
+    r = candidate.get("resolution") or ""; title = (candidate.get("persona") or {}).get("title", "")
+    if r == "composite": return {"kind": "composite", "text": f"Composite — no official category for this role. Figures come from the closest official occupations" + (f": {candidate['card'].get('proxy_note')}" if (candidate.get('card') or {}).get('proxy_note') else ".")}
+    if "tier 1" in r: return {"kind": "exact", "text": f"Official occupation (exact match): {title}"}
+    if r.startswith("official"): return {"kind": "proxy", "text": f"Closest official occupation: {title} — figures are for this category"}
+    return {"kind": "unknown", "text": "Could not be matched to an official occupation"}
+
+def why_this_appeared(candidate: dict, views: dict) -> dict:
+    """Two groups from data the graph already reviewed: the candidate's cited rationale (deterministically checked against profile refs) and the reviewed card.
+    Nothing is generated here; removed content is absent because the card object IS the reviewed object."""
+    prefs = views.get("profile_refs") or {}; rat = candidate.get("rationale") or {}; card = candidate.get("card") or {}
+    told = []
+    for k in ("why_included", "matches_interests", "uses_strengths", "fits_preferences", "constraints_ok"):
+        lines = rat.get(k); lines = [lines] if isinstance(lines, str) else (lines or [])
+        for l in lines:
+            if l and l.strip(): told.append({"label": RATIONALE_LABEL[k], **resolve_refs(l, prefs)})
+    conflicts = [{"label": RATIONALE_LABEL["constraints_conflict"], **resolve_refs(l, prefs)} for l in (rat.get("constraints_conflict") or []) if l.strip()]
+    conflicts += [{"label": "Practical mismatch", **resolve_refs(l, prefs)} for l in (card.get("constraint_flags") or [])]
+    if (rat.get("poor_fit_if") or "").strip(): conflicts.append({"label": RATIONALE_LABEL["poor_fit_if"], **resolve_refs(rat["poor_fit_if"], prefs)})
+    soc = (candidate.get("persona") or {}).get("soc", "")
+    evidence = {"outlook": [resolve_refs(f, prefs)["text"] for f in card.get("facts") or []], "education": card.get("education_entry") or "not reported",
+                "tasks_ai_used": [f"{t.get('task', '')} (observed AI use {t['penetration']:.2f})" if t.get("penetration") is not None else t.get("task", "") for t in (card.get("ai_assists") or [])[:3]],
+                "stays_human": [resolve_refs(f"{t.get('task', '')} — {t.get('why', '')}", prefs)["text"] for t in (card.get("more_important") or [])[:3]],
+                "tradeoff": resolve_refs(card.get("tradeoff", ""), prefs)["text"], "confidence": str(card.get("evidence_confidence") or ""),
+                "unknowns": [resolve_refs(u, prefs)["text"] for u in (views.get("unknowns") or []) if soc and soc in u][:3]}
+    return {"told": told, "conflicts": conflicts, "evidence": evidence, "resolution": resolution_label(candidate), "removed": len((candidate.get("review") or {}).get("removed") or [])}
+
+# ───────────────────────────── Run details (How we reached this) ─────────────────────────────
+SOURCE_WORD = {"ok": "used", "partial": "partial", "unavailable": "unavailable"}
+
+def run_details(views: dict, candidates: list[dict] | None = None, approvals: dict | None = None) -> dict:
+    """User-facing facts about THIS run. Model names, cost and raw tool counts are deliberately not here (developer mode shows them)."""
+    sk = views.get("skeptic") or {}; status = views.get("review_status") or sk.get("status") or "verified"
+    cards = views.get("cards_by_family") or {}; n_cards = sum(len(v) for v in cards.values())
+    occs = []
+    if candidates:
+        for c in candidates: occs.append({"label": c.get("label"), "title": (c.get("persona") or {}).get("title"), **resolution_label(c)})
+    else:
+        for o in (views.get("outlooks") or {}).values(): occs.append({"label": o.get("title"), "title": o.get("title"), "kind": "proxy" if o.get("proxy_note") else "exact", "text": o.get("proxy_note") or "Official occupation"})
+    ap = approvals or {}
+    humans = [k for k in ("understanding", "reactions", "plan", "save") if ap.get(k)]
+    return {"sources": [{"name": k, "status": SOURCE_WORD.get(v, v)} for k, v in (views.get("source_status") or {}).items()], "occupations": occs, "n_cards": n_cards,
+            "review_status": status, "removed": [{"text": TAG.sub("", CREF.sub("", PREF.sub("", r.get("sentence", "")))).strip(), "reason": r.get("reason", "")} for r in sk.get("stripped") or []],
+            "rationale_removed": sk.get("rationale_lines_removed", 0), "unknowns": [TAG.sub("", CREF.sub("", u)).strip() for u in views.get("unknowns") or []],
+            "disagreements": views.get("disagreements") or [], "approvals": humans, "verified": status != "unverified"}

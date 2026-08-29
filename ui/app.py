@@ -236,20 +236,7 @@ def screen_plan():
     if v["deltas"]:
         st.markdown("### Since your last plan"); [st.markdown(f"- {d['kind']}: {d['claim'][:120]}" + (f" ({d['from']:g} → {d['to']:g})" if d["kind"] == "moved" else "")) for d in v["deltas"][:8]]
 
-    with st.expander("7. How we reached this answer"):
-        sk = v["skeptic"]
-        st.markdown("**Sources** — " + " · ".join(f"{'🟢' if s=='ok' else '🟡' if s=='partial' else '🔴'} {k}" for k, s in v["source_status"].items()))
-        st.markdown(f"**Reviewer** ({sk['model'].split('/')[-1]}, a different model family than the writer): kept {sk['kept']} lines, removed {len(sk['stripped'])} ({sk['ratio']:.0%}) after {sk['attempt']} pass(es).")
-        for s_ in sk["stripped"][:8]: st.markdown(f"<div class='task'>✂ {s_['sentence'][:140]}<br><span class='p'>{s_['reason'][:120]}</span></div>", unsafe_allow_html=True)
-        st.markdown("**Where sources disagree**"); [st.markdown(f"- {d['spread']} across {', '.join(d['sources'])}: {d['topic']}") for d in v["disagreements"]] or st.markdown("- none this run")
-        st.markdown("**Known unknowns**"); [st.markdown(f"- {u}") for u in v["unknowns"]]
-        st.markdown("**Forecast context (conditional)**"); [st.markdown(f"- {strip_refs(f)}") for f in v["forecast_context"]]
-        st.markdown(f"**Run** — {v['budget']['tool_calls']} tool calls · est. ${v['budget']['cost_usd']:.3f}")
-        st.markdown("**Agent steps**"); [st.markdown(f"<div class='small'>· {l}</div>", unsafe_allow_html=True) for l in S.log]
-        st.markdown("**Evidence cards**")
-        for fam, cards in v["cards_by_family"].items():
-            if cards:
-                st.markdown(f"_{fam}_ ({len(cards)})"); [st.markdown(f"<div class='task'>{c['claim'][:160]}<br><span class='p'>{c['source']} · {c.get('as_of') or ''} · <a href='{c.get('url')}'>source</a></span></div>", unsafe_allow_html=True) for c in cards[:12]]
+    with st.expander("7. How we reached this answer"): student_ui.render_run_details(S, v)
 
     st.markdown("---"); st.markdown("<span class='kicker'>⏸ Your approval</span>", unsafe_allow_html=True)
     if v.get("review_status") == "unverified": st.warning("This plan is unverified (review step failed). If you save it, the file will be marked UNVERIFIED.")

@@ -122,7 +122,7 @@ def interview_gate(state: StudentState) -> dict:
     """⏸ One question. Resume: {"action": "answer"|"skip"|"unsure"|"more"|"recommend"|"edit", "text": str, "edit_turn": int}."""
     q = state["pending"]; turns = list(state["turns"]); comp = state["completeness"]
     d = interrupt({"kind": "interview", "turn": len(turns) + 1, "max_turns": state["max_turns"], "goal": q["goal"], "question": q["question"], "learned": _learned_summary(state["profile"]),
-                   "coverage": comp.get("coverage", {}), "can_recommend": len(turns) >= 2, "previous": [{"i": t["i"], "question": t["question"], "answer": t.get("answer", "")} for t in turns]})
+                   "coverage": comp.get("coverage", {}), "profile": {f: state["profile"].get(f, []) for f in FIELDS} | {"pidth": state["profile"].get("pidth", {}), "contradictions": state["profile"].get("contradictions", [])}, "can_recommend": len(turns) >= 2, "previous": [{"i": t["i"], "question": t["question"], "answer": t.get("answer", "")} for t in turns]})
     action = d.get("action", "answer"); text = (d.get("text") or "").strip()
     if action == "edit":
         i = int(d.get("edit_turn", -1));

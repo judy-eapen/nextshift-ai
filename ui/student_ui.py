@@ -4,10 +4,13 @@ from __future__ import annotations
 import re, uuid
 import streamlit as st
 from langgraph.types import Command
+from ui import journey as J
 
 C = {"amber": "#E5A24A", "student": "#7FC8E8", "green": "#8FBF9F", "red": "#E07A5F", "purple": "#B48CFF", "muted": "#8A94A6", "line": "#2A3544"}
 DEMAND = {"growing": ("▲ Growing", C["green"]), "stable": ("● Stable", C["amber"]), "declining": ("▼ Declining", C["red"]), "unknown": ("? No official projection", C["muted"])}
 CHANGE = {"substantial": "◆ Substantial", "moderate": "◆ Moderate", "limited": "◆ Limited", "unknown": "? Unknown"}
+CORE_LABELS = {"interests_or_energizing": "what energizes you", "strengths": "strengths you've shown", "negatives": "what to avoid or build", "pidth": "people · ideas · data · tech · hands", "constraints": "practical limits", "values_or_impact": "what matters to you"}
+COVERAGE_GLYPH = {"none": ("○", "not yet"), "weak": ("◔", "a little"), "moderate": ("◑", "enough"), "strong": ("●", "clear")}
 BOUNDARY = "This is a guided exploration based on what you shared and available career data — not a test that determines what you should become."
 
 def strip_refs(text) -> str: return re.sub(r"\s*\[(?:[cu]\d{2,3}|p:[a-z_]+:\d+|interpretation|advice)\]", "", str(text or "")).strip()
@@ -51,10 +54,13 @@ def screen_interview(S):
         st.markdown(f"<p class='muted'>You don't need to know what career you want yet. I'll ask one question at a time — about 8 to 12 — and then show you what I understood before suggesting anything.<br><span class='small'>{BOUNDARY} Nothing is added to your saved record until you approve it at the end; while you work, your answers are kept in a resumable session file on this computer. A first name is plenty.</span></p>", unsafe_allow_html=True)
     col, side = st.columns([3, 1.3])
     with side:
-        st.markdown(f"<span class='small'>Question {p['turn']} of about {p['max_turns']}</span>", unsafe_allow_html=True); st.progress(min(p["turn"] / p["max_turns"], 1.0))
-        if p["learned"]:
-            st.markdown("<span class='kicker'>What I've learned so far</span>", unsafe_allow_html=True)
-            for l in p["learned"][:8]: st.markdown(f"<div class='small'>· {l[:90]}</div>", unsafe_allow_html=True)
+        st.markdown(f"<span class='small'>Question {p['turn']} of up to {p['max_turns']}</span>", unsafe_allow_html=True); st.progress(min(p["turn"] / p["max_turns"], 1.0))
+        cov = p.get("coverage") or {}
+        st.markdown("<span class='kicker'>Still learning about</span>", unsafe_allow_html=True)
+        for key, lab in CORE_LABELS.items():
+            lvl = cov.get(key, "none"); g, aria = COVERAGE_GLYPH[lvl]
+            st.markdown(f"<div class='small'><span role='img' aria-label='{aria}'>{g}</span> {lab}</div>", unsafe_allow_html=True)
+        st.markdown("<div class='small' style='margin-top:6px'>A fixed rule picks the next topic from these gaps; the AI only words the question.</div>", unsafe_allow_html=True)
     with col:
         st.markdown(f"### {p['question']}")
         text = st.text_area("answer", placeholder="Type as much or as little as you like…", height=110, label_visibility="collapsed", key=f"ans{p['turn']}")
@@ -65,11 +71,25 @@ def screen_interview(S):
         if b[2].button("Skip"): route(S, run(S, Command(resume={"action": "skip"})))
         if p.get("can_recommend") and b[3].button("Recommend careers now"): route(S, run(S, Command(resume={"action": "recommend"})))
         if p["turn"] > 8 and b[4].button("Ask me more"): route(S, run(S, Command(resume={"action": "more"})))
+    if p.get("profile") is not None:
+        with st.expander("What NextShift currently understands about you"):
+            st.markdown("<p class='small'>Built only from your answers — each item shows the words it rests on. Nothing here is a verdict; edit an answer to change it.</p>", unsafe_allow_html=True)
+            for si, sec in enumerate(J.understands_sections(p["profile"])):
+                st.markdown(f"**{sec['title']}**")
+                if not sec["items"]: st.markdown("<div class='small'>Not mentioned yet.</div>", unsafe_allow_html=True); continue
+                for ii, it in enumerate(sec["items"][:6]):
+                    tag = f" <span class='small'>· {it['tag']}</span>" if it.get("tag") else ""
+                    st.markdown(f"- {it['value']}{tag}", unsafe_allow_html=True)
+                    qn = f" (Q{it['turn']})" if it.get("turn") and it["turn"] < 100 else ""
+                    if it.get("quote"): st.markdown(f"<div class='small' style='margin-left:18px'>Based on your answer{qn}: “{it['quote']}”</div>", unsafe_allow_html=True)
+                    if it.get("turn") and it["turn"] < 100 and any(t["i"] == it["turn"] for t in p["previous"]) and st.button(f"Edit Q{it['turn']}", key=f"edq_{si}_{ii}"): S.edit_turn = it["turn"]; st.rerun()
+    with col:
         if p["previous"]:
-            with st.expander("Edit an earlier answer"):
-                labels = [f"Q{t['i']}: {t['question'][:70]}" for t in p["previous"]]; pick = st.selectbox("Which one?", labels, label_visibility="collapsed")
+            with st.expander("Edit an earlier answer", expanded=bool(S.get("edit_turn"))):
+                labels = [f"Q{t['i']}: {t['question'][:70]}" for t in p["previous"]]; idx = next((i for i, t in enumerate(p["previous"]) if t["i"] == S.get("edit_turn")), 0)
+                pick = st.selectbox("Which one?", labels, index=idx, label_visibility="collapsed")
                 t = p["previous"][labels.index(pick)]; new = st.text_area("Your new answer", value=t["answer"], key=f"edit{t['i']}", height=80)
-                if st.button("Save this answer"): route(S, run(S, Command(resume={"action": "edit", "edit_turn": t["i"], "text": new})))
+                if st.button("Save this answer"): S.edit_turn = None; route(S, run(S, Command(resume={"action": "edit", "edit_turn": t["i"], "text": new})))
 
 # ───────────────────────────── understanding gate ─────────────────────────────
 def screen_understanding(S):
@@ -122,17 +142,8 @@ def screen_results(S):
                 if col.checkbox(lab, key=f"rx_{c['key']}_{val}"): verdict = val
             why = cols[3].text_input("What appeals — or doesn't?", key=f"why_{c['key']}", placeholder="e.g. I like the people part, not the paperwork", label_visibility="collapsed")
             if verdict: reactions[c["key"]] = {"key": c["key"], "verdict": verdict, "why": why}
-            with st.expander("Why this was suggested"):
-                for k, lines in c["rationale"].items():
-                    if isinstance(lines, list) and lines: st.markdown(f"**{k.replace('_', ' ')}** — " + "; ".join(strip_refs(l) for l in lines))
-                    elif isinstance(lines, str) and lines.strip(): st.markdown(f"**{k.replace('_', ' ')}** — {strip_refs(lines)}")
-                if c.get("review", {}).get("removed"): st.markdown(f"<span class='small'>Reviewer removed {len(c['review']['removed'])} line(s) from this card.</span>", unsafe_allow_html=True)
-    with st.expander("How we reached this"):
-        sk = v["skeptic"]; st.markdown(f"**Reviewer** ({sk['model'].split('/')[-1]}): {sk['total']} lines checked, {len(sk['stripped'])} removed. **Sources:** " + " · ".join(f"{'🟢' if s=='ok' else '🟡' if s=='partial' else '🔴'} {k}" for k, s in v["source_status"].items()))
-        for s_ in sk["stripped"][:10]: st.markdown(f"<div class='task'>✂ {s_['sentence'][:140]}<br><span class='p'>{s_['reason'][:120]}</span></div>", unsafe_allow_html=True)
-        st.markdown("**Known unknowns**"); [st.markdown(f"- {u}") for u in v["unknowns"][:10]]
-        st.markdown("**Forecast context (conditional)**"); [st.markdown(f"- {strip_refs(f)}") for f in v["forecast_context"]]
-        st.markdown(f"**Run** — {v['budget']['tool_calls']} tool calls · est. ${v['budget']['cost_usd']:.3f}"); [st.markdown(f"<div class='small'>· {l}</div>", unsafe_allow_html=True) for l in S.log[-25:]]
+            with st.expander("Why this appeared →"): why_this_appeared(c, v)
+    with st.expander("How we reached this"): render_run_details(S, v, candidates=[c for g in v["groups"].values() for c in g])
     st.markdown("---"); st.markdown("### Which of these speaks to you, and what about it appeals?")
     b = st.columns([2, 1, 1])
     if b[0].button("Continue with my reactions →", type="primary", width="stretch", disabled=not reactions):
@@ -228,3 +239,60 @@ def screen_done(S, reset):
 
 SCREENS = {"s_interview_run": screen_interview_run, "s_interview": screen_interview, "s_understanding": screen_understanding, "s_results": screen_results, "s_discriminate": screen_discriminate,
            "s_shortlist": screen_shortlist, "s_deep": screen_deep, "s_save": screen_save}
+
+
+# ───────────────────────────── explanations (reviewed data only; no generation) ─────────────────────────────
+SRC_GLYPH = {"used": ("●", "used"), "partial": ("◑", "partial"), "unavailable": ("○", "unavailable")}
+
+def why_this_appeared(c: dict, v: dict):
+    """Two groups: what the student said (cited rationale, deterministically checked) and career evidence (the reviewed card). Never a score."""
+    w = J.why_this_appeared(c, v)
+    st.markdown(f"<div class='small'>{w['resolution']['text']}</div>", unsafe_allow_html=True)
+    a, b = st.columns(2)
+    with a:
+        st.markdown("**Based on what you told us**")
+        if not w["told"]: st.markdown("<div class='small'>No rationale line for this card survived the checks.</div>", unsafe_allow_html=True)
+        for it in w["told"]:
+            st.markdown(f"- {it['text']} <span class='small'>· {it['label'].lower()}</span>", unsafe_allow_html=True)
+            for q in it["quotes"]: st.markdown(f"<div class='small' style='margin-left:18px'>Based on your answer: “{q}”</div>", unsafe_allow_html=True)
+        if w["conflicts"]:
+            st.markdown("**May conflict with what you said**")
+            for it in w["conflicts"]:
+                st.markdown(f"- {it['text']} <span class='small'>· {it['label'].lower()}</span>", unsafe_allow_html=True)
+                for q in it["quotes"]: st.markdown(f"<div class='small' style='margin-left:18px'>Based on your answer: “{q}”</div>", unsafe_allow_html=True)
+    with b:
+        e = w["evidence"]; st.markdown("**Based on career evidence**")
+        for f in e["outlook"]: st.markdown(f"- {f} <span class='small'>· official outlook</span>", unsafe_allow_html=True)
+        st.markdown(f"- Typical entry education: {e['education']}")
+        for t in e["tasks_ai_used"]: st.markdown(f"- {t} <span class='small'>· current AI use, not automation</span>", unsafe_allow_html=True)
+        for t in e["stays_human"]: st.markdown(f"- {t} <span class='small'>· interpretation</span>", unsafe_allow_html=True)
+        if e["tradeoff"]: st.markdown(f"- {e['tradeoff']} <span class='small'>· tradeoff</span>", unsafe_allow_html=True)
+        for u in e["unknowns"]: st.markdown(f"- {u} <span class='small'>· unknown</span>", unsafe_allow_html=True)
+        if e["confidence"]: st.markdown(f"<div class='small'>Evidence confidence: {e['confidence']}</div>", unsafe_allow_html=True)
+    if w["removed"]: st.markdown(f"<div class='small'>The reviewer removed {w['removed']} line(s) from this card — listed under <i>How we reached this</i>.</div>", unsafe_allow_html=True)
+
+def render_run_details(S, v: dict, candidates: list[dict] | None = None):
+    """User-facing facts about this run. Model names, cost, tool counts and the raw step log live in developer mode."""
+    from ui import explain
+    rd = J.run_details(v, candidates)
+    st.markdown("**Sources in this run** — " + " · ".join(f"<span role='img' aria-label='{SRC_GLYPH[s['status']][1]}'>{SRC_GLYPH[s['status']][0]}</span> {s['name']} ({s['status']})" for s in rd["sources"]), unsafe_allow_html=True)
+    if rd["occupations"]:
+        st.markdown("**Occupations looked up**")
+        for o in rd["occupations"]: st.markdown(f"- {o['label']}" + (f" → {o['title']}" if o.get("title") and o["title"] != o["label"] else "") + f" <span class='small'>· {o['kind']}</span>", unsafe_allow_html=True)
+    st.markdown(f"**Evidence** — {rd['n_cards']} pieces of evidence. **Review** — " + ("<b>UNVERIFIED</b>: the independent reviewer failed; only the citation check ran." if not rd["verified"] else "verified by a separate reviewer.") +
+                f" {len(rd['removed'])} line(s) removed" + (f", plus {rd['rationale_removed']} rationale line(s) that did not cite your words" if rd.get("rationale_removed") else "") + ".", unsafe_allow_html=True)
+    for r in rd["removed"][:10]: st.markdown(f"<div class='task'>✂ {r['text'][:140]}<br><span class='p'>{r['reason'][:120]}</span></div>", unsafe_allow_html=True)
+    if rd["disagreements"]: st.markdown("**Where sources disagree**"); [st.markdown(f"- {d.get('spread', '')} across {', '.join(d.get('sources', []))}: {d.get('topic', '')}") for d in rd["disagreements"]]
+    if rd["unknowns"]: st.markdown("**Known unknowns**"); [st.markdown(f"- {u}") for u in rd["unknowns"][:10]]
+    if v.get("forecast_context"): st.markdown("**Forecast context (conditional)**"); [st.markdown(f"- {strip_refs(f)}") for f in v["forecast_context"]]
+    done = [s["label"] for s in explain.journey(S) if s["state"] == "done" and s["label"].startswith(("Checking that we understood", "Learning from your reactions", "Waiting"))]
+    human = [{"Checking that we understood": "You confirmed what we understood", "Learning from your reactions": "You reacted to the directions", "Waiting for your approval": "You approved the save"}[d] for d in done]
+    st.markdown("**Your decisions so far** — " + (" · ".join(human) if human else "none yet; nothing is saved until you approve"))
+    st.markdown(f"**Saved result** — {'would be marked UNVERIFIED' if not rd['verified'] else 'will be marked verified'} when you approve." if not S.get("final_state") else f"**Saved result** — {'UNVERIFIED' if not rd['verified'] else 'verified'}.")
+    cards = v.get("cards_by_family") or {}
+    if any(cards.values()):
+        with st.expander(f"Evidence used ({rd['n_cards']})"):
+            for fam, cs in cards.items():
+                if cs: st.markdown(f"_{fam}_ ({len(cs)})"); [st.markdown(f"<div class='task'>{c['claim'][:160]}<br><span class='p'>{c['source']} · {c.get('as_of') or ''}" + (f" · <a href='{c.get('url')}'>source</a>" if c.get('url') else "") + "</span></div>", unsafe_allow_html=True) for c in cs[:12]]
+    if explain.dev_enabled(S):
+        with st.expander("Developer mode — this run"): explain.dev_block(S)

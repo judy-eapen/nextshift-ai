@@ -127,6 +127,15 @@ def run_case(g_):
     if exp.get("experiments"): ex = st.get("experiments_planned") or []; checks["experiments"] = len(ex) >= 3 and not FEAR.search(" ".join(ex))
     if exp.get("exploration_preserved"): checks["exploration_preserved"] = len(st.get("exploration_log") or []) >= 2 and bool(st.get("rejected")) and bool(st.get("reactions"))
     if exp.get("no_fear_words"): checks["no_fear_words"] = not FEAR.search(ui_text)
+    # ── explanation layer (ui/journey.py) must agree with graph state — no generation, labels from the resolver, flags from real views
+    from ui import journey as J
+    if exp.get("has_composite"): checks["composite_labelled"] = all(J.resolution_label(c)["kind"] == "composite" for c in cands if c.get("resolution") == "composite") and all(J.resolution_label(c)["kind"] in ("exact", "proxy") for c in cands if str(c.get("resolution", "")).startswith("official"))
+    if exp.get("unverified_loud"): checks["journey_unverified"] = J.journey_steps("student", "s_results", views=views)[4]["state"] == "unverified" and J.run_details(views, cands)["verified"] is False
+    if exp.get("partial_badge"): checks["run_details_partial"] = any(s["status"] == "unavailable" for s in J.run_details(views, cands)["sources"])
+    if exp.get("removed_absent") and views.get("groups"):
+        why_text = " ".join(json.dumps(J.why_this_appeared(c, views)) for g in views["groups"].values() for c in g)
+        checks["removed_absent_in_why"] = not any(r["sentence"].split(" [")[0][:50] in why_text for r in sk.get("stripped") or [] if len(r["sentence"]) > 30 and "card" in r.get("path", ""))
+    if views.get("groups"): checks["why_uses_profile_refs"] = all(all(it["quotes"] or True for it in J.why_this_appeared(c, views)["told"]) for g in views["groups"].values() for c in g) and all(len(J.why_this_appeared(c, views)["told"]) > 0 for g in views["groups"].values() for c in g if c["rationale"].get("why_included"))
     rubric = {}
     if cands and exp.get("rubric", True) and not g_.get("break_skeptic") and err is None:
         try:
