@@ -1,30 +1,29 @@
-# Good morning — NextShift AI is finished for submission (Sat night → Sun 2026-08-30)
+# Good morning — NextShift AI, Saturday 2026-08-29
 
-**The app is running at http://localhost:8599** (`streamlit run ui/app.py` if it isn't). Repo pushed: https://github.com/judy-eapen/nextshift-ai
+**App:** http://localhost:8599 (`streamlit run ui/app.py`). **Repo:** https://github.com/judy-eapen/nextshift-ai (everything pushed). **Deadline:** Sun 11:59 pm PT.
 
-## What's done
-- **Redesign shipped, both journeys.** Start → guided intake (4 turns) → ⏸ *Here's what I understood* → parallel evidence → **Your plan**: direct answer · 1 outlook · 2 how the work may change · 3 what this means for you · 4 30 days / 6 months / 1 year · 5 other paths · 6 confidence & uncertainty · 7 ▸ how we reached this answer → ⏸ approve / edit / don't save.
-- **Student path** compares up to 3 careers in one run (parallel fan-out), with a comparison table and "our read". Example: Graphic Designers −1.7% (declining) vs UX Designers +6.0% (growing) vs Clinical Psychologists.
-- **BLS Employment Projections 2025–35** wired in (your download) → real *Demand: growing / stable / declining*, openings, entry education. Composites (Product Manager) show closest official categories as *labelled proxies* plus an explicit unknown.
-- **Task-diff multipliers are gone.** Three groups: *AI will probably assist* (fact, current use) · *may become more important* (low use + a stated reason — tagged interpretation) · *still uncertain*.
-- **Evals: 13/13** — both journeys, edit at gate 1, reject at each gate (no writes), Polymarket outage, conflicting forecasts, broken reviewer model, second-run deltas, plus a 5-point answer-quality rubric judged by the reviewer model. `20260829-002835.json` — one clean run, all fixes in. Median ≈ 3 min, ≈ $0.01/plan.
-- **UI verified end to end in Streamlit** (AppTest): professional composite through both gates and save; student 3-way through both gates with reject → nothing written.
-- Architecture diagram (`design/architecture-diagram.png`), project doc draft (`docs/PROJECT_DOC.md`), 5-minute video script (`docs/VIDEO_SCRIPT.md`), sample outputs (`samples/`).
+## What happened overnight
+You approved the student redesign ("do all of it"). It's built, both journeys, all phases:
 
-## Your Sunday, in order (~3 h)
-1. **Click through once yourself** (10 min): Product Manager path with your own week description; then the student path. If any wording jars, tell me — copy is cheap to change.
-2. **Record the video** (`docs/VIDEO_SCRIPT.md`, 5:00). Tip: run the PM path once before recording so caches are warm; the analysis step takes ~2–3 min — cut it or narrate over it. The student run is a good place to show the Polymarket outage badge (sidebar → *Simulate a source outage*).
-3. **Google Doc**: paste `docs/PROJECT_DOC.md` (it follows the handout's required sections: overview, datasets, prompts used, iterations, learnings) and drop in `design/architecture-diagram.png`. Add 2–3 screenshots. The "prompts used with Claude Code" section is written from this week's actual conversation.
-4. **Submit** the form: https://forms.gle/HMgTU7zy6UJ8XkJX6 — video, Google Doc, repo link. Deadline Sun 11:59 pm PT.
+- **Phase A (both journeys):** the reviewer now judges the *structured objects the UI renders* (no more Markdown shadow); horizon isn't hardcoded; reviewer failure is loud (UNVERIFIED banner, save warning, filename tag); certainty-wording lint; `*.sqlite-wal/-shm` ignored.
+- **Student interviewer:** one question at a time; code picks the next goal from coverage gaps and contradictions, the model only words it; five actions (I'm not sure · Skip · Recommend now · Ask me more · Edit an earlier answer); stops at 8–12 substantive answers or 14 max; nine-section *"Here's what I understand about you"* gate before any data is gathered.
+- **Candidates → evidence → cards:** 8–10 directions in three groups (+ *Your ideas, reconsidered* when the student named careers), each with a rationale citing the student's own words `[p:field:i]`; resolved to real occupations (composites capped at two); BLS outlook, entry education, task groups; structured review per card; **deterministic "practical mismatch"** lines when entry education exceeds the student's stated limit.
+- **Reactions → discriminators → shortlist → deep dive → what-ifs → save.** Ten-section deep dive with *Test this career before committing*; nothing written until the save gate.
+- **Evals:** professional 12/12 (g05 retired — superseded by the interviewer); student 24-case sweep with simulated students: **STUDENT_RESULT**.
 
-## Known limitations (say them in the doc; they're honest, not embarrassing)
-- Job-level statistics don't exist for composites; we show proxies and say so. The task-level data is exact.
-- "Other paths" is empty by design — no skill-similarity evidence in this run (roadmap: O*NET abilities/knowledge similarity; data is already in `data/raw/`).
-- Metaculus prices are gated for this account; Polymarket + Manifold carry the forecasts. Manifold is play-money; the UI never averages them.
-- A plan takes 2–4 min; the reviewer (thinking model) is most of it.
-- "Since your last plan" shows real deltas only when evidence actually moved between runs.
+## Your Sunday (~3 h)
+1. **Click through the student door yourself** (10 min). Try "I'm not sure" and "Edit an earlier answer". Tell me any wording that jars.
+2. **Record the video** — `docs/VIDEO_SCRIPT.md` (updated: 3:55 is the student beat). Pre-run both paths once so caches are warm; each full analysis is 5–9 min, so cut or narrate over the working panel.
+3. **Google Doc** — paste `docs/PROJECT_DOC.md`; drop in `design/architecture-diagram.png` (professional) and `design/architecture-student.png` (interviewer). Add 3–4 screenshots (interview turn · understanding gate · career cards · deep dive).
+4. **Submit** https://forms.gle/HMgTU7zy6UJ8XkJX6 — video, doc, repo.
+
+## Honest limitations (put them in the doc)
+- A student run takes 5–9 min and costs ~$0.07 (ten occupations of evidence + a thinking-model reviewer over ~150 lines).
+- The reviewer is strict: 15–30% of model-written lines are removed per run. Every removal is listed under *How we reached this*. That's the feature.
+- Composites (roles with no official category) show proxy outlook, labelled. "Other paths" in the professional plan stays empty — no skill-similarity evidence yet.
+- Metaculus prices are gated for this account; Polymarket + Manifold carry forecasts.
 
 ## If something breaks
-- `python run_cli.py --composite "Product Manager" --auto` reproduces the demo path in the terminal.
-- `python -m evals.run_golden g01` is a 3-minute health check.
-- Embedding caches (`data/processed/*.npy`) rebuild automatically on first run (~5 min).
+- `python run_cli.py --composite "Product Manager" --auto` — professional path in the terminal.
+- `PYTHONPATH=. python -m evals.run_student_evals s01` — one full student journey with a simulated student (~9 min).
+- Reviewer failures are logged to `data/processed/review_failures.log`.
