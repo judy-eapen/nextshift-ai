@@ -83,14 +83,14 @@ def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int, rol
 
 REVIEW_MEMO: dict = {}   # content-hash → (removed paths, status); process-local; same text + same sources ⇒ same verdicts. Never persisted.
 
-def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 24, max_tokens: int = 12000, workers: int = 4, role: str = "skeptic") -> tuple[dict, float, str]:
+def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_tokens: int = 12000, workers: int = 4, role: str = "skeptic") -> tuple[dict, float, str]:
     """items = [(index, listing_text)]. Batches run in parallel; a failed batch is retried once in halves. Any batch still failing → 'unverified' (loud).
     Raw output of a failing batch is written to data/processed/review_failures.log for diagnosis."""
     from concurrent.futures import ThreadPoolExecutor
     import pathlib as _pl, time as _t
     from . import diag
     verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None; _t0 = _t.perf_counter(); _buf: list = []
-    if role == "skeptic": batch = max(batch, 24)   # thinking model: each call spends ~6k reasoning tokens (~60 s) almost regardless of batch size — measured 2026-08-29 — so FEWER, larger batches are both faster and cheaper
+    if role == "skeptic": batch, workers = 12, 4   # thinking model, measured 2026-08-29 on g01: batch 8 → 145 s wall (8 calls, 48k reasoning tokens); batch 24 → 194 s (a 24-line call runs ~150 s); batch 12 × 4 workers → 95 s. Endpoint sustains ~4 concurrent calls.
     chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
     def one(chunk):
         diag.bind_collector(_buf)

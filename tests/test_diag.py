@@ -42,11 +42,12 @@ def test_worker_thread_events_are_collected_and_flushed():
     assert len(buf) == 1 and diag.FALLBACK == []
     diag.flush(buf); assert buf == [] and diag.FALLBACK[-1]["role"] == "skeptic"
 
-def test_thinking_reviewer_uses_few_large_batches(monkeypatch):
-    """Measured: a thinking-model review call costs ~6k reasoning tokens / ~60 s almost independent of batch size → fewest calls wins."""
+def test_thinking_reviewer_uses_measured_batch_size(monkeypatch):
+    """Measured on g01 (2026-08-29): batch 8 → 145 s, batch 24 → 194 s, batch 12 × 4 workers → 95 s. The thinking reviewer is pinned to 12."""
     from graph import review as rv
     seen = []
     def fake(chunk, system, max_tokens, role="skeptic"): seen.append(len(chunk)); return {j: {"verdict": "keep"} for j in range(len(chunk))}, 0.0
     monkeypatch.setattr(rv, "_judge_batch", fake)
-    rv.judge_lines([(i, f"line {i}") for i in range(40)], "sys", batch=8, role="skeptic"); assert seen == [24, 16]
+    rv.judge_lines([(i, f"line {i}") for i in range(40)], "sys", batch=8, role="skeptic"); assert seen == [12, 12, 12, 4]
+    seen.clear(); rv.judge_lines([(i, f"line {i}") for i in range(40)], "sys", batch=24, role="skeptic"); assert seen == [12, 12, 12, 4]
     seen.clear(); rv.judge_lines([(i, f"line {i}") for i in range(20)], "sys", batch=30, role="extractor"); assert seen == [20]
