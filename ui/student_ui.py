@@ -44,7 +44,7 @@ def screen_interview(S):
     st.markdown("<span class='kicker' style='color:%s'>Exploring careers</span>" % C["student"], unsafe_allow_html=True)
     if p["turn"] == 1:
         st.markdown("## Let's figure out what kinds of work might fit you.")
-        st.markdown(f"<p class='muted'>You don't need to know what career you want yet. I'll ask one question at a time — about 8 to 12 — and then show you what I understood before suggesting anything.<br><span class='small'>{BOUNDARY} Nothing you type is stored until you approve it at the end; a first name is plenty.</span></p>", unsafe_allow_html=True)
+        st.markdown(f"<p class='muted'>You don't need to know what career you want yet. I'll ask one question at a time — about 8 to 12 — and then show you what I understood before suggesting anything.<br><span class='small'>{BOUNDARY} Nothing is added to your saved record until you approve it at the end; while you work, your answers are kept in a resumable session file on this computer. A first name is plenty.</span></p>", unsafe_allow_html=True)
     col, side = st.columns([3, 1.3])
     with side:
         st.markdown(f"<span class='small'>Question {p['turn']} of about {p['max_turns']}</span>", unsafe_allow_html=True); st.progress(min(p["turn"] / p["max_turns"], 1.0))

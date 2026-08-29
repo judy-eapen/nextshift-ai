@@ -130,7 +130,7 @@ No multipliers. Three groups from *observed* penetration: **AI will probably ass
 ## Citation discipline
 Facts cite `[cNN]`; unknowns cite `[uNN]`; interpretive lines add `[interpretation]`; practical advice with no factual claim carries `[advice]` and is kept unchecked; any line with a number must cite. The skeptic (Qwen3-Next-80B Thinking) reviews `plan_md` line by line; >30% stripped → one rewrite → escalation banner.
 
-## Evaluation (evals/golden.json, 13 cases)
+## Evaluation (evals/golden.json, 12 cases — g05 retired 2026-08-29, superseded by the student interviewer; student journey: evals/student_golden.json, 24 cases)
 Professional clean match · PM composite · "Head of Product" needing clarification · low-exposure nurses (no fear words) · student 3-way comparison (must surface Graphic Designers −1.7%) · occupation with no projection · Polymarket disabled · conflicting forecasts · edit at gate 1 changes horizon · reject at gate 1 (0 tool calls) · reject at gate 2 (no file, no snapshot) · broken skeptic model (fallback flagged) · second run computes deltas. Plus a 5-point answer-quality rubric judged by the reviewer model.
 
 ---

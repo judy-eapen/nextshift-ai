@@ -1,6 +1,6 @@
 # NextShift AI — Week 3 project documentation
 *Maven · Mastering Agentic AI · Week 3 "Build Your AI Agent" · Judy Darvin · submitted 2026-08-30*
-*Paste into the Google Doc; sections follow the handout's required list (overview · datasets · prompts used · iterations · learnings). Diagram: `design/architecture-diagram.png`. Repo: https://github.com/judy-eapen/nextshift-ai*
+*Paste into the Google Doc; sections follow the handout's required list (overview · datasets · prompts used · iterations · learnings). Diagrams: `design/architecture-diagram.png` (professional) · `design/architecture-student.png` (student interviewer). Repo: https://github.com/judy-eapen/nextshift-ai*
 
 ---
 
@@ -28,7 +28,7 @@
 | **Never does** | Guarantee a job is safe or doomed · state a number not on a card · turn "AI is used for this task today" into "this task is automated" · infer a task "grows" from low AI usage · average disagreeing forecasts · invent a course or product · write anything before the plan gate. |
 | **Human in the loop** | Professional: gate 1 (understanding) before any tool spend; gate 2 (plan) before save. Student: every interview question is an interrupt (answer · not sure · skip · recommend now · ask more · edit earlier), then the understanding gate, reactions, discriminating questions, shortlist choices, exploration and a save gate — seven interrupt kinds on one thread. All are LangGraph `interrupt`s resumed with `Command(resume=…)`. |
 | **When something breaks** | Every tool returns `SourceResult(ok, cards, error, unknowns)` — never raises. Retry ×2 with backoff; then the source is marked *unavailable* and the plan carries a "Partial evidence" badge. No forecast → a cited *unknown*, never a number. Reviewer model down → citation-only check, flagged in the UI. Budget: 40 tool calls / $1. |
-| **How I know it worked** | 13-case golden set, both journeys, run end to end through both gates: ≥N cards, zero uncited factual lines, correct demand reading, unknowns/disagreements surfaced where expected, no write before approval, <10 min — plus a 5-point answer-quality rubric judged by the reviewer model (answers every concern · facts kept apart from interpretation · no guarantees · no invented products · concrete 30-day actions). **Result: 13/13 after two prompt fixes; median ~3 min; ~$0.01 per plan.** |
+| **How I know it worked** | 12-case professional golden set plus a 24-case student sweep, both journeys, run end to end through both gates: ≥N cards, zero uncited factual lines, correct demand reading, unknowns/disagreements surfaced where expected, no write before approval, <10 min — plus a 5-point answer-quality rubric judged by the reviewer model (answers every concern · facts kept apart from interpretation · no guarantees · no invented products · concrete 30-day actions). **Result: professional 12/12 after two prompt fixes (median ~3 min; ~$0.01 per plan); student 24/24 (median ~9–10 min; ~$0.07 per exploration).** |
 
 ## 3. Architecture
 
@@ -81,7 +81,7 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 | 7 | Scenario tree as the result | Users couldn't find the answer | Answer-first plan; forecasts demoted to conditional context in §6 |
 | 8 | Worldview gate (edit forecast anchors) | Asked the user to approve concepts they don't have | Understanding gate: confirm what the agent understood *about them*, before any tool spend |
 | 9 | Reviewer stripped 52% of the student plan | Bug: refs above `c99` didn't match a 2-digit regex | Fixed; strip rate fell to 0–3% |
-| 10 | Eval rubric said 30-day plans weren't actionable | Judge saw only the first 6,000 chars — never reached §4 | Pass the whole plan to the judge; 13/13 |
+| 10 | Eval rubric said 30-day plans weren't actionable | Judge saw only the first 6,000 chars — never reached §4 | Pass the whole plan to the judge; all cases pass |
 | 11 | Student intake as a 4-turn form asking for careers | Students who don't know were stuck | Adaptive interviewer: code picks the goal by coverage gap and contradictions, model words the question |
 | 12 | Question writer told to "build on what they said" | Riffed on one moment for eight turns; constraints never asked | Topic lock: base question per goal, ≤8-word lead-in |
 | 13 | Reviewer judged a Markdown shadow while the UI showed the structured object | Removed claims could still appear on screen | Structured review: flatten → judge → delete in the object the UI renders; export generated afterwards |
@@ -99,11 +99,11 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 
 ## 8. Evaluation results (evals/results/)
 
-**Student journey (24 cases, simulated students):** see `evals/student_golden.json` — no career ideas · three careers in mind · "I don't know" ×5 · recommend early · ask for more · edit the summary · correct an earlier answer · strict cost constraint · likes a field but dislikes its daily work · claimed vs demonstrated strengths · composite role · declining demand with many openings · BLS unavailable · Polymarket down · reviewer model down · reject profile · reject save · no write before approval · removed content absent from the UI · feedback changes the shortlist · concrete experiments · exploration preserves decisions · max turns · professional regression. Result: ****24/24** across the sweeps (17 in the parallel sweep on current code, 7 rerun serially after a process stall; every case passes its deterministic checks and, where judged, the 5-point rubric). Median ≈ 9–10 min and ≈ $0.07 per full exploration when run alone; parallel runs share one Nebius endpoint and slow each other down — run evals with `EVAL_WORKERS=1` for timing.** (≈ $0.06 and 8–10 min per full exploration).
+**Student journey (24 cases, simulated students):** see `evals/student_golden.json` — no career ideas · three careers in mind · "I don't know" ×5 · recommend early · ask for more · edit the summary · correct an earlier answer · strict cost constraint · likes a field but dislikes its daily work · claimed vs demonstrated strengths · composite role · declining demand with many openings · BLS unavailable · Polymarket down · reviewer model down · reject profile · reject save · no write before approval · removed content absent from the UI · feedback changes the shortlist · concrete experiments · exploration preserves decisions · max turns · professional regression. Result: **24/24** across the sweeps (17 in the parallel sweep on current code, 7 rerun serially after a process stall; every case passes its deterministic checks and, where judged, the 5-point rubric). Median ≈ 9–10 min and ≈ $0.07 per full exploration when run alone; parallel runs share one Nebius endpoint and slow each other down — run evals with `EVAL_WORKERS=1` for timing.
 
 **Professional journey (12 cases):**
 
-13 cases · both journeys · both gates · failure injection · memory. First pass 9/13; after fixing the ref regex, the rubric truncation, and the plan prompt: **13/13**. Median ≈ 3 min per plan, ≈ $0.01 per plan on open-weight models. Details: `evals/golden.json`, `evals/run_golden.py`, `graph/DESIGN.md`.
+12 cases · both gates · failure injection · memory (originally 13; g05, the old student 3-way comparison, was retired when the interviewer superseded it). First pass 9/13; after fixing the ref regex, the rubric truncation, and the plan prompt: **12/12**. Median ≈ 3 min per plan, ≈ $0.01 per plan on open-weight models. Details: `evals/golden.json`, `evals/run_golden.py`, `graph/DESIGN.md`.
 
 ## 9. Roadmap (one slide)
 

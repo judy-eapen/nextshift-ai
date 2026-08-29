@@ -6,7 +6,7 @@ flowchart TB
     PLAN["Your plan<br/>1 outlook · 2 how the work changes · 3 for you<br/>4 30d / 6m / 1y · 5 other paths · 6 confidence<br/>7 ▸ how we reached this answer"]
   end
 
-  subgraph GRAPH["LangGraph supervisor · SQLite checkpointer · LangSmith tracing"]
+  subgraph GRAPH["LangGraph supervisor · SQLite checkpointer · LangSmith tracing (developer mode only)"]
     RES["Occupation resolver (pre-graph)<br/>exact title → semantic → composite from 18K task statements"]
     UND["understand · PLANNER<br/>restate the person in plain words"]
     HITL1{{"⏸ Understanding gate<br/>confirm / edit / reject · zero tool spend before this"}}
@@ -20,7 +20,7 @@ flowchart TB
     REC["reconcile (code)<br/>dedupe · refs · disagreements · unknowns · deltas vs snapshot"]
     OUT["write_outlook<br/>demand from BLS only · AI change = labelled interpretation<br/>3 task groups: assists · more important · uncertain"]
     WP["write_plan · PLANNER<br/>direct answer · for you · 30/6/12 · comparison (students) · confidence"]
-    SKEP["skeptic · different model family<br/>line-by-line: facts need cards · interpretation tagged · advice labelled"]
+    SKEP["skeptic · different model family<br/>code strips uncited lines first · model judges the rest in batches<br/>reviewer failure → UNVERIFIED (loud)"]
     HITL2{{"⏸ Plan gate<br/>approve / edit / reject"}}
     RECD["record · the only writer<br/>plan file · evidence snapshot · profile"]
   end
@@ -46,7 +46,7 @@ flowchart TB
   HITL2 -- approve / edit --> RECD --> MEM
   HITL2 -- reject --> END2((end · nothing written))
   MEM -. "next run: since your last plan" .-> REC
-  GATHER -- "read-only tool calls · retry ×2 · unavailable = badge, not a crash" --> SRC
+  GATHER -- "read-only tool calls · a failed source = partial-evidence badge, not a crash" --> SRC
 
   classDef human fill:#E5A24A,stroke:#8a5a10,color:#111
   classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
