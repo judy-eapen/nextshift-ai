@@ -101,6 +101,10 @@ def screen_results(S):
     if v.get("review_status") == "unverified": st.error("Our independent review step failed, so these cards were checked for citations only — not for accuracy. Treat them as a draft.")
     st.markdown(" ".join(f"<span class='badge'>{b}</span>" for b in v["badges"]), unsafe_allow_html=True)
     st.markdown(f"<p class='small'>{BOUNDARY}</p>", unsafe_allow_html=True)
+    if not any(v["groups"].values()):
+        st.warning("I couldn't put together career directions this time (the generation step failed). Nothing was saved.")
+        if st.button("Try again from my profile"): route(S, run(S, Command(resume={"action": "back_to_understanding"})))
+        if st.button("Stop"): route(S, run(S, Command(resume={"action": "stop"}))); return
     reactions = {}
     for g, cs in v["groups"].items():
         if not cs: continue

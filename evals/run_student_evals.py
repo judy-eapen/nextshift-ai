@@ -114,10 +114,14 @@ def run_case(g_):
             "shortlist": [c["label"] for c in cands if c["key"] in (st.get("shortlist") or [])], "cost_usd": round(st.get("cost_usd") or 0, 4), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "pass": all(checks.values())}
 
 def main():
-    golden = json.loads((ROOT / "evals/student_golden.json").read_text()); ids = set(sys.argv[1:]); results = []
-    for g_ in [g for g in golden if not ids or g["id"] in ids]:
-        print(f"▶ {g_['id']} {g_['name']} …", end=" ", flush=True); r = run_case(g_); results.append(r)
-        print(f"{'PASS' if r['pass'] else 'FAIL'} {r['seconds']}s turns={r['turns']} cands={r['candidates']} stripped={r['stripped']} review={r['review_status']} ${r['cost_usd']}" + (f" ERR {r['error'][:120]}" if r["error"] else "") + ("" if r["pass"] else f"  failed: {[k for k, v in r['checks'].items() if not v]}"), flush=True)
+    from concurrent.futures import ThreadPoolExecutor
+    golden = json.loads((ROOT / "evals/student_golden.json").read_text()); ids = set(sys.argv[1:]); todo = [g for g in golden if not ids or g["id"] in ids]; results = []
+    workers = int(os.environ.get("EVAL_WORKERS", "3"))
+    def one(g_):
+        r = run_case(g_)
+        print(f"▶ {g_['id']} {g_['name']} … {'PASS' if r['pass'] else 'FAIL'} {r['seconds']}s turns={r['turns']} cands={r['candidates']} stripped={r['stripped']} review={r['review_status']} ${r['cost_usd']}" + (f" ERR {r['error'][:120]}" if r["error"] else "") + ("" if r["pass"] else f"  failed: {[k for k, v in r['checks'].items() if not v]}"), flush=True)
+        return r
+    with ThreadPoolExecutor(max_workers=workers) as ex: results = list(ex.map(one, todo))
     out = ROOT / "evals/results"; out.mkdir(exist_ok=True); path = out / f"student_{time.strftime('%Y%m%d-%H%M%S')}.json"
     summary = {"passed": sum(r["pass"] for r in results), "total": len(results), "median_seconds": sorted(r["seconds"] for r in results)[len(results) // 2] if results else None, "total_cost_usd": round(sum(r["cost_usd"] for r in results), 4)}
     path.write_text(json.dumps({"summary": summary, "results": results}, indent=2)); print(f"\n■ {summary['passed']}/{summary['total']} · median {summary['median_seconds']}s · ${summary['total_cost_usd']} · {path}")

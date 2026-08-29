@@ -30,7 +30,7 @@ def build_student_graph(checkpointer=None):
     g.add_conditional_edges("resolve_candidates", x.fan_out_candidates, GATHERERS)
     for gname in GATHERERS: g.add_edge(gname, "reconcile")
     g.add_edge("reconcile", "write_outlook"); g.add_edge("write_outlook", "analyze_fit"); g.add_edge("analyze_fit", "review_cards"); g.add_edge("review_cards", "render_results"); g.add_edge("render_results", "reaction_gate")
-    g.add_conditional_edges("reaction_gate", x.after_reactions, {"update": "update_from_reactions", "end": END})
+    g.add_conditional_edges("reaction_gate", x.after_reactions, {"update": "update_from_reactions", "end": END, "regen": "generate_candidates"})
     g.add_edge("update_from_reactions", "discriminate")
     g.add_conditional_edges("discriminate", x.after_discriminate, {"ask": "discriminator_gate", "shortlist": "build_shortlist"})
     g.add_edge("discriminator_gate", "apply_discriminators"); g.add_edge("apply_discriminators", "build_shortlist"); g.add_edge("build_shortlist", "shortlist_gate")

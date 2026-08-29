@@ -30,9 +30,11 @@ Never infer from gender, race, background or school. No personality labels. Pref
 Return {"candidates":[{"label":"...","search_title":"O*NET-style title","group":"strong|explore|unexpected","needs_composite":false,"rationale":{"matches_interests":["..."],"uses_strengths":["..."],"fits_preferences":["..."],"constraints_ok":["..."],"constraints_conflict":["..."],"why_included":"...","poor_fit_if":"..."}}]}"""
 
 def generate_candidates(state: StudentState) -> dict:
-    prof = state["profile"]
-    try: out, cost = llm.chat_json("planner", GEN_SYS, _profile_table(prof), max_tokens=3500, temperature=0.4)
-    except Exception as e: out, cost = {"candidates": []}, 0.0; _say(f"Candidate generation failed: {e}")
+    prof = state["profile"]; out, cost = {"candidates": []}, 0.0
+    for attempt, (mt, extra) in enumerate([(7000, ""), (7000, "\nKeep every rationale line under 20 words and produce at most 8 candidates so the JSON stays short and valid.")]):
+        try: out, c_ = llm.chat_json("planner", GEN_SYS + extra, _profile_table(prof), max_tokens=mt, temperature=0.4 if attempt == 0 else 0.2); cost += c_; break
+        except Exception as e: _say(f"Candidate generation attempt {attempt + 1} failed ({type(e).__name__}) — retrying" if attempt == 0 else f"Candidate generation failed twice: {e}")
+    if not out.get("candidates"): out = {"candidates": []}
     cands = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:MAX_CANDIDATES]
     for i, c in enumerate(cands): c["key"] = f"k{i+1}"; c.setdefault("group", "explore"); c.setdefault("rationale", {})
     _say(f"Thought of {len(cands)} directions: {sum(c['group']=='strong' for c in cands)} strong · {sum(c['group']=='explore' for c in cands)} worth exploring · {sum(c['group']=='unexpected' for c in cands)} unexpected")
@@ -67,6 +69,7 @@ def resolve_candidates(state: StudentState) -> dict:
             soc = c["persona"]["soc"]; seen_soc[soc] = seen_soc.get(soc, 0) + 1
             if seen_soc[soc] > 2: c["persona"] = None; c["resolution"] = "dropped (duplicate occupation)"
     keep = [c for c in cands if c.get("persona")]
+    if not keep: _say("⚠ I couldn't produce career directions this time — you'll see an empty results screen with a retry option")
     _say(f"Matched {len(keep)} directions to official occupations" + (f" ({sum(c['resolution']=='composite' for c in keep)} assembled as composites)" if any(c['resolution']=='composite' for c in keep) else ""))
     return {"candidates": keep, "targets": [{"persona": c["persona"], "role": "candidate"} for c in keep]}
 
@@ -206,7 +209,7 @@ def reaction_gate(state: StudentState) -> dict:
     action = d.get("action", "continue"); rx = [r for r in d.get("reactions", []) if r.get("key")]
     return {"reactions": rx, "last_action": action, "approvals": {**state.get("approvals", {}), "reactions": {"action": action, "at": time.time(), "n": len(rx)}}}
 
-def after_reactions(state: StudentState) -> str: return "end" if state["last_action"] == "stop" else "update"
+def after_reactions(state: StudentState) -> str: return "end" if state["last_action"] == "stop" else "regen" if state["last_action"] == "back_to_understanding" else "update"
 
 RX_SYS = """A student reacted to career cards. For each reaction with a 'why', extract what it reveals about the student — as profile evidence — exactly like the interview updater:
 {"add": {"<field>": [{"value": "...", "quote": "their words", "kind": "stated"}]}, "pidth": {...only informed keys...}, "notes": ["one line per reaction on what it separates: e.g. 'likes psychology for the one-on-one, not the research'"]}

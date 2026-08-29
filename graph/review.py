@@ -10,12 +10,12 @@ TAGS = ("[interpretation]", "[advice]")
 # deterministic lint: certainty about the future is never allowed, regardless of citations
 CERTAINTY = re.compile(r"\b(will be (automated|replaced|eliminated)|will disappear|will vanish|is safe from AI|guaranteed|100% safe|doomed|obsolete)\b", re.I)
 
-PARAGRAPH_KEYS = ("direct_answer", "for_you", "our_read", "outlook_takeaway", "why_fit", "what_work_is_like", "summary")
+PARAGRAPH_KEYS = ("direct_answer", "for_you", "our_read", "outlook_takeaway", "why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "note", "what_people_do", "education_and_entry", "outlook", "how_ai_may_change", "risks_tradeoffs_uncertainty", "summary")
 _SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z“\"(])")
 
 def split_sentences(text: str) -> list[str]: return [x for x in _SENT.split(text.strip()) if x.strip()]
 
-def flatten(obj: Any, path: str = "", out: list | None = None, skip_keys=("card_id", "ref", "soc", "url", "id", "key", "penetration", "task")) -> list[tuple[str, str]]:
+def flatten(obj: Any, path: str = "", out: list | None = None, skip_keys=("card_id", "ref", "soc", "url", "id", "key", "penetration", "task", "label", "group", "title", "name", "resolution", "kind", "verdict", "separates")) -> list[tuple[str, str]]:
     """Every non-empty string leaf that is a *claim* (skip identifiers and verbatim task statements, which come from cards).
     Paragraph fields are emitted one sentence at a time as path#i, so one bad sentence doesn't take the paragraph with it."""
     out = [] if out is None else out
