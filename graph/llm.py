@@ -28,6 +28,11 @@ def chat(role: str, system: str, user: str, temperature: float = 0.2, max_tokens
 def chat_json(role: str, system: str, user: str, **kw) -> tuple[dict | list, float]:
     """Ask for JSON, tolerate fences/preamble. Raises ValueError if unparseable (caller decides how to degrade)."""
     text, cost = chat(role, system + "\nRespond with valid JSON only — no prose, no markdown fences.", user, **kw)
-    m = re.search(r"(\{.*\}|\[.*\])", text, flags=re.S)
-    if not m: raise ValueError(f"no JSON in model output: {text[:200]}")
-    return json.loads(m.group(1)), cost
+    start = min([i for i in (text.find("{"), text.find("[")) if i >= 0], default=-1)
+    if start < 0: raise ValueError(f"no JSON in model output: {text[:200]}")
+    try: obj, _ = json.JSONDecoder().raw_decode(text[start:])          # first complete object; ignores trailing chatter
+    except json.JSONDecodeError:
+        m = re.search(r"(\{.*\}|\[.*\])", text, flags=re.S)
+        if not m: raise
+        obj = json.loads(m.group(1))
+    return obj, cost

@@ -202,7 +202,7 @@ def write_outlook(state: State) -> dict:
             out, c_ = llm.chat_json("planner", OUTLOOK_SYS, f"Occupation: {p['title']}. Demand reading from projections: {demand}. Share of tasks with heavy AI use: {share:.0%}.\nEvidence:\n{_table(mine, refs)}", max_tokens=400); cost += c_
             interp = [l for l in out.get("lines", []) if isinstance(l, str)][:3]
         except Exception: interp = []
-        outlooks[occ] = {"soc": occ, "title": p["title"], "demand_reading": demand, "ai_change_reading": change, "facts": facts, "interpretation": interp, "education_entry": edu.claim.split(": ", 1)[-1] if edu else None, "proxy_note": proxy}
+        outlooks[occ] = {"soc": occ, "title": p["title"], "demand_reading": demand, "ai_change_reading": change, "facts": facts, "interpretation": interp, "education_entry": edu.claim.split("entry: ", 1)[-1].split(";")[0] if edu else None, "proxy_note": proxy}
         changes[occ] = _work_change(occ, tasks, inv)
         _say(f"{p['title']}: demand {demand} (BLS projection) · AI-related change {change} (interpretation)")
     for occ, ch in changes.items():
@@ -257,6 +257,8 @@ def write_plan(state: State) -> dict:
     try: plan, cost = llm.chat_json("planner", PLAN_SYS, user, max_tokens=3200, temperature=0.3)
     except Exception as e: plan, cost = {"direct_answer": f"(the planner failed: {e})", "d30": [], "m6": [], "y1": [], "confidence": {}}, 0.0
     if p.get("door") != "student": plan["comparison"], plan["our_read"] = [], ""
+    for key in ("d30", "m6", "y1"):   # practical advice with no factual claim is labelled, not fact-checked — on the structured object the reviewer sees
+        plan[key] = [b + ("" if re.search(r"\[[cu]\d{2,3}\]|\[interpretation\]|\[advice\]", b) else " [advice]") for b in (plan.get(key) or []) if isinstance(b, str)]
     _say("Wrote your plan — now every line gets checked against the evidence")
     return {"plan": plan, "cost_usd": cost}
 
@@ -323,15 +325,9 @@ def skeptic(state: State) -> dict:
         to_check.append((p, t, [r for r in rv.REF.findall(t) if r in refs]))
     verdicts, cost, status = {}, 0.0, "verified"
     if to_check:
-        listing = "\n\n".join(f"{i}. {t}\n   cards: " + " | ".join(f"[{r}] {cards[refs[r]].claim} (value {cards[refs[r]].value} {cards[refs[r]].unit})" for r in cited if refs[r] in cards) for i, (p, t, cited) in enumerate(to_check))
-        try:
-            text, cost = llm.chat("skeptic", SKEPTIC_SYS + "\nRespond with valid JSON only.", listing, max_tokens=14000, temperature=0.0)
-            try: verdicts = {int(v["i"]): v for v in json.loads(re.search(r"\{.*\}", text, flags=re.S).group(0)).get("verdicts", []) if "i" in v}
-            except Exception:
-                verdicts = {int(i): {"verdict": v, "reason": (r or "")[:200]} for i, v, r in re.findall(r'"i"\s*:\s*(\d+)\s*,\s*"verdict"\s*:\s*"(keep|strip)"(?:\s*,\s*"reason"\s*:\s*"([^"]*))?', text)}
-                if not verdicts: raise ValueError("no verdicts parseable")
-        except Exception as e:
-            status = "unverified"; _say(f"⚠ Reviewer model failed ({type(e).__name__}) — cards were checked for citations only, NOT for accuracy")
+        items = [(i, f"{t}\n   cards: " + " | ".join(f"[{r}] {cards[refs[r]].claim} (value {cards[refs[r]].value} {cards[refs[r]].unit})" for r in cited if refs[r] in cards)) for i, (p, t, cited) in enumerate(to_check)]
+        verdicts, cost, status = rv.judge_lines(items, SKEPTIC_SYS)
+        if status == "unverified": _say(f"⚠ Reviewer model failed ({rv.judge_lines.last_error}) — cards were checked for citations only, NOT for accuracy")
     for i, (p, t, _) in enumerate(to_check):
         v = verdicts.get(i, {"verdict": "keep", "reason": "cited; reviewer did not object" if status == "verified" else "UNVERIFIED — reviewer unavailable"})
         if v.get("verdict") == "strip": removed.append({"path": p, "sentence": t, "reason": v.get("reason", "")})

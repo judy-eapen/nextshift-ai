@@ -1,20 +1,42 @@
-"""Compile the student graph. Phase B: interview loop → understanding gate (confirm → END placeholder until Phase C adds candidates)."""
+"""Compile the student graph: interview loop → ⏸ understanding → candidates → evidence (parallel) → fit → review → ⏸ results/reactions →
+discriminators → shortlist → ⏸ shortlist gate → deep dive → ⏸ explore → … → ⏸ save → record. One graph, one thread, several interrupts."""
 from __future__ import annotations
 from langgraph.graph import StateGraph, START, END
 from .student import StudentState
-from . import student as s
+from . import student as s, student_explore as x, nodes as n
 from .build import sqlite_checkpointer
 
-def build_student_graph(checkpointer=None, phase_c=None):
+GATHERERS = ["gather_forecasts", "gather_research", "gather_outlook", "gather_exposure"]
+
+def build_student_graph(checkpointer=None):
     g = StateGraph(StudentState)
     for name, fn in [("init_interview", s.init_interview), ("select_question", s.select_question), ("interview_gate", s.interview_gate), ("update_profile", s.update_profile),
-                     ("evaluate_completeness", s.evaluate_completeness), ("render_understanding", s.render_understanding), ("understanding_gate", s.understanding_gate)]:
+                     ("evaluate_completeness", s.evaluate_completeness), ("render_understanding", s.render_understanding), ("understanding_gate", s.understanding_gate),
+                     ("generate_candidates", x.generate_candidates), ("resolve_candidates", x.resolve_candidates),
+                     ("gather_forecasts", n.gather_forecasts), ("gather_research", n.gather_research), ("gather_outlook", n.gather_outlook), ("gather_exposure", n.gather_exposure),
+                     ("reconcile", n.reconcile), ("write_outlook", n.write_outlook), ("analyze_fit", x.analyze_fit), ("review_cards", x.review_cards), ("render_results", x.render_results),
+                     ("reaction_gate", x.reaction_gate), ("update_from_reactions", x.update_from_reactions), ("discriminate", x.discriminate), ("discriminator_gate", x.discriminator_gate), ("apply_discriminators", x.apply_discriminators),
+                     ("build_shortlist", x.build_shortlist), ("shortlist_gate", x.shortlist_gate), ("deep_dive", x.deep_dive), ("explore_gate", x.explore_gate), ("explore", x.explore),
+                     ("save_gate", x.save_gate), ("record", x.record)]:
         g.add_node(name, fn)
+    # interview loop
     g.add_edge(START, "init_interview"); g.add_edge("init_interview", "select_question"); g.add_edge("select_question", "interview_gate")
     g.add_edge("interview_gate", "update_profile"); g.add_edge("update_profile", "evaluate_completeness")
     g.add_conditional_edges("evaluate_completeness", s.after_completeness, {"ask": "select_question", "understanding": "render_understanding"})
     g.add_edge("render_understanding", "understanding_gate")
-    targets = {"back": "select_question", "end": END, "candidates": END}
-    if phase_c: phase_c(g); targets["candidates"] = "generate_candidates"
-    g.add_conditional_edges("understanding_gate", s.after_understanding, targets)
+    g.add_conditional_edges("understanding_gate", s.after_understanding, {"back": "select_question", "end": END, "candidates": "generate_candidates"})
+    # candidates → evidence → cards
+    g.add_edge("generate_candidates", "resolve_candidates")
+    g.add_conditional_edges("resolve_candidates", x.fan_out_candidates, GATHERERS)
+    for gname in GATHERERS: g.add_edge(gname, "reconcile")
+    g.add_edge("reconcile", "write_outlook"); g.add_edge("write_outlook", "analyze_fit"); g.add_edge("analyze_fit", "review_cards"); g.add_edge("review_cards", "render_results"); g.add_edge("render_results", "reaction_gate")
+    g.add_conditional_edges("reaction_gate", x.after_reactions, {"update": "update_from_reactions", "end": END})
+    g.add_edge("update_from_reactions", "discriminate")
+    g.add_conditional_edges("discriminate", x.after_discriminate, {"ask": "discriminator_gate", "shortlist": "build_shortlist"})
+    g.add_edge("discriminator_gate", "apply_discriminators"); g.add_edge("apply_discriminators", "build_shortlist"); g.add_edge("build_shortlist", "shortlist_gate")
+    g.add_conditional_edges("shortlist_gate", x.after_shortlist, {"deep_dive": "deep_dive", "explore": "explore", "results": "render_results", "save": "save_gate", "end": END})
+    g.add_edge("deep_dive", "explore_gate")
+    g.add_conditional_edges("explore_gate", x.after_explore, {"save": "save_gate", "end": END, "shortlist": "shortlist_gate", "deep_dive": "deep_dive", "results": "render_results", "explore": "explore"})
+    g.add_edge("explore", "shortlist_gate")
+    g.add_conditional_edges("save_gate", x.after_save, {"record": "record", "end": END}); g.add_edge("record", END)
     return g.compile(checkpointer=checkpointer or sqlite_checkpointer())

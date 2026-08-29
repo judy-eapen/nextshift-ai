@@ -67,3 +67,30 @@ def classify(text: str, refs: dict) -> str:
     return "fact"
 
 def certainty_violation(text: str) -> bool: return bool(CERTAINTY.search(text))
+
+
+def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int) -> tuple[dict, float]:
+    import json as _json
+    from . import llm
+    local = {j: idx for j, (idx, _) in enumerate(chunk)}
+    listing = "\n\n".join(f"{j}. {txt}" for j, (_, txt) in enumerate(chunk))
+    text, c = llm.chat("skeptic", system + "\nRespond with valid JSON only: {\"verdicts\":[{\"i\":0,\"verdict\":\"keep\",\"reason\":\"...\"}]}", listing, max_tokens=max_tokens, temperature=0.0)
+    try: got = {int(v["i"]): v for v in _json.loads(re.search(r"\{.*\}", text, flags=re.S).group(0)).get("verdicts", []) if "i" in v}
+    except Exception:
+        got = {int(i): {"verdict": v, "reason": (rs or "")[:200]} for i, v, rs in re.findall(r'"i"\s*:\s*(\d+)\s*,\s*"verdict"\s*:\s*"(keep|strip)"(?:\s*,\s*"reason"\s*:\s*"([^"]*))?', text)}
+        if not got: raise ValueError(f"no verdicts parseable; raw: {text[:160]!r}")
+    return {local[j]: v for j, v in got.items() if j in local}, c
+
+def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 20, max_tokens: int = 12000) -> tuple[dict, float, str]:
+    """items = [(index, listing_text)]. Calls the reviewer in batches; a failed batch is retried once in halves. Any batch still failing → status 'unverified' (loud)."""
+    verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None
+    for b in range(0, len(items), batch):
+        chunk = items[b:b + batch]
+        try: got, c = _judge_batch(chunk, system, max_tokens); verdicts.update(got); cost += c
+        except Exception as e:
+            judge_lines.last_error = f"{type(e).__name__}: {str(e)[:200]}"
+            for half in (chunk[: len(chunk) // 2 or 1], chunk[len(chunk) // 2 or 1:]):
+                if not half: continue
+                try: got, c = _judge_batch(half, system, max_tokens); verdicts.update(got); cost += c
+                except Exception as e2: status = "unverified"; judge_lines.last_error = f"{type(e2).__name__}: {str(e2)[:200]}"
+    return verdicts, cost, status

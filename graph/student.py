@@ -38,7 +38,7 @@ class StudentState(TypedDict, total=False):
     door: str; thread_id: str; first_name: str
     profile: StudentProfile; turns: list[Turn]; completeness: dict; max_turns: int; last_action: str; pending: dict
     # later phases (C–E) reuse the professional gatherers, so the same reducers live here
-    candidates: list[dict]; reactions: list[dict]; discriminators: list[Turn]; shortlist: list[str]; rejected: list[dict]; selected: Optional[str]; deep_dive: dict
+    targets: list[dict]; candidates: list[dict]; reactions: list[dict]; discriminators: list[Turn]; shortlist: list[str]; rejected: list[dict]; selected: Optional[str]; deep_dive: dict
     experiments_planned: list[str]; exploration_log: list[dict]
     evidence: Annotated[list[Card], operator.add]; unknowns: Annotated[list[str], operator.add]; errors: Annotated[list[str], operator.add]
     source_status: Annotated[dict, merge_dicts]; tool_calls: Annotated[int, operator.add]; cost_usd: Annotated[float, operator.add]
