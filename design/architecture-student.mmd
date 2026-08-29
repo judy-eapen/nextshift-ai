@@ -1,0 +1,35 @@
+flowchart TB
+  subgraph UI["Streamlit · NextShift AI · student door"]
+    direction LR
+    S0["Start<br/>“You don't need to know what career you want yet”"]
+    S1["Interview · one question at a time<br/>Send · I'm not sure · Skip · Recommend now · Ask me more · Edit an earlier answer"]
+    S4["Career directions · 3 groups · reactions 😀 🤔 ✕ + why"]
+    S7["Shortlist · 8 dimensions shown separately · Our read (interpretation)"]
+    S8["Deep dive · 10 sections incl. Test this career"]
+  end
+  subgraph G["LangGraph · one graph, one thread, seven interrupts · SQLite checkpointer"]
+    direction TB
+    INIT["init_interview"] --> SQ["select_question<br/>code picks the goal · model words it"] --> IG{{"⏸ interview_gate"}} --> UP["update_profile<br/>Evidence{value, quote, turn, kind}"] --> EC["evaluate_completeness (code)<br/>core coverage · contradictions · ≤14 turns"]
+    EC -- "not ready" --> SQ
+    EC -- "ready / recommend / max" --> RU["render_understanding · 9 sections"] --> UG{{"⏸ understanding_gate<br/>confirm · edit · back · reject"}}
+    UG -- back --> SQ
+    UG -- reject --> E1((end · nothing written))
+    UG -- confirm --> GC["generate_candidates · 8–10 · cited rationale"] --> RC["resolve_candidates<br/>exact → semantic → composite"]
+    RC -- "Send × candidate" --> GATH["gather_outlook · gather_exposure<br/>+ forecasts · research"] --> REC["reconcile"] --> WO["write_outlook · 3 task groups"] --> AF["analyze_fit · card prose"] --> RV1["review_cards · structured, batched"] --> RR["render_results"] --> RG{{"⏸ reaction_gate"}}
+    RG --> UR["update_from_reactions · why → profile"] --> DI["discriminate · 0–2 questions"] --> DG{{"⏸ discriminator_gate"}} --> BS["build_shortlist · reviewed"] --> SG{{"⏸ shortlist_gate<br/>pick · what-if · back · save"}}
+    DI -- none needed --> BS
+    SG -- pick --> DD["deep_dive · reviewed · test_this_career"] --> XG{{"⏸ explore_gate<br/>what-if · compare · back · save"}}
+    SG -- what-if --> EX["explore · reorder · add constraint · log"] --> SG
+    XG -- what-if --> EX
+    XG -- save --> SV{{"⏸ save_gate"}} --> RECD["record · the only writer<br/>profile · shortlist · reactions · experiments · snapshot"]
+    SV -- reject --> E2((end · nothing written))
+  end
+  S0 --> INIT
+  IG -.-> S1
+  RG -.-> S4
+  SG -.-> S7
+  XG -.-> S8
+  classDef human fill:#E5A24A,stroke:#8a5a10,color:#111
+  classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
+  class IG,UG,RG,DG,SG,XG,SV human
+  class RECD write
