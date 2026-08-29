@@ -126,11 +126,26 @@ def analyze_fit(state: StudentState) -> dict:
     user = f"PROFILE REFS:\n{_profile_table(prof)}\n\nCANDIDATES:\n" + "\n\n".join(blocks) + f"\n\nForecast context: {state.get('forecast_context')}\nUnknowns: {state.get('unknowns')}\n\nEvidence table:\n{N._table(state['evidence'], refs)}"
     try: out, cost = llm.chat_json("planner", FIT_SYS, user, max_tokens=6000, temperature=0.3); cards = out.get("cards", {})
     except Exception as e: cards, cost = {}, 0.0; _say(f"Fit analysis failed: {e}")
+    EDU_RANK = [("high school", 0), ("postsecondary nondegree", 1), ("certificate", 1), ("some college", 1), ("associate", 2), ("2-year", 2), ("two-year", 2), ("bachelor", 3), ("4-year", 3), ("four-year", 3), ("master", 4), ("doctoral", 5), ("professional degree", 5), ("graduate", 4)]
+    def _rank(text):
+        t = (text or "").lower(); hits = [r for k, r in EDU_RANK if k in t]; return max(hits) if hits else None
+    def constraint_flags(card_edu: str | None, edu_ref: str | None) -> list[str]:
+        """Deterministic: typical entry education vs the student's stated education/cost constraints — cited to the BLS card and the student's words."""
+        out = []
+        for i, e in enumerate(prof.get("education_constraints") or []):
+            lim = _rank(e["value"] + " " + e.get("quote", "")); have = _rank(card_edu)
+            neg = any(w in (e["value"] + " " + e.get("quote", "")).lower() for w in ("no grad", "not grad", "avoid a long", "no more than", "max", "at most", "short", "quick", "earn early", "can't afford", "cannot afford"))
+            if lim is not None and have is not None and have > lim and (neg or lim <= 2): out.append(f"Typical entry is a {card_edu.split(';')[0].lower()}, which is more school than the limit you mentioned [p:education_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
+        for i, e in enumerate(prof.get("financial_constraints") or []):
+            if (_rank(card_edu) or 0) >= 3: out.append(f"A {card_edu.split(';')[0].lower()} path has real cost, which you said matters [p:financial_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
+        return out[:2]
     cands = json.loads(json.dumps(state["candidates"]))
     for c in cands:
         soc = c["persona"]["soc"]; o = outlooks.get(soc, {}); txt = cards.get(c["key"], {})
+        edu_fact = next((f for f in o.get("facts", []) if "Typical education" in f), None); edu_ref = re.search(r"\[(c\d{2,3})\]", edu_fact).group(1) if edu_fact and re.search(r"\[(c\d{2,3})\]", edu_fact) else None
+        flags = constraint_flags(o.get("education_entry"), edu_ref)
         c["card"] = {"why_fit": txt.get("why_fit", ""), "what_work_is_like": txt.get("what_work_is_like", ""), "how_ai_may_reshape": txt.get("how_ai_may_reshape", ""), "human_capabilities": txt.get("human_capabilities", ""),
-                     "tradeoff": txt.get("tradeoff", ""), "evidence_confidence": txt.get("evidence_confidence", "low"),
+                     "tradeoff": txt.get("tradeoff", ""), "constraint_flags": flags, "evidence_confidence": txt.get("evidence_confidence", "low"),
                      "demand_reading": o.get("demand_reading", "unknown"), "ai_change_reading": o.get("ai_change_reading", "unknown"), "facts": o.get("facts", []), "education_entry": o.get("education_entry"), "proxy_note": o.get("proxy_note"),
                      "ai_assists": changes.get(soc, {}).get("ai_assists", [])[:6], "more_important": changes.get(soc, {}).get("more_important", [])[:6]}
     _say("Wrote the career cards — now the reviewer checks every line against the evidence and your own words")

@@ -10,3 +10,9 @@
 ▶ s17 student rejects the final save … PASS 511s turns=8 cands=10 stripped=21 review=verified $0.0646
 ▶ s19 reviewer-removed content absent from UI … PASS 347s turns=8 cands=10 stripped=0 review=unverified $0.022
 ▶ s22 exploration loop preserves decisions … FAIL 274s turns=9 cands=1 stripped=1 review=verified $0.0144 ERR IndexError('list index out of range')  failed: ['no_error', 'saved', 'exploration_preserved']
+▶ s23 max interview turns … FAIL 68s turns=14 cands=0 stripped=0 review=verified $0.0024 ERR IndexError('list index out of range')  failed: ['no_error']
+▶ s21 concrete low-cost experiments … PASS 725s turns=8 cands=10 stripped=40 review=verified $0.0725
+▶ s20 feedback changes the shortlist … PASS 764s turns=8 cands=10 stripped=35 review=verified $0.0817
+▶ s24 professional journey still works … PASS 183s turns=0 cands=0 stripped=8 review=None $0.0166
+
+■ 8/16 · median 538s · $0.8414 · /Users/judydarvin/Desktop/Projects/nextshift-ai/evals/results/student_20260829-033419.json

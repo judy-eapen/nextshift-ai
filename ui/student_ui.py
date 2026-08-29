@@ -91,6 +91,7 @@ def card_html(c: dict) -> str:
     edu = cd.get("education_entry") or "—"
     rows = [("Why it may fit you", cd.get("why_fit")), ("What the work is like", cd.get("what_work_is_like")), ("How AI may reshape it", cd.get("how_ai_may_reshape")), ("Human capabilities that stay important", cd.get("human_capabilities")), ("Possible mismatch", cd.get("tradeoff"))]
     body = "".join(f"<div class='task'><span class='small'>{lab}</span><br>{strip_refs(v)}</div>" for lab, v in rows if strip_refs(v))
+    body += "".join(f"<div class='task' style='border-color:{C['red']}'><span class='small'>Practical mismatch</span><br>{strip_refs(fl)}</div>" for fl in cd.get("constraint_flags", []))
     proxy = f"<div class='small'>No official category for this role — figures are for the closest official occupations.</div>" if c.get("resolution") == "composite" else ""
     return (f"<div class='card'><b style='font-size:17px'>{c['label']}</b> <span class='small'>· {c['persona']['title']}</span><br>{pill('Demand ' + d, dc)} {pill('AI-related change ' + CHANGE[cd.get('ai_change_reading', 'unknown')], C['purple'])} "
             f"<span class='small'>education: {edu} · evidence: {str(cd.get('evidence_confidence', '')).split(' ')[0]}</span>{proxy}" + ("".join(f"<div class='small'>· {f}</div>" for f in facts)) + body + "</div>")

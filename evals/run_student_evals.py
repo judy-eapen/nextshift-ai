@@ -128,7 +128,9 @@ def run_case(g_):
     rubric = {}
     if cands and exp.get("rubric", True) and not g_.get("break_skeptic") and err is None:
         try:
-            sample = json.dumps({"cards": [{"label": c["label"], "why_fit": clean(c["card"].get("why_fit")), "tradeoff": clean(c["card"].get("tradeoff")), "education": c["card"].get("education_entry"), "demand": c["card"].get("demand_reading")} for c in cands[:6]], "profile_summary": prof.get("summary_sections"), "experiments": [clean(x) for x in st.get("experiments_planned") or []]})
+            sample = json.dumps({"cards": [{"label": c["label"], "why_fit": clean(c["card"].get("why_fit")), "tradeoff": clean(c["card"].get("tradeoff")), "practical_mismatch": [clean(f) for f in c["card"].get("constraint_flags", [])], "education": c["card"].get("education_entry"),
+                                            "outlook_facts_official_bls": [clean(f) for f in c["card"].get("facts", [])[:2]], "demand_reading_from_bls": c["card"].get("demand_reading"), "ai_change_reading_interpretation": c["card"].get("ai_change_reading")} for c in cands[:6]],
+                                 "student_constraints": {k: [x["value"] for x in prof.get(k, [])] for k in ("education_constraints", "financial_constraints", "location_constraints", "time_constraints")}, "profile_summary": prof.get("summary_sections"), "experiments": [clean(x) for x in st.get("experiments_planned") or []]})
             rubric, _ = llm.chat_json("skeptic", RUBRIC, sample[:14000], max_tokens=6000, temperature=0.0)
             for k in ("grounded_in_profile", "facts_vs_interpretation", "no_guarantees", "respects_constraints", "concrete_experiments"): checks[f"rubric_{k}"] = bool(rubric.get(k))
         except Exception as e: rubric = {"error": repr(e)}

@@ -1,0 +1,437 @@
+{
+  "summary": {
+    "passed": 8,
+    "total": 16,
+    "median_seconds": 538,
+    "total_cost_usd": 0.8414
+  },
+  "results": [
+    {
+      "id": "s01",
+      "seconds": 628,
+      "turns": 12,
+      "candidates": 10,
+      "cards": 321,
+      "stripped": 36,
+      "review_status": "verified",
+      "shortlist": [
+        "Event Planner",
+        "Nonprofit Program Coordinator"
+      ],
+      "cost_usd": 0.0746,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "turns_between": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": false,
+        "no_fear_words": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": false,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": false,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "1. All 'why_fit' lines reference student's specific statements (e.g., 'making things happen in real life', charity drives). 2. 'Demand: growing' is presented as fact without citation, conflating interpretation with official data. 3. Tradeoffs explicitly note challenges (e.g., repetitive tasks, experience requirements); no promises of happiness/safety. 4. Education level (Bachelor's) acknowledged, but cost and location constraints not addressed in tradeoffs/education lines. 5. Experiments are low-cost, actionable (e.g., shadowing, mock plans) with no invented courses/schools.",
+      "pass": false
+    },
+    {
+      "id": "s02",
+      "seconds": 566,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 412,
+      "stripped": 30,
+      "review_status": "verified",
+      "shortlist": [
+        "UX Designer",
+        "Behavioral Designer"
+      ],
+      "cost_usd": 0.0704,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "existing_ideas_captured": true,
+        "existing_ideas_appear": false,
+        "saved": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "All criteria met: why_fit lines directly reference student's quoted experiences and values; demand data is factual and separate from interpretation; tradeoffs highlight potential downsides without guarantees; education requirements align with student's constraints (Bachelor's degree, grad school optional); experiments are practical, low-cost activities with no invented courses/schools.",
+      "pass": false
+    },
+    {
+      "id": "s03",
+      "seconds": 538,
+      "turns": 13,
+      "candidates": 10,
+      "cards": 337,
+      "stripped": 21,
+      "review_status": "verified",
+      "shortlist": [
+        "Bicycle Repairers",
+        "Automotive Service Technicians and Mechanics"
+      ],
+      "cost_usd": 0.0635,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "max_turns": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "no_goal_over_twice": true,
+        "saved": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": false,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "Bachelor's degree cards (Computer Hardware Engineers, User Experience Designers) don't address student's constraint for short-term education; other criteria satisfied.",
+      "pass": false
+    },
+    {
+      "id": "s05",
+      "seconds": 539,
+      "turns": 9,
+      "candidates": 10,
+      "cards": 358,
+      "stripped": 29,
+      "review_status": "verified",
+      "shortlist": [
+        "UX Designer",
+        "Human Factors Engineer"
+      ],
+      "cost_usd": 0.0693,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "max_turns": true,
+        "more_extends": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s07",
+      "seconds": 654,
+      "turns": 9,
+      "candidates": 10,
+      "cards": 322,
+      "stripped": 35,
+      "review_status": "verified",
+      "shortlist": [
+        "Community Outreach Coordinator",
+        "Video Producer for Social Impact"
+      ],
+      "cost_usd": 0.0843,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "edit_applied": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s09",
+      "seconds": 608,
+      "turns": 9,
+      "candidates": 9,
+      "cards": 333,
+      "stripped": 26,
+      "review_status": "verified",
+      "shortlist": [
+        "Medical Illustrator",
+        "Biological Science Teacher, Postsecondary"
+      ],
+      "cost_usd": 0.0754,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "contradiction_recorded": false,
+        "saved": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": false,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "Biological Science Teacher card's tradeoff is empty despite requiring a doctoral degree (costly/time-consuming), which contradicts student's stated cost constraints. Other cards like Curriculum Developer and Medical Animator address cost, but not all relevant roles do.",
+      "pass": false
+    },
+    {
+      "id": "s14",
+      "seconds": 234,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 417,
+      "stripped": 1,
+      "review_status": "unverified",
+      "shortlist": [
+        "Project Manager",
+        "Meeting, Convention, and Event Planner"
+      ],
+      "cost_usd": 0.0268,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "partial_badge": false,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": false
+    },
+    {
+      "id": "s15",
+      "seconds": 420,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 358,
+      "stripped": 12,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Editor",
+        "Event Coordinator"
+      ],
+      "cost_usd": 0.0498,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "unverified_loud": false,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": false
+    },
+    {
+      "id": "s17",
+      "seconds": 511,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 332,
+      "stripped": 21,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Editor",
+        "Meeting and Event Planner"
+      ],
+      "cost_usd": 0.0646,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "final_rejected": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s18",
+      "seconds": 433,
+      "turns": 9,
+      "candidates": 10,
+      "cards": 399,
+      "stripped": 10,
+      "review_status": "verified",
+      "shortlist": [
+        "UX Designer",
+        "User Experience Researcher"
+      ],
+      "cost_usd": 0.0531,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s19",
+      "seconds": 347,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 410,
+      "stripped": 0,
+      "review_status": "unverified",
+      "shortlist": [
+        "Event Planner",
+        "Video Editor for Social Impact"
+      ],
+      "cost_usd": 0.022,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s20",
+      "seconds": 764,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 451,
+      "stripped": 35,
+      "review_status": "verified",
+      "shortlist": [
+        "Interaction Designer",
+        "Information Architect"
+      ],
+      "cost_usd": 0.0817,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": true,
+        "feedback_changes_shortlist": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s21",
+      "seconds": 725,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 316,
+      "stripped": 40,
+      "review_status": "verified",
+      "shortlist": [
+        "Medical Assistant",
+        "Occupational Therapy Assistant"
+      ],
+      "cost_usd": 0.0725,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": true,
+        "experiments": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s22",
+      "seconds": 274,
+      "turns": 9,
+      "candidates": 1,
+      "cards": 73,
+      "stripped": 1,
+      "review_status": "verified",
+      "shortlist": [],
+      "cost_usd": 0.0144,
+      "error": "IndexError('list index out of range')",
+      "checks": {
+        "no_error": false,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": false,
+        "exploration_preserved": false
+      },
+      "rubric_notes": null,
+      "pass": false
+    },
+    {
+      "id": "s23",
+      "seconds": 68,
+      "turns": 14,
+      "candidates": 0,
+      "cards": 9,
+      "stripped": 0,
+      "review_status": "verified",
+      "shortlist": [],
+      "cost_usd": 0.0024,
+      "error": "IndexError('list index out of range')",
+      "checks": {
+        "no_error": false,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "max_turns": true
+      },
+      "rubric_notes": null,
+      "pass": false
+    },
+    {
+      "id": "s24",
+      "seconds": 183,
+      "turns": 0,
+      "candidates": 0,
+      "cards": 39,
+      "stripped": 8,
+      "review_status": null,
+      "shortlist": [],
+      "cost_usd": 0.0166,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    }
+  ]
+}
