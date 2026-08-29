@@ -10,12 +10,21 @@ TAGS = ("[interpretation]", "[advice]")
 # deterministic lint: certainty about the future is never allowed, regardless of citations
 CERTAINTY = re.compile(r"\b(will be (automated|replaced|eliminated)|will disappear|will vanish|is safe from AI|guaranteed|100% safe|doomed|obsolete)\b", re.I)
 
+PARAGRAPH_KEYS = ("direct_answer", "for_you", "our_read", "outlook_takeaway", "why_fit", "what_work_is_like", "summary")
+_SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z“\"(])")
+
+def split_sentences(text: str) -> list[str]: return [x for x in _SENT.split(text.strip()) if x.strip()]
+
 def flatten(obj: Any, path: str = "", out: list | None = None, skip_keys=("card_id", "ref", "soc", "url", "id", "key", "penetration", "task")) -> list[tuple[str, str]]:
-    """Every non-empty string leaf that is a *claim* (skip identifiers and verbatim task statements, which come from cards)."""
+    """Every non-empty string leaf that is a *claim* (skip identifiers and verbatim task statements, which come from cards).
+    Paragraph fields are emitted one sentence at a time as path#i, so one bad sentence doesn't take the paragraph with it."""
     out = [] if out is None else out
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k in skip_keys or k.startswith("_"): continue
+            if k in PARAGRAPH_KEYS and isinstance(v, str):
+                for i, sent in enumerate(split_sentences(v)): out.append((f"{path}.{k}#{i}" if path else f"{k}#{i}", sent))
+                continue
             flatten(v, f"{path}.{k}" if path else k, out, skip_keys)
     elif isinstance(obj, list):
         for i, v in enumerate(obj): flatten(v, f"{path}[{i}]", out, skip_keys)
@@ -32,12 +41,16 @@ def _resolve(obj: Any, path: str):
 
 def apply_removals(obj: Any, paths: list[str]) -> Any:
     """Delete failing leaves. List items are removed (highest index first so earlier indices stay valid); dict leaves become ''."""
-    list_removals: dict[str, list[int]] = {}
+    list_removals: dict[str, list[int]] = {}; sent_removals: dict[str, set[int]] = {}
     for p in paths:
+        ms = re.fullmatch(r"(.*)#(\d+)", p)
+        if ms: sent_removals.setdefault(ms.group(1), set()).add(int(ms.group(2))); continue
         m = re.fullmatch(r"(.*)\[(\d+)\]", p)
         if m: list_removals.setdefault(m.group(1), []).append(int(m.group(2)))
         else:
             parent, key = _resolve(obj, p); parent[key] = ""
+    for pp, idxs in sent_removals.items():
+        parent, key = _resolve(obj, pp); parent[key] = " ".join(sn for i, sn in enumerate(split_sentences(parent[key])) if i not in idxs)
     for lp, idxs in list_removals.items():
         parent, key = _resolve(obj, lp) if lp else (None, None); lst = parent[key] if parent is not None else obj
         for i in sorted(set(idxs), reverse=True):
