@@ -21,7 +21,7 @@ def steps(door: str) -> list[dict]:
                    "If you say you're bad at something, that is recorded as a skill you haven't built yet, never as a permanent limit."
                    if student else "It does not judge your performance or predict your job. It uses your week to find the official occupation whose task list is closest to your real work.")}
     s2 = {"n": 2, "title": "We decide what to ask next" if student else "We match your work to an official occupation", "tags": ["code"] if student else ["code", "AI"],
-          "body": (f"After every answer, a fixed rule (not the AI) checks which important parts of your profile are still unclear and picks the topic of the next question. The AI only words the question. "
+          "body": (f"After every answer, a fixed rule (not the AI) checks which important parts of your profile are still unclear and picks the next question from a curated set for that topic. The AI writes a question only when a topic's set runs out. "
                    f"The interview stops when the rule says there is enough (usually after {TARGET_TURNS[0]}–{TARGET_TURNS[1]} answers), when you press *Recommend careers now*, or at {MAX_TURNS} questions — whichever comes first."
                    if student else "Your title is matched to the U.S. occupation list — exact title first, then by meaning. When no official category exists (many \"Product…\" roles), NextShift assembles a composite from official task statements and shows you the task list to untick."),
           "more_title": "Why a rule and not the AI" if student else "Exact, closest, composite",

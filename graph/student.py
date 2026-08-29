@@ -110,13 +110,16 @@ def select_question(state: StudentState) -> dict:
     fallback = bank[min(asked, len(bank) - 1)]
     if goal == "clarify" and prof.get("contradictions"): c = prof["contradictions"][-1]; fallback = f"Earlier you said “{c.get('quote_a', '')[:80]}”, and also “{c.get('quote_b', '')[:80]}”. How do those fit together for you?"
     if not turns: return {"pending": {"goal": goal, "question": bank[0]}}    # the fixed opener — no model call before the student has said anything
+    # Normal path is deterministic: code picked the goal, the curated bank supplies the wording (contradiction clarifiers are templated from the quotes above).
+    # The model writes a question ONLY when this goal's bank is exhausted and we still need to ask about it — a genuinely new angle is required.
+    if goal == "clarify" or asked < len(bank): return {"pending": {"goal": goal, "question": fallback, "source": "curated"}}
     last = turns[-1]
-    ctx = f"GOAL: {goal} (about: {', '.join(GOALS[goal][1]) or 'clarifying a contradiction'}).\nBASE QUESTION: {fallback}\nStudent's last answer (for an optional ≤8-word lead-in only; if it is '(not sure)' or '(skipped)' use NO lead-in and do not comment on it): {last.get('answer', '')[:200]}"
+    ctx = f"GOAL: {goal} (about: {', '.join(GOALS[goal][1])}).\nQUESTIONS ALREADY ASKED ON THIS TOPIC (do not repeat their angle): {bank}\nBASE QUESTION: {fallback}\nStudent's last answer (for an optional ≤8-word lead-in only; if it is '(not sure)' or '(skipped)' use NO lead-in): {last.get('answer', '')[:200]}"
     try:
-        out, cost = llm.chat_json("planner", QUESTION_SYS, ctx, max_tokens=120, temperature=0.3); q = (out.get("question") or fallback).strip()
+        out, cost = llm.chat_json("planner", QUESTION_SYS, ctx, max_tokens=120, temperature=0.3, purpose="question_new_angle"); q = (out.get("question") or fallback).strip()
         if len(q) > 260 or "?" not in q: q = fallback
     except Exception: q, cost = fallback, 0.0
-    return {"pending": {"goal": goal, "question": q}, "cost_usd": cost}
+    return {"pending": {"goal": goal, "question": q, "source": "model"}, "cost_usd": cost}
 
 def interview_gate(state: StudentState) -> dict:
     """⏸ One question. Resume: {"action": "answer"|"skip"|"unsure"|"more"|"recommend"|"edit", "text": str, "edit_turn": int}."""
@@ -157,7 +160,7 @@ def update_profile(state: StudentState) -> dict:
     if t["action"] == "unsure": prof["uncertainties"].append({"value": f"unsure about: {t['goal']}", "quote": "(not sure)", "source_turn": t["i"], "kind": "stated"}); return {"profile": prof}
     known = {f: [e["value"] for e in prof.get(f, [])] for f in FIELDS if prof.get(f)}
     try:
-        out, cost = llm.chat_json("planner", UPDATE_SYS, f"Current profile (values only): {json.dumps(known)}\nCurrent leanings: {prof.get('pidth')}\n\nQ: {t['question']}\nA: {t['answer']}", max_tokens=900, temperature=0.1)
+        out, cost = llm.chat_json("planner", UPDATE_SYS, f"Current profile (values only): {json.dumps(known)}\nCurrent leanings: {prof.get('pidth')}\n\nQ: {t['question']}\nA: {t['answer']}", max_tokens=900, temperature=0.1, purpose="profile_update")
     except Exception as e: out, cost = {}, 0.0; _say(f"(profile update skipped: {e})")
     touched = []
     for f, items in (out.get("add") or {}).items():
@@ -169,12 +172,12 @@ def update_profile(state: StudentState) -> dict:
             try: prof["pidth"][k] = max(-1.0, min(1.0, float(v)))
             except Exception: pass
     for c in out.get("contradictions") or []: prof["contradictions"].append({**c, "turn": t["i"], "status": "open"})
-    # cross-turn check: a new dislike / constraint / growth area vs everything the student said they're drawn to
-    if any(f in touched for f in ("dislikes", "growth_areas", "not_yet_learned", "education_constraints", "financial_constraints", "location_constraints")) and (prof.get("interests") or prof.get("energizing_activities") or prof.get("existing_career_ideas")):
+    # cross-turn check: ONLY when a deterministic screen finds a high-value possible conflict the primary extraction did not already report
+    if _needs_contra_check(prof, touched, t["i"], bool(out.get("contradictions"))):
         try:
             likes = [f"{e['value']} — “{e['quote']}”" for f in ("interests", "energizing_activities", "existing_career_ideas") for e in prof.get(f, [])]
             negs = [f"{f}: {e['value']} — “{e['quote']}”" for f in ("dislikes", "growth_areas", "not_yet_learned", "education_constraints", "financial_constraints", "location_constraints") for e in prof.get(f, []) if e.get("source_turn") == t["i"]]
-            out2, c2 = llm.chat_json("extractor", CONTRA_SYS, f"Drawn to:\n" + "\n".join(likes) + "\n\nNew negatives/constraints this turn:\n" + "\n".join(negs), max_tokens=300, temperature=0.0); cost += c2
+            out2, c2 = llm.chat_json("extractor", CONTRA_SYS, f"Drawn to:\n" + "\n".join(likes) + "\n\nNew negatives/constraints this turn:\n" + "\n".join(negs), max_tokens=300, temperature=0.0, purpose="contradiction_check"); cost += c2
             known = {(c.get("quote_a", "")[:40], c.get("quote_b", "")[:40]) for c in prof["contradictions"]}
             for c in out2.get("contradictions") or []:
                 if isinstance(c, dict) and (c.get("quote_a", "")[:40], c.get("quote_b", "")[:40]) not in known: prof["contradictions"].append({**c, "turn": t["i"], "status": "open"})
@@ -186,6 +189,27 @@ def update_profile(state: StudentState) -> dict:
         if tt["i"] == t["i"]: tt["fields_touched"] = sorted(set(touched))
     _say(f"Learned: {', '.join(sorted(set(touched))) or 'nothing new'}")
     return {"profile": prof, "turns": turns, "cost_usd": cost}
+
+NEG_FIELDS = ("dislikes", "growth_areas", "not_yet_learned", "education_constraints", "financial_constraints", "location_constraints")
+LIKE_FIELDS = ("interests", "energizing_activities", "existing_career_ideas")
+LIMIT_WORDS = ("no more than", "at most", "max", "only", "can't afford", "cannot afford", "no grad", "not grad", "short", "quick", "2-year", "two-year", "certificate", "no college", "not college", "avoid")
+_STOP = {"about", "really", "would", "which", "there", "their", "thing", "things", "school", "people", "working", "something", "because", "don't", "doesn't"}
+
+def _words(*texts) -> set[str]: return {w for w in re.findall(r"[a-z]{5,}", " ".join(texts).lower()) if w not in _STOP}
+
+def _needs_contra_check(prof: dict, touched: list[str], turn_i: int, primary_found: bool) -> bool:
+    """Deterministic screen for the extra contradiction call. True only if this turn added a negative/constraint AND either (a) it shares a substantive word with
+    something the student is drawn to, or (b) it is an education/cost limit while the student has named careers — AND the primary extraction reported nothing."""
+    if primary_found or not any(f in touched for f in NEG_FIELDS): return False
+    new_negs = [(f, e) for f in NEG_FIELDS for e in prof.get(f, []) if e.get("source_turn") == turn_i]
+    likes = [e for f in LIKE_FIELDS for e in prof.get(f, [])]
+    if not new_negs or not likes: return False
+    like_words = _words(*(e.get("value", "") + " " + e.get("quote", "") for e in likes))
+    for f, e in new_negs:
+        text = e.get("value", "") + " " + e.get("quote", "")
+        if _words(text) & like_words: return True
+        if f in ("education_constraints", "financial_constraints") and prof.get("existing_career_ideas") and any(w in text.lower() for w in LIMIT_WORDS): return True
+    return False
 
 def evaluate_completeness(state: StudentState) -> dict:
     """Code decides readiness and the next goal; no model call. Returns the structured Completeness object the UI can show."""

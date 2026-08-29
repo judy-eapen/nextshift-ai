@@ -61,7 +61,7 @@ def screen_interview(S):
         for key, lab in CORE_LABELS.items():
             lvl = cov.get(key, "none"); g, aria = COVERAGE_GLYPH[lvl]
             st.markdown(f"<div class='small'><span role='img' aria-label='{aria}'>{g}</span> {lab}</div>", unsafe_allow_html=True)
-        st.markdown("<div class='small' style='margin-top:6px'>A fixed rule picks the next topic from these gaps; the AI only words the question.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='small' style='margin-top:6px'>A fixed rule picks the next topic from these gaps and the next question from a curated set; the AI reads your answers, it doesn't write the questions.</div>", unsafe_allow_html=True)
     with col:
         st.markdown(f"### {p['question']}")
         text = st.text_area("answer", placeholder="Type as much or as little as you like…", height=110, label_visibility="collapsed", key=f"ans{p['turn']}")
