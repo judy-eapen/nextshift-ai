@@ -56,6 +56,8 @@ def test_light_card_is_deterministic_and_marks_interpretation():
     card = X._light_card(c, o, prof)
     assert card["why_fit"].endswith("[p:interests:0]") and card["tradeoff"].endswith("[interpretation]") and card["ai_change_reading"] == "pending" and card["how_ai_may_reshape"] == ""
     assert card["constraint_flags"] and "[p:education_constraints:0]" in card["constraint_flags"][0] and "[c03]" in card["constraint_flags"][0]
+    c["rationale"]["constraints_conflict"] = ["Most programs are far from home, which you want to avoid [p:location_constraints:0]", "uncited line"]
+    flags = X._light_card(c, o, prof)["constraint_flags"]; assert any("location_constraints" in f for f in flags) and not any(f == "uncited line" for f in flags)
 
 # reviewer roles: light → fast model, deep → thinking model; failure stays UNVERIFIED (12)
 def test_review_roles_and_unverified(monkeypatch):

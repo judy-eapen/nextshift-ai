@@ -189,7 +189,11 @@ def _light_card(c: dict, o: dict, prof: dict, changes: dict | None = None) -> di
     why = rat.get("why_included") or next((l for l in (rat.get("matches_interests") or []) if l), "")
     poor = (rat.get("poor_fit_if") or "").strip(); tradeoff = (poor + ("" if "[" in poor else " [interpretation]")) if poor else ""
     conf = "moderate — official projection found" if o.get("growth_pct") is not None else ("low — proxy figures from the closest official categories" if c.get("resolution") == "composite" else "low — no official projection row")
-    return {"why_fit": why, "what_work_is_like": desc or "", "how_ai_may_reshape": "", "human_capabilities": "", "tradeoff": tradeoff, "constraint_flags": constraint_flags(prof, o.get("education_entry"), _edu_ref(o)),
+    # practical mismatches: deterministic education/cost lines + the generator's cited constraint conflicts (location, schedule, licensing…) — every line rests on the student's own words
+    flags = constraint_flags(prof, o.get("education_entry"), _edu_ref(o))
+    for l in (rat.get("constraints_conflict") or []):
+        if isinstance(l, str) and l.strip() and "[p:" in l and l not in flags: flags.append(l.strip())
+    return {"why_fit": why, "what_work_is_like": desc or "", "how_ai_may_reshape": "", "human_capabilities": "", "tradeoff": tradeoff, "constraint_flags": flags[:3],
             "evidence_confidence": conf, "demand_reading": o.get("demand_reading", "unknown"), "ai_change_reading": o.get("ai_change_reading", "pending"), "facts": o.get("facts", []), "education_entry": o.get("education_entry"), "proxy_note": o.get("proxy_note"),
             "growth_pct": o.get("growth_pct"), "openings": o.get("openings"), "median_wage": o.get("median_wage"), "evidence_level": o.get("evidence_level", "light"),
             "ai_assists": (changes or {}).get(soc, {}).get("ai_assists", [])[:6], "more_important": (changes or {}).get(soc, {}).get("more_important", [])[:6]}
