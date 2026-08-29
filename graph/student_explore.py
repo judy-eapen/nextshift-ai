@@ -83,7 +83,7 @@ def fan_out_candidates(state: StudentState) -> list[Send]:
 FIT_SYS = """You write the reader-facing text for career cards for ONE student. For each candidate you get: the student's profile refs, the candidate's rationale (already cited), official outlook facts, the three task groups and forecast context.
 For each candidate return short, plain, warm text — every sentence cites [cNN] and/or [p:field:i]; interpretive sentences also end with [interpretation]:
 - why_fit (2 sentences, tied to the student's own words), what_work_is_like (2 sentences from the task cards), how_ai_may_reshape (1-2 sentences — current use is NOT automation),
-- human_capabilities (1-2 sentences from the 'more important' group), tradeoff (1-2 honest sentences: constraints conflict, declining demand, long education…), evidence_confidence: "low|moderate|high" with a 1-line reason.
+- human_capabilities (1-2 sentences from the 'more important' group), tradeoff (1-2 honest sentences; MUST name any stated dislike, constraint or growth area this role would run into — e.g. blood, shift work, cost, years of school, solitary desk work — citing the [p:...] ref; also declining demand or long education), evidence_confidence: "low|moderate|high" with a 1-line reason.
 Never guarantee anything, never call a task automated/replaced, never invent schools, courses or employers. Return {"cards": {"k1": {...}, "k2": {...}}}"""
 
 def analyze_fit(state: StudentState) -> dict:

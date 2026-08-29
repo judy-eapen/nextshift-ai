@@ -17,7 +17,7 @@ FEAR = re.compile(r"\b(doomed|obsolete|will be replaced|will disappear|safe from
 RUBRIC = """Grade a student's career-exploration output. Answer true/false with a short reason each:
 1 grounded_in_profile: do the 'why it may fit' lines trace to what the student actually said (not stereotypes or personality labels)?
 2 facts_vs_interpretation: are official projections kept apart from AI-related interpretation and from fit?
-3 no_guarantees: no promise of safety, happiness or a 'perfect' career? 4 respects_constraints: do cards acknowledge stated education/cost/location constraints where relevant?
+3 no_guarantees: no promise of safety, happiness or a 'perfect' career? 4 respects_constraints: constraints means stated education level, cost, location or time limits ONLY — if the profile states none, answer true; if it states some, do the cards' education/tradeoff lines acknowledge them where relevant?
 5 concrete_experiments: are the 'test this career' items low-cost and doable by a student (interview, shadow, project, class, activity), with no invented named courses/schools?
 Return {"grounded_in_profile":bool,"facts_vs_interpretation":bool,"no_guarantees":bool,"respects_constraints":bool,"concrete_experiments":bool,"notes":"..."}"""
 
