@@ -112,17 +112,35 @@ def run_case(g_):
     if exp.get("saved"): checks["saved"] = bool(st.get("exported_path")) and Path(st["exported_path"]).exists() and _snap_count(tid) == 1
     if exp.get("removed_absent"):   # each review's removals checked against ITS OWN rendered object
         def leak(stripped, text): return any(r["sentence"].split(" [")[0][:50] in text for r in (stripped or []) if len(r["sentence"]) > 30)
-        def leak_cards():   # compare each removal against ITS OWN card's prose (twins may legitimately share a sentence)
-            allc = [c for g in (views.get("groups") or {}).values() for c in g]
-            for r in sk.get("stripped") or []:
-                m = re.match(r"candidates\[(\d+)\]", r["path"]);
-                if not m or len(r["sentence"]) <= 30: continue
-                idx = int(m.group(1)); 
-                if idx >= len(allc): continue
-                own = " ".join(str(allc[idx]["card"].get(k, "")) for k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff")) + " ".join(str(x.get("why", "")) for x in allc[idx]["card"].get("more_important", []))
-                if r["sentence"].split(" [")[0][:50] in own: return True
+        def leak_cards():   # each card's own removals (c["review"]["removed"], stored by review_cards) are checked at THEIR OWN path in THAT card — twins may share a sentence
+            for c in [c for g in (views.get("groups") or {}).values() for c in g]:
+                for r in (c.get("review") or {}).get("removed") or []:
+                    if len(r["sentence"]) <= 30: continue
+                    key = r["sentence"].split(" [")[0][:50]; sub = re.sub(r"^candidates\[\d+\]\.", "", r["path"])
+                    try:
+                        if sub.startswith("more_important"):
+                            i = int(re.match(r"more_important\[(\d+)\]", sub).group(1)); rows = c["card"].get("more_important") or []
+                            if i < len(rows) and key in (rows[i].get("why") or ""): return True
+                        else:
+                            field = re.sub(r"#\d+$", "", sub.replace("card.", "", 1))
+                            if key in str(c["card"].get(field, "")): return True
+                    except Exception:
+                        if key in json.dumps(c["card"]): return True
             return False
         checks["removed_absent"] = not leak_cards() and not leak((dd.get("review") or {}).get("stripped"), dd_text) and not leak(((views.get("shortlist") or {}).get("review") or {}).get("stripped"), sl_text)
+        if not checks["removed_absent"]:   # diagnostics: which removal matched which surface
+            leaks = []
+            for where, stripped, text in (("cards", sk.get("stripped"), None), ("deep_dive", (dd.get("review") or {}).get("stripped"), dd_text), ("shortlist", ((views.get("shortlist") or {}).get("review") or {}).get("stripped"), sl_text)):
+                for r in stripped or []:
+                    key = r["sentence"].split(" [")[0][:50]
+                    if len(r["sentence"]) <= 30: continue
+                    if where == "cards":
+                        m = re.match(r"candidates\[(\d+)\]", r["path"]); allc = [c for g in (views.get("groups") or {}).values() for c in g]
+                        if m and int(m.group(1)) < len(allc):
+                            own = json.dumps(allc[int(m.group(1))]["card"])
+                            if key in own: leaks.append({"where": where, "path": r["path"], "sentence": r["sentence"][:160], "near": own[max(0, own.find(key) - 80): own.find(key) + 100]})
+                    elif key in text: leaks.append({"where": where, "path": r["path"], "sentence": r["sentence"][:160], "near": text[max(0, text.find(key) - 80): text.find(key) + 100]})
+            log.append("LEAKS: " + json.dumps(leaks)[:1500])
     if exp.get("feedback_changes_shortlist"): rej = {r["key"] for r in st.get("rejected") or []}; checks["feedback_changes_shortlist"] = bool(rej) and not (rej & set(st.get("shortlist") or []))
     if exp.get("experiments"): ex = st.get("experiments_planned") or []; checks["experiments"] = len(ex) >= 3 and not FEAR.search(" ".join(ex))
     if exp.get("exploration_preserved"): checks["exploration_preserved"] = len(st.get("exploration_log") or []) >= 2 and bool(st.get("rejected")) and bool(st.get("reactions"))
@@ -146,7 +164,7 @@ def run_case(g_):
             for k in ("grounded_in_profile", "facts_vs_interpretation", "no_guarantees", "respects_constraints", "concrete_experiments"): checks[f"rubric_{k}"] = bool(rubric.get(k))
         except Exception as e: rubric = {"error": repr(e)}
     return {"id": g_["id"], "seconds": round(time.time() - t0), "turns": len(st.get("turns") or []), "candidates": len(cands), "cards": len(st.get("evidence") or []), "stripped": len(sk.get("stripped") or []), "review_status": sk.get("status"),
-            "shortlist": [c["label"] for c in cands if c["key"] in (st.get("shortlist") or [])], "cost_usd": round(st.get("cost_usd") or 0, 4), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "pass": all(checks.values())}
+            "shortlist": [c["label"] for c in cands if c["key"] in (st.get("shortlist") or [])], "cost_usd": round(st.get("cost_usd") or 0, 4), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "diagnostics": [l for l in log if l.startswith("LEAKS:")], "pass": all(checks.values())}
 
 def main():
     from concurrent.futures import ThreadPoolExecutor

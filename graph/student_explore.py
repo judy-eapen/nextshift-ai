@@ -231,7 +231,7 @@ def review_cards(state: StudentState) -> dict:
     for c in cands:
         r = by.get(c["key"]);
         if not r: continue
-        c["card"].update(r["card"]); c["card"]["more_important"] = r["more_important"]; c["review"] = {"removed": [x for x in sk["stripped"] if f"candidates[{reviewed['candidates'].index(r)}]" in x["path"]]}
+        c["card"].update(r["card"]); c["card"]["more_important"] = r["more_important"]; c["review"] = {"removed": [x for x in sk["stripped"] if re.match(rf"candidates\[{reviewed['candidates'].index(r)}\]\.", x["path"])]}   # exact index — 'candidates[1]' must not match 'candidates[10]' 
     sk["rationale_lines_removed"] = rat_removed
     return {"candidates": cands, "skeptic": sk, "cost_usd": cost}
 
