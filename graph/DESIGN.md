@@ -132,3 +132,24 @@ Facts cite `[cNN]`; unknowns cite `[uNN]`; interpretive lines add `[interpretati
 
 ## Evaluation (evals/golden.json, 13 cases)
 Professional clean match · PM composite · "Head of Product" needing clarification · low-exposure nurses (no fear words) · student 3-way comparison (must surface Graphic Designers −1.7%) · occupation with no projection · Polymarket disabled · conflicting forecasts · edit at gate 1 changes horizon · reject at gate 1 (0 tool calls) · reject at gate 2 (no file, no snapshot) · broken skeptic model (fallback flagged) · second run computes deltas. Plus a 5-point answer-quality rubric judged by the reviewer model.
+
+---
+# STUDENT JOURNEY REDESIGN (Sat 2026-08-29) — career-discovery interviewer
+
+Approved design (see chat, 15-part proposal). Built in `graph/student.py` (interview loop, understanding gate), `graph/student_explore.py` (candidates → evidence → fit → review → reactions → discriminators → shortlist → deep dive → what-ifs → save), `graph/student_build.py` (one graph, one thread, seven interrupts), `ui/student_ui.py`, `evals/run_student_evals.py` + `evals/student_golden.json` (24 cases) with `evals/sim_student.py` personas.
+
+## Decisions
+- **One graph, several interrupts** (not separate graphs): the exploration loop must keep one state — profile, reactions, rejected careers, planned experiments — on one checkpoint thread. Professional journey untouched, own compiled graph.
+- **Profile = Evidence, not labels.** Every field holds `{value, quote, source_turn, kind}`. Four kinds of "negative" are structural: `dislikes` · `not_yet_learned` · `growth_areas` · `*_constraints`. No permanent-weakness field exists. `[p:field:i]` refs let the reviewer check "this rests on what the student said".
+- **Next question = code picks the goal, model words it.** Goal ranking = coverage gap × core bonus, contradictions first, no goal more than twice, `existing_ideas` always asked once early. The model rewrites a base question with ≤8 words of lead-in — earlier versions that "built on what they said" drifted for eight turns.
+- **Completeness = code.** Ready when every core dimension (interests/energizing · strengths · negatives · people-ideas-data-tech-hands leaning · a constraint · values/impact) ≥ moderate and ≥8 substantive answers, or the student asks, or 14 turns. Thin conversations are flagged on the results.
+- **Candidates**: planner proposes 8–10 in three groups with a cited seven-part rationale; code enforces ≤2 per 6-digit occupation; low-confidence semantic matches and modern roles become **composites** with proxy-labelled outlook.
+- **Evidence** reuses the professional gatherers per candidate via `Send`; `Card.occ` keeps them apart. Outlook/work-change code unchanged.
+- **Structured review everywhere** (`graph/review.py`): objects are flattened to leaves, paragraphs to sentences; failing leaves are deleted *in the object the UI renders*; a citation-repair pass runs first (the reviewer still verifies added refs); the reviewer runs in batches of 20 with a halving retry; any failed batch → `unverified`, red banner, filename tag. Certainty-about-the-future wording is stripped by lint regardless of citations.
+- **Reactions update the profile** (the *why* becomes evidence with `kind: stated`); rejections are remembered; 0–2 discriminating questions only when the excited/curious set forks on education, people-vs-data, hands-on, licensing or schedule.
+- **Shortlist** shows eight dimensions separately, never a score; "Our read" is labelled interpretation. **Deep dive** has ten sections; *Test this career* is first-class and feeds `experiments_planned`. **What-ifs** reorder within existing candidates and may add a constraint; everything goes to `exploration_log`.
+- **Writes**: `record` is the only writer, after the save gate; snapshot payload generalised (profile, shortlist, reactions, rejected, experiments, log, review status).
+- Boundary line shown at start, on results and in the export: *"a guided exploration based on what you shared and available career data — not a test that determines what you should become."* No age/school fields; first name optional.
+
+## Known-issue fixes (both journeys, Phase A)
+UI renders only reviewed structured objects (`state.reviewed`/`views`) · horizon comes from the profile (no hardcoded 2030) · reviewer failure is loud (UNVERIFIED status, banner, save warning, filename tag; no rewrite loop on an absent reviewer) · `*.sqlite-wal/-shm` ignored · current-use wording lint.
