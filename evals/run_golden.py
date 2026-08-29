@@ -55,7 +55,7 @@ def run_one(graph, g):
         os.environ["DISABLE_SOURCES"] = ""
     st = graph.get_state(cfg).values; exp = g["expect"]; ol = list((st.get("outlooks") or {}).values()); plan = st.get("plan") or {}; sk = st.get("skeptic") or {}
     body = (st.get("plan_md") or "").split("\n---\n")[0]
-    uncited = [l for l in body.split("\n") if l.strip() and not l.startswith(("#", "**", "_")) and not re.search(r"\[[cu]\d{2}\]|\[advice\]|\[interpretation\]", l)]
+    uncited = [l for l in body.split("\n") if l.strip() and not l.startswith(("#", "**", "_")) and not re.search(r"\[[cu]\d{2,3}\]|\[advice\]|\[interpretation\]", l)]
     checks = {"no_error": err is None, "under_10min": time.time() - t0 < 600}
     if "min_cards" in exp: checks["min_cards"] = len(st.get("evidence") or []) >= exp["min_cards"]; checks["zero_uncited"] = len(uncited) == 0; checks["direct_answer"] = len((plan.get("direct_answer") or "")) > 80
     if "demand_reading" in exp: checks["demand_reading"] = bool(ol) and ol[0]["demand_reading"] == exp["demand_reading"]

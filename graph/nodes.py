@@ -169,7 +169,7 @@ def _table(cards: list[Card], refs: dict, occ: str | None = None, max_tasks: int
 def _reading_demand(cards):
     g = next((c for c in cards if c.id.endswith(":growth") and c.confidence >= 0.9), None)
     if not g: return "unknown"
-    return "growing" if g.value >= 5.0 else "declining" if g.value <= -2.0 else "stable"
+    return "growing" if g.value >= 5.0 else "declining" if g.value < 0 else "stable"   # any projected loss is 'declining'; national average is +3.5%
 
 def _reading_change(tasks):
     if not tasks: return "unknown", 0.0
@@ -282,7 +282,7 @@ def _plan_md(state: State, plan: dict) -> str:
     add("## 3. What this means for you"); add(plan.get("for_you", ""))
     add("## 4. Your preparation plan")
     for label, key in (("Next 30 days", "d30"), ("Next six months", "m6"), ("Next year", "y1")):
-        add(f"**{label}**"); [add(f"- {b}" + ("" if re.search(r"\[[cu]\d{2}\]|\[interpretation\]", b) else " [advice]")) for b in plan.get(key, [])]
+        add(f"**{label}**"); [add(f"- {b}" + ("" if re.search(r"\[[cu]\d{2,3}\]|\[interpretation\]", b) else " [advice]")) for b in plan.get(key, [])]
     add("## 5. Other paths to consider"); [add(f"- **{a.get('title')}** — {a.get('why_fit')} · transferable: {a.get('transferable')} · prep: {a.get('prep')} · outlook: {a.get('outlook')} · tradeoff: {a.get('tradeoff')}") for a in plan.get("adjacent", [])]
     if not plan.get("adjacent"): add(f"_{plan.get('adjacent_note') or 'Not enough evidence in this run to recommend a change of path.'}_")
     add("## 6. Confidence and uncertainty")
@@ -303,7 +303,7 @@ def skeptic(state: State) -> dict:
     keep_idx, stripped, to_check = {}, [], []
     for i, l in enumerate(lines):
         if l.startswith(("#", "**", "_")): keep_idx[i] = l; continue
-        cited = [r for r in re.findall(r"\[([cu]\d{2})\]", l) if r in refs]
+        cited = [r for r in re.findall(r"\[([cu]\d{2,3})\]", l) if r in refs]
         if not cited and ("[advice]" in l or "[interpretation]" in l) and not re.search(r"\d", l): keep_idx[i] = l; continue   # practical advice with no factual claim: kept, labelled, not fact-checked
         if not cited: stripped.append({"sentence": l, "reason": "no evidence ref" + (" (contains a number)" if re.search(r"\d", l) else "")}); continue
         if all(refs[r].startswith("unknown:") for r in cited): keep_idx[i] = l; continue
