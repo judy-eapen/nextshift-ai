@@ -8,6 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv; load_dotenv()
 import pandas as pd
 from langgraph.types import Command
+from graph import review as _rv
 from graph.build import build_graph
 from graph import llm, memory
 
@@ -78,7 +79,12 @@ def run_one(graph, g):
     if exp.get("skeptic_fallback_flagged"): checks["skeptic_fallback_flagged"] = sk.get("status") == "unverified" and any("UNVERIFIED" in b for b in (st.get("views") or {}).get("badges", [])) and (st.get("views") or {}).get("review_status") == "unverified"
     if "min_cards" in exp and sk.get("stripped"):   # removed content must not reach the UI (compare against the reviewed views)
         v_ = st.get("views") or {}; ui_text = json.dumps(v_.get("plan")) + json.dumps(v_.get("outlooks")) + json.dumps(v_.get("changes"))
-        checks["removed_absent_from_ui"] = not any((r["sentence"].split(" [")[0][:50] if r["path"].endswith(".why") else r["sentence"][:60]) in ui_text for r in sk["stripped"])
+        def _leaked(r):   # a removed 'why' is checked at ITS OWN row — the same short reason may legitimately survive on another task row
+            if r["path"].endswith(".why"):
+                try: parent, key = _rv._resolve(v_, r["path"]); return bool((parent[key] or "").strip()) and r["sentence"].split(" [")[0][:50] in parent[key]
+                except Exception: return r["sentence"].split(" [")[0][:50] in ui_text
+            return r["sentence"][:60] in ui_text
+        checks["removed_absent_from_ui"] = not any(_leaked(r) for r in sk["stripped"])
     if exp.get("deltas_computed"): checks["deltas_computed"] = st.get("prior_snapshot") is not None and isinstance(st.get("deltas"), list)
     rubric = {}
     if "min_cards" in exp and plan.get("direct_answer") and not g.get("break_skeptic"):
