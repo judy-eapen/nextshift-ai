@@ -8,7 +8,7 @@ from typing import Any
 REF = re.compile(r"\[([cu]\d{2,3})\]")
 TAGS = ("[interpretation]", "[advice]")
 # deterministic lint: certainty about the future is never allowed, regardless of citations
-CERTAINTY = re.compile(r"\b(will be (automated|replaced|eliminated)|will disappear|will vanish|is safe from AI|guaranteed|100% safe|doomed|obsolete)\b", re.I)
+CERTAINTY = re.compile(r"\b(will be (automated|replaced|eliminated)|will disappear|will vanish|is safe from AI|guaranteed|100% safe|doomed|(is|are|become) obsolete|perfect (fit|match|career)|perfect for you|ideal career for you)\b", re.I)
 
 PARAGRAPH_KEYS = ("direct_answer", "for_you", "our_read", "outlook_takeaway", "why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "note", "what_people_do", "education_and_entry", "outlook", "how_ai_may_change", "risks_tradeoffs_uncertainty", "summary")
 _SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z“\"(])")

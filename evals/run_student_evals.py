@@ -76,7 +76,9 @@ def run_case(g_):
         if old_sk: os.environ["SKEPTIC_MODEL"] = old_sk
         os.environ["DISABLE_SOURCES"] = ""
     st = graph.get_state(cfg).values; cands = st.get("candidates") or []; comp = st.get("completeness") or {}; sk = st.get("skeptic") or {}; prof = st.get("profile") or {}; views = st.get("views") or {}; dd = st.get("deep_dive") or {}
-    ui_text = json.dumps(views.get("groups", {})) + json.dumps(views.get("shortlist", {})) + json.dumps(dd.get("sections", {}))
+    def prose_of_cards(groups): return " ".join(str(c["card"].get(k, "")) for g in groups.values() for c in g for k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff")) + " ".join(str(r.get("why", "")) for g in groups.values() for c in g for r in c["card"].get("more_important", []))
+    cards_text = prose_of_cards(views.get("groups", {})); dd_text = json.dumps(dd.get("sections", {})); sl_text = json.dumps(views.get("shortlist", {}).get("rows", {})) + str(views.get("shortlist", {}).get("our_read", ""))
+    ui_text = cards_text + " " + sl_text + " " + dd_text   # model-written prose only — verbatim O*NET task statements are data, not claims
     checks = {"no_error": err is None, "under_15min": time.time() - t0 < 900, "no_write_before_approval": not writes_before_approval}
     if exp.get("reaches_understanding"): checks["reaches_understanding"] = bool(prof.get("summary_sections"))
     if "turns_between" in exp: lo, hi = exp["turns_between"]; checks["turns_between"] = lo <= len(st.get("turns") or []) <= hi
@@ -100,7 +102,9 @@ def run_case(g_):
     if exp.get("profile_rejected"): checks["profile_rejected"] = (st.get("approvals") or {}).get("understanding", {}).get("action") == "reject" and not cands and (st.get("tool_calls") or 0) == 0
     if exp.get("final_rejected"): checks["final_rejected"] = not st.get("exported_path") and _snap_count(tid) == 0
     if exp.get("saved"): checks["saved"] = bool(st.get("exported_path")) and Path(st["exported_path"]).exists() and _snap_count(tid) == 1
-    if exp.get("removed_absent"): checks["removed_absent"] = not any((r["sentence"].split(" [")[0][:50] in ui_text) for r in (sk.get("stripped") or []) if len(r["sentence"]) > 30)
+    if exp.get("removed_absent"):   # each review's removals checked against ITS OWN rendered object
+        def leak(stripped, text): return any(r["sentence"].split(" [")[0][:50] in text for r in (stripped or []) if len(r["sentence"]) > 30)
+        checks["removed_absent"] = not leak(sk.get("stripped"), cards_text) and not leak((dd.get("review") or {}).get("stripped"), dd_text) and not leak(((views.get("shortlist") or {}).get("review") or {}).get("stripped"), sl_text)
     if exp.get("feedback_changes_shortlist"): rej = {r["key"] for r in st.get("rejected") or []}; checks["feedback_changes_shortlist"] = bool(rej) and not (rej & set(st.get("shortlist") or []))
     if exp.get("experiments"): ex = st.get("experiments_planned") or []; checks["experiments"] = len(ex) >= 3 and not FEAR.search(" ".join(ex))
     if exp.get("exploration_preserved"): checks["exploration_preserved"] = len(st.get("exploration_log") or []) >= 2 and bool(st.get("rejected")) and bool(st.get("reactions"))

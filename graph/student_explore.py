@@ -8,7 +8,7 @@ from . import llm, memory, nodes as N, review as rv
 from .student import StudentState, FIELDS, _say, _coverage
 
 MAX_CANDIDATES = 10; MIN_CANDIDATES = 6
-GROUP_LABEL = {"strong": "Strong matches", "explore": "Worth exploring", "unexpected": "Unexpected possibilities"}
+GROUP_LABEL = {"strong": "Strong matches", "explore": "Worth exploring", "unexpected": "Unexpected possibilities", "reconsider": "Your ideas, reconsidered"}
 
 # ───────────────────────────── profile refs ─────────────────────────────
 def profile_refs(profile: dict) -> dict:
@@ -26,6 +26,7 @@ GEN_SYS = """You propose career directions for ONE student from their confirmed 
 Use real occupation names as they appear in the US O*NET / BLS taxonomy where possible (e.g. "Occupational Therapists", "User Experience Designers", "Electricians", "Market Research Analysts"). Modern roles without a category are fine (say so in needs_composite).
 For EACH direction give a transparent rationale — every line must cite the profile refs it rests on, like [p:interests:0]:
 matches_interests · uses_strengths · fits_preferences · constraints_ok · constraints_conflict · why_included · poor_fit_if (one honest line).
+If the profile lists existing_career_ideas, EVERY one of them must appear as a candidate — placed honestly in strong / explore, or in a fourth group "reconsider" with the reason — so the student sees how their own ideas hold up.
 Never infer from gender, race, background or school. No personality labels. Prefer directions whose education path is compatible with stated constraints; if not compatible, say so in constraints_conflict rather than dropping it.
 Return {"candidates":[{"label":"...","search_title":"O*NET-style title","group":"strong|explore|unexpected","needs_composite":false,"rationale":{"matches_interests":["..."],"uses_strengths":["..."],"fits_preferences":["..."],"constraints_ok":["..."],"constraints_conflict":["..."],"why_included":"...","poor_fit_if":"..."}}]}"""
 
@@ -36,7 +37,7 @@ def generate_candidates(state: StudentState) -> dict:
         except Exception as e: _say(f"Candidate generation attempt {attempt + 1} failed ({type(e).__name__}) — retrying" if attempt == 0 else f"Candidate generation failed twice: {e}")
     if not out.get("candidates"): out = {"candidates": []}
     cands = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:MAX_CANDIDATES]
-    for i, c in enumerate(cands): c["key"] = f"k{i+1}"; c.setdefault("group", "explore"); c.setdefault("rationale", {})
+    for i, c in enumerate(cands): c["key"] = f"k{i+1}"; c["group"] = c.get("group") if c.get("group") in GROUP_LABEL else "explore"; c.setdefault("rationale", {})
     _say(f"Thought of {len(cands)} directions: {sum(c['group']=='strong' for c in cands)} strong · {sum(c['group']=='explore' for c in cands)} worth exploring · {sum(c['group']=='unexpected' for c in cands)} unexpected")
     return {"candidates": cands, "cost_usd": cost}
 
