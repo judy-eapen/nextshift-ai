@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv; load_dotenv(ROOT / ".env")
 import streamlit as st, pandas as pd
 from langgraph.types import Command
+from ui import student_ui
 
 st.set_page_config(page_title="NextShift AI", page_icon="⟶", layout="centered")
 C = {"bg": "#0B0F14", "surface": "#121821", "line": "#2A3544", "ink": "#E6EAF0", "muted": "#8A94A6", "amber": "#E5A24A", "student": "#7FC8E8", "green": "#8FBF9F", "red": "#E07A5F", "purple": "#B48CFF"}
@@ -53,8 +54,8 @@ def screen_start():
     st.markdown("<p class='muted'>Understand how demand for a career may change, how AI may reshape the work, and what you can do to prepare.</p>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown(f"<div class='card' style='border-color:{C['student']}66'><span class='kicker' style='color:{C['student']}'>Students</span><h3 style='margin:6px 0'>I'm exploring careers</h3><p class='muted'>Compare directions and see where opportunity is likely to be.</p></div>", unsafe_allow_html=True)
-        if st.button("Start exploring →", width="stretch"): S.door = "student"; S.profile = {"door": "student"}; S.stage = "intake"; S.step = 0; st.rerun()
+        st.markdown(f"<div class='card' style='border-color:{C['student']}66'><span class='kicker' style='color:{C['student']}'>Students</span><h3 style='margin:6px 0'>I'm exploring careers</h3><p class='muted'>You don't need to know what you want yet — a short conversation, then directions worth exploring.</p></div>", unsafe_allow_html=True)
+        if st.button("Start exploring →", width="stretch"): S.door = "student"; student_ui.start(S)
     with c2:
         st.markdown("<div class='card'><span class='kicker'>Professionals</span><h3 style='margin:6px 0'>I'm preparing for changes in my career</h3><p class='muted'>See what's coming for your role and what to do now.</p></div>", unsafe_allow_html=True)
         if st.button("Start planning →", type="primary", width="stretch"): S.door = "professional"; S.profile = {"door": "professional"}; S.stage = "intake"; S.step = 0; st.rerun()
@@ -278,4 +279,6 @@ with st.sidebar:
         for f in files[:6]: st.markdown(f"<div class='small'>{f.name}</div>", unsafe_allow_html=True)
     if S.stage != "start" and st.button("↺ Start over"): reset(); st.rerun()
 
-{"start": screen_start, "intake": screen_intake, "understanding_run": screen_understanding_run, "understanding": screen_understanding, "working": screen_working, "plan": screen_plan, "done": screen_done}[S.stage]()
+if S.stage in student_ui.SCREENS: student_ui.SCREENS[S.stage](S)
+elif S.stage == "s_done": student_ui.screen_done(S, reset)
+else: {"start": screen_start, "intake": screen_intake, "understanding_run": screen_understanding_run, "understanding": screen_understanding, "working": screen_working, "plan": screen_plan, "done": screen_done}[S.stage]()
