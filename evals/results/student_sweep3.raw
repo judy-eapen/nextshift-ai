@@ -1,0 +1,3 @@
+▶ s03 vague — I don't know ×5 … FAIL 538s turns=13 cands=10 stripped=21 review=verified $0.0635  failed: ['rubric_respects_constraints']
+▶ s02 three careers in mind … FAIL 566s turns=8 cands=10 stripped=30 review=verified $0.0704  failed: ['existing_ideas_appear']
+▶ s01 no career ideas … FAIL 628s turns=12 cands=10 stripped=36 review=verified $0.0746  failed: ['removed_absent', 'rubric_facts_vs_interpretation', 'rubric_respects_constraints']

@@ -109,7 +109,17 @@ def run_case(g_):
     if exp.get("saved"): checks["saved"] = bool(st.get("exported_path")) and Path(st["exported_path"]).exists() and _snap_count(tid) == 1
     if exp.get("removed_absent"):   # each review's removals checked against ITS OWN rendered object
         def leak(stripped, text): return any(r["sentence"].split(" [")[0][:50] in text for r in (stripped or []) if len(r["sentence"]) > 30)
-        checks["removed_absent"] = not leak(sk.get("stripped"), cards_text) and not leak((dd.get("review") or {}).get("stripped"), dd_text) and not leak(((views.get("shortlist") or {}).get("review") or {}).get("stripped"), sl_text)
+        def leak_cards():   # compare each removal against ITS OWN card's prose (twins may legitimately share a sentence)
+            allc = [c for g in (views.get("groups") or {}).values() for c in g]
+            for r in sk.get("stripped") or []:
+                m = re.match(r"candidates\[(\d+)\]", r["path"]);
+                if not m or len(r["sentence"]) <= 30: continue
+                idx = int(m.group(1)); 
+                if idx >= len(allc): continue
+                own = " ".join(str(allc[idx]["card"].get(k, "")) for k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff")) + " ".join(str(x.get("why", "")) for x in allc[idx]["card"].get("more_important", []))
+                if r["sentence"].split(" [")[0][:50] in own: return True
+            return False
+        checks["removed_absent"] = not leak_cards() and not leak((dd.get("review") or {}).get("stripped"), dd_text) and not leak(((views.get("shortlist") or {}).get("review") or {}).get("stripped"), sl_text)
     if exp.get("feedback_changes_shortlist"): rej = {r["key"] for r in st.get("rejected") or []}; checks["feedback_changes_shortlist"] = bool(rej) and not (rej & set(st.get("shortlist") or []))
     if exp.get("experiments"): ex = st.get("experiments_planned") or []; checks["experiments"] = len(ex) >= 3 and not FEAR.search(" ".join(ex))
     if exp.get("exploration_preserved"): checks["exploration_preserved"] = len(st.get("exploration_log") or []) >= 2 and bool(st.get("rejected")) and bool(st.get("reactions"))

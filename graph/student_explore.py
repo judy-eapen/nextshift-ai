@@ -37,6 +37,13 @@ def generate_candidates(state: StudentState) -> dict:
         except Exception as e: _say(f"Candidate generation attempt {attempt + 1} failed ({type(e).__name__}) — retrying" if attempt == 0 else f"Candidate generation failed twice: {e}")
     if not out.get("candidates"): out = {"candidates": []}
     cands = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:MAX_CANDIDATES]
+    # code-enforced: every career the student named appears, even if the model skipped it
+    def _tok(s): return {t for t in re.findall(r"[a-z]+", s.lower()) if len(t) > 3 and t not in {"design", "designer", "path", "graduate"}} | {t[:5] for t in re.findall(r"[a-z]+", s.lower()) if len(t) > 5}
+    for i, e in enumerate(prof.get("existing_career_ideas") or []):
+        idea = e["value"]; present = any(_tok(idea) & _tok(c["label"] + " " + str(c.get("search_title", ""))) for c in cands)
+        if not present and len(cands) < MAX_CANDIDATES + 2:
+            cands.append({"label": idea.title(), "search_title": idea, "group": "reconsider", "needs_composite": False,
+                          "rationale": {"why_included": f"You said this was already on your mind [p:existing_career_ideas:{i}]", "matches_interests": [], "uses_strengths": [], "fits_preferences": [], "constraints_ok": [], "constraints_conflict": [], "poor_fit_if": "The evidence below will show whether it holds up."}})
     for i, c in enumerate(cands): c["key"] = f"k{i+1}"; c["group"] = c.get("group") if c.get("group") in GROUP_LABEL else "explore"; c.setdefault("rationale", {})
     _say(f"Thought of {len(cands)} directions: {sum(c['group']=='strong' for c in cands)} strong · {sum(c['group']=='explore' for c in cands)} worth exploring · {sum(c['group']=='unexpected' for c in cands)} unexpected")
     return {"candidates": cands, "cost_usd": cost}
@@ -70,6 +77,17 @@ def resolve_candidates(state: StudentState) -> dict:
             soc = c["persona"]["soc"]; seen_soc[soc] = seen_soc.get(soc, 0) + 1
             if seen_soc[soc] > 2: c["persona"] = None; c["resolution"] = "dropped (duplicate occupation)"
     keep = [c for c in cands if c.get("persona")]
+    majors = {c["persona"]["soc"][:2] for c in keep}
+    if keep and len(majors) < 3:   # too narrow (e.g. ten UX-flavoured roles): ask for directions outside these groups, resolve them, add up to 3
+        try:
+            out, cost = llm.chat_json("planner", GEN_SYS + f"\nProduce ONLY 3 additional directions that are NOT in these fields: {sorted({c['persona']['title'] for c in keep})}. They must still be justified by the profile.", _profile_table(state["profile"]), max_tokens=2500, temperature=0.5)
+            extra = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:3]
+            for j, c in enumerate(extra):
+                c["key"] = f"k{len(cands) + j + 1}"; c["group"] = c.get("group") if c.get("group") in GROUP_LABEL else "explore"; c.setdefault("rationale", {})
+                r0 = rs.resolve(c.get("search_title") or c["label"], "", k=3); m = r0["matches"][0] if r0.get("matches") else None
+                if m and m["soc"][:2] not in majors: c["persona"] = {"soc": m["soc"], "onet_soc": m.get("onet_soc") or f"{m['soc']}.00", "title": m["title"], "matched_via": f"tier {r0['tier']}"}; c["resolution"] = f"official (tier {r0['tier']})"; c["resolver_note"] = "added for breadth"; keep.append(c); majors.add(m["soc"][:2])
+            _say(f"Added {len(extra)} directions for breadth — the first set leaned on one field")
+        except Exception as e: _say(f"(breadth top-up skipped: {e})")
     if not keep: _say("⚠ I couldn't produce career directions this time — you'll see an empty results screen with a retry option")
     _say(f"Matched {len(keep)} directions to official occupations" + (f" ({sum(c['resolution']=='composite' for c in keep)} assembled as composites)" if any(c['resolution']=='composite' for c in keep) else ""))
     return {"candidates": keep, "targets": [{"persona": c["persona"], "role": "candidate"} for c in keep]}
