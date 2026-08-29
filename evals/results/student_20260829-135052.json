@@ -1,0 +1,41 @@
+{
+  "summary": {
+    "passed": 0,
+    "total": 1,
+    "median_seconds": 597,
+    "total_cost_usd": 0.0822
+  },
+  "results": [
+    {
+      "id": "s19",
+      "seconds": 597,
+      "turns": 11,
+      "candidates": 11,
+      "cards": 350,
+      "stripped": 35,
+      "review_status": "verified",
+      "shortlist": [
+        "Meeting, Convention, and Event Planners",
+        "Public Relations Specialists"
+      ],
+      "cost_usd": 0.0822,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": false,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "diagnostics": [
+        "LEAKS: [{\"where\": \"cards\", \"path\": \"candidates[5].more_important[4].why\", \"sentence\": \"judgment under ambiguity [c200] [interpretation]\", \"near\": \"\\\": \\\"Perform marketing and public relations activities.\\\", \\\"ref\\\": \\\"c196\\\", \\\"why\\\": \\\"judgment under ambiguity [c196] [interpretation]\\\", \\\"card_id\\\": \\\"onet:task:perform-marketing-and-publi\"}]"
+      ],
+      "pass": false
+    }
+  ]
+}

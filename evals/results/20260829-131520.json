@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "passed": 1,
+    "total": 1,
+    "median_seconds": 137,
+    "total_cost_usd": 0.0177
+  },
+  "results": [
+    {
+      "id": "g04",
+      "kind": "professional",
+      "seconds": 137,
+      "cards": 158,
+      "stripped": 12,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0177,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/29-1141_2035_20260829-131507.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "ai_change_reading": true,
+        "no_fear_words": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Addresses both demand (BLS projections) and change (AI task impact). Official BLS data labeled [official outlook], AI interpretations clearly marked [interpretation]. Uses 'projected', 'may', 'uncertain' without guarantees of safety or decline. No specific courses/products named; general tools like 'AI note-taking tool' without brand names. 30-day plan includes concrete steps like comparing documentation methods, interviewing colleagues, mapping tasks.",
+      "pass": true
+    }
+  ]
+}

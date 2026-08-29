@@ -1,0 +1,159 @@
+{
+  "summary": {
+    "passed": 3,
+    "total": 5,
+    "median_seconds": 597,
+    "total_cost_usd": 0.3333
+  },
+  "results": [
+    {
+      "id": "s01",
+      "seconds": 693,
+      "turns": 12,
+      "candidates": 11,
+      "cards": 387,
+      "stripped": 38,
+      "review_status": "verified",
+      "shortlist": [
+        "Film and Video Editors",
+        "Meeting, Convention, and Event Planners"
+      ],
+      "cost_usd": 0.0847,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "turns_between": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": false,
+        "no_fear_words": true,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "All criteria met: why_fit directly references student's stated experiences; BLS facts separated from AI interpretation; tradeoffs highlight risks without guarantees; cost/education constraints acknowledged in practical_mismatch; experiments are low-cost and feasible (e.g., free software, local interviews).",
+      "pass": false
+    },
+    {
+      "id": "s11",
+      "seconds": 597,
+      "turns": 9,
+      "candidates": 9,
+      "cards": 469,
+      "stripped": 31,
+      "review_status": "verified",
+      "shortlist": [
+        "UX Designer",
+        "User Experience Researcher"
+      ],
+      "cost_usd": 0.0745,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "has_composite": true,
+        "saved": true,
+        "composite_labelled": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s19",
+      "seconds": 623,
+      "turns": 8,
+      "candidates": 9,
+      "cards": 281,
+      "stripped": 33,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Editor",
+        "Public Relations Specialist"
+      ],
+      "cost_usd": 0.0684,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": false,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "pass": false
+    },
+    {
+      "id": "s13",
+      "seconds": 555,
+      "turns": 12,
+      "candidates": 10,
+      "cards": 318,
+      "stripped": 52,
+      "review_status": "verified",
+      "shortlist": [
+        "Project Manager",
+        "Event Planner"
+      ],
+      "cost_usd": 0.0804,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "unknown_outlook_labelled": true,
+        "partial_badge": true,
+        "saved": true,
+        "run_details_partial": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s15",
+      "seconds": 165,
+      "turns": 12,
+      "candidates": 10,
+      "cards": 425,
+      "stripped": 1,
+      "review_status": "unverified",
+      "shortlist": [
+        "Video Producer for Nonprofits",
+        "Nonprofit Communications Director"
+      ],
+      "cost_usd": 0.0253,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "unverified_loud": true,
+        "saved": true,
+        "journey_unverified": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    }
+  ]
+}

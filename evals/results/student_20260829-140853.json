@@ -1,0 +1,76 @@
+{
+  "summary": {
+    "passed": 2,
+    "total": 2,
+    "median_seconds": 542,
+    "total_cost_usd": 0.1371
+  },
+  "results": [
+    {
+      "id": "s01",
+      "seconds": 507,
+      "turns": 10,
+      "candidates": 10,
+      "cards": 345,
+      "stripped": 15,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Editors",
+        "Meeting, Convention, and Event Planners"
+      ],
+      "cost_usd": 0.0627,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "turns_between": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true,
+        "no_fear_words": true,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "All criteria met: why_fit lines directly reference student's stated experiences; BLS facts separated from interpretations; no guarantees of outcomes; tradeoffs address education/cost constraints; experiments are low-cost and actionable without invented courses/schools.",
+      "diagnostics": [],
+      "pass": true
+    },
+    {
+      "id": "s19",
+      "seconds": 542,
+      "turns": 11,
+      "candidates": 10,
+      "cards": 372,
+      "stripped": 32,
+      "review_status": "verified",
+      "shortlist": [
+        "Event Planners",
+        "Public Relations Specialists"
+      ],
+      "cost_usd": 0.0744,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "diagnostics": [],
+      "pass": true
+    }
+  ]
+}

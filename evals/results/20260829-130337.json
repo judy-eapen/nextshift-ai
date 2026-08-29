@@ -1,0 +1,369 @@
+{
+  "summary": {
+    "passed": 10,
+    "total": 12,
+    "median_seconds": 114,
+    "total_cost_usd": 0.1666
+  },
+  "results": [
+    {
+      "id": "g01",
+      "kind": "professional",
+      "seconds": 240,
+      "cards": 39,
+      "stripped": 16,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0238,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/15-1252_2030_20260829-123932.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "projection": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": false
+      },
+      "rubric_notes": "30-day plan section is empty; first concrete action is listed under 'Next six months' instead of within 30 days.",
+      "pass": false
+    },
+    {
+      "id": "g02",
+      "kind": "professional",
+      "seconds": 116,
+      "cards": 53,
+      "stripped": 7,
+      "uncited_final": 0,
+      "tool_calls": 16,
+      "cost_usd": 0.0121,
+      "demand": [
+        "unknown"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/composite_product-manager_1-2y_20260829-124132.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "unknowns": true,
+        "proxy_labelled": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed: demand (BLS data for related roles), change (AI task usage details), learn (concrete 30-day actions). Facts separated from interpretation via [interpretation] labels. No guarantees made; all statements qualify uncertainty. No specific products/courses named. 30-day plan includes specific, practical tasks like comparing AI vs manual methods and tracking time.",
+      "pass": true
+    },
+    {
+      "id": "g03",
+      "kind": "professional",
+      "seconds": 108,
+      "cards": 53,
+      "stripped": 10,
+      "uncited_final": 0,
+      "tool_calls": 16,
+      "cost_usd": 0.0093,
+      "demand": [
+        "unknown"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/composite_product-manager_2030_20260829-124330.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "resolver_offers_composite": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses both 'change' (AI's role in tasks) and 'pivot' (no evidence for path change). Official BLS data is clearly separated from interpretations (labeled [interpretation]). No guarantees made about safety or decline; uncertainties explicitly stated. No specific courses/products named\u2014only general AI tool usage. 30-day plan includes concrete, practical tasks with clear deliverables (e.g., comparisons, documentation).",
+      "pass": true
+    },
+    {
+      "id": "g04",
+      "kind": "professional",
+      "seconds": 139,
+      "cards": 158,
+      "stripped": 10,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0173,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 1,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/29-1141_2035_20260829-124544.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "ai_change_reading": true,
+        "no_fear_words": true,
+        "removed_absent_from_ui": false,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses demand (BLS projections) and change (AI's role in tasks). Official data separated from interpretation (e.g., 'BLS projects' vs. 'interpretation' labels). No guarantees made (uses projections/probabilities). No specific products/courses named. 30-day steps are concrete, practical actions (e.g., charting with AI tool, task mapping).",
+      "pass": false
+    },
+    {
+      "id": "g06",
+      "kind": "professional",
+      "seconds": 114,
+      "cards": 160,
+      "stripped": 8,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0136,
+      "demand": [
+        "stable"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/11-9199_2030_20260829-124745.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "unknowns": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed; facts (BLS data) clearly separated from interpretations with [interpretation] tags; no guarantees made (uses 'likely', 'stable demand' with caveats); no specific products/courses named (general AI tools); 30-day plan has concrete, specific tasks with clear actions.",
+      "pass": true
+    },
+    {
+      "id": "g07",
+      "kind": "professional",
+      "seconds": 104,
+      "cards": 36,
+      "stripped": 5,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0117,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/43-4051_2030_20260829-124925.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "partial_badge": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses all concerns: demand (BLS decline data), change (AI task penetration details), pivot (explicitly states no recommendation due to insufficient data). Facts (BLS sources) are clearly separated from interpretations via [interpretation] tags. No guarantees made (uses 'projected', 'may', 'suggests'). No specific courses/products named; actions are generic (e.g., 'AI note-taker'). 30-day plan has concrete steps like comparing call summaries, mapping complaints, and interviewing colleagues.",
+      "pass": true
+    },
+    {
+      "id": "g08",
+      "kind": "professional",
+      "seconds": 238,
+      "cards": 60,
+      "stripped": 11,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0268,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/27-3043_2030_20260829-125325.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "disagreement": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All stated concerns (demand and change) addressed; official BLS data clearly separated from AI-related interpretations with explicit labels; no guarantees about safety or decline (uses 'projected', 'may', 'uncertain'); no specific courses/products named (only generic AI tools); 30-day plan includes concrete, measurable actions like documenting differences in AI vs manual work and rewriting drafts.",
+      "pass": true
+    },
+    {
+      "id": "g09",
+      "kind": "professional",
+      "seconds": 371,
+      "cards": 52,
+      "stripped": 10,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0254,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 14,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/13-2011_2035_20260829-125932.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "final_horizon": true,
+        "understanding_edited": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses 'learn' through concrete skill-building exercises; facts (BLS data) are clearly separated from interpretations with labels; no guarantees of safety/growth; no specific products/courses named; 30-day steps are practical and actionable.",
+      "pass": true
+    },
+    {
+      "id": "g10",
+      "kind": "professional",
+      "seconds": 1,
+      "cards": 0,
+      "stripped": 0,
+      "uncited_final": 0,
+      "tool_calls": 0,
+      "cost_usd": 0.0001,
+      "demand": [],
+      "deltas": 0,
+      "exported": null,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "no_export": true,
+        "no_gathering_after_reject": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "g11",
+      "kind": "professional",
+      "seconds": 105,
+      "cards": 50,
+      "stripped": 5,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0114,
+      "demand": [
+        "stable"
+      ],
+      "deltas": 9,
+      "exported": null,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "no_export": true,
+        "no_snapshot": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "g12",
+      "kind": "professional",
+      "seconds": 28,
+      "cards": 59,
+      "stripped": 2,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0028,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 1,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/25-2021_2035_20260829-130202_UNVERIFIED.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "skeptic_fallback_flagged": true,
+        "removed_absent_from_ui": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "g13",
+      "kind": "professional",
+      "seconds": 96,
+      "cards": 39,
+      "stripped": 9,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0123,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/15-1252_2030_20260829-130337.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "deltas_computed": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    }
+  ]
+}
