@@ -98,3 +98,109 @@
 [2026-08-29 10:03:40] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
 
 [2026-08-29 10:03:40] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:02:01] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:02:02] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:02:02] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:02:02] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:07] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:07] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:07] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:07] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:22] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:22] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:32] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:32] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 13:52:32] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:27] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:44] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:45] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:59] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:59] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:21:59] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:22] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:22] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:22] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:31] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:31] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:41] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:41] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 16:53:41] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 17:15:46] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 17:15:46] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 17:15:46] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:35:50] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:35:50] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:35:50] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:36:05] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:36:06] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:36:13] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:36:13] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
+
+[2026-08-29 19:36:13] OpenAIModelNotFoundError: Error code: 404 - {'detail': 'The model `not/a-real-model` does not exist.'}
