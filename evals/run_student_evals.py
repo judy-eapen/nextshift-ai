@@ -63,6 +63,7 @@ def run_case(g_):
         if p and p["kind"] == "results":
             if _wrote(): writes_before_approval = True
             keys = [c["key"] for grp in p["views"]["groups"].values() for c in grp]
+            if not keys: p = run(Command(resume={"action": "stop"})); raise StopIteration   # empty results screen → student stops; nothing to react to
             rx = g_.get("reactions") or [{"key": 0, "verdict": "excited", "why": "I like working directly with people"}, {"key": 1, "verdict": "curious", "why": "not sure about the amount of school"}, {"key": -1, "verdict": "no", "why": "too solitary"}]
             rx = [{**r, "key": keys[r["key"]] if isinstance(r["key"], int) else r["key"]} for r in rx if not isinstance(r["key"], int) or -len(keys) <= r["key"] < len(keys)]
             seen_k = set(); rx = [r for r in rx if not (r["key"] in seen_k or seen_k.add(r["key"]))]   # short lists: no duplicate reactions
@@ -77,6 +78,7 @@ def run_case(g_):
         if p and p["kind"] == "save":
             if _wrote(): writes_before_approval = True
             p = run(Command(resume={"action": "reject" if g_.get("reject_final") else "approve"}))
+    except StopIteration: pass
     except Exception as e: err = repr(e)
     finally:
         if old_sk: os.environ["SKEPTIC_MODEL"] = old_sk

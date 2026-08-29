@@ -325,6 +325,7 @@ Then "our_read": 2-4 sentences on how the options differ for THIS student and wh
 Return {"rows": {"k1": {...8 dims...}}, "our_read": "..."}"""
 
 def build_shortlist(state: StudentState) -> dict:
+    if not state.get("candidates"): return {"shortlist": [], "views": {**state.get("views", {}), "shortlist": {"keys": [], "rows": {}, "our_read": "", "review": {"stripped": [], "total": 0}}}}
     rx = {r["key"]: r for r in state["reactions"]}; disc = state.get("discriminators", [])
     order = sorted([c for c in state["candidates"] if rx.get(c["key"], {}).get("verdict") in ("excited", "curious")], key=lambda c: (rx[c["key"]]["verdict"] != "excited", c["group"] != "strong"))
     short = [c["key"] for c in order[:3]] or [c["key"] for c in state["candidates"] if c["group"] == "strong"][:2]
