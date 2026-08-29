@@ -7,21 +7,34 @@ flowchart TB
     S7["Shortlist · 8 dimensions shown separately · Our read (interpretation)"]
     S8["Deep dive · 10 sections incl. Test this career"]
   end
-  subgraph G["LangGraph · one graph, one thread, seven interrupts · SQLite checkpointer"]
+  subgraph G["LangGraph · one graph, one thread, seven interrupts · SQLite checkpointer · 38 nodes"]
     direction TB
-    INIT["init_interview"] --> SQ["select_question<br/>code picks the goal · model words it"] --> IG{{"⏸ interview_gate"}} --> UP["update_profile<br/>Evidence{value, quote, turn, kind}"] --> EC["evaluate_completeness (code)<br/>core coverage · contradictions · ≤14 turns"]
+    INIT["init_interview"] --> SQ["select_question<br/>code picks the goal · curated question (model only if a topic runs out)"] --> IG{{"⏸ interview_gate"}} --> UP["update_profile<br/>Evidence{value, quote, turn, kind}"] --> EC["evaluate_completeness (code)<br/>core coverage · contradictions · ≤14 turns"]
     EC -- "not ready" --> SQ
     EC -- "ready / recommend / max" --> RU["render_understanding · 9 sections"] --> UG{{"⏸ understanding_gate<br/>confirm · edit · back · reject"}}
     UG -- back --> SQ
     UG -- reject --> E1((end · nothing written))
-    UG -- confirm --> GC["generate_candidates · 8–10 · cited rationale"] --> RC["resolve_candidates<br/>exact → semantic → composite"]
-    RC -- "Send × candidate" --> GATH["gather_outlook · gather_exposure<br/>+ forecasts · research"] --> REC["reconcile"] --> WO["write_outlook · 3 task groups"] --> AF["analyze_fit · card prose"] --> RV1["review_cards · code: rationale refs + uncited lines · model: batched verdicts<br/>failure → UNVERIFIED"] --> RR["render_results"] --> RG{{"⏸ reaction_gate"}}
-    RG --> UR["update_from_reactions · why → profile"] --> DI["discriminate · 0–2 questions"] --> DG{{"⏸ discriminator_gate"}} --> BS["build_shortlist · 8 dimensions · reviewed (review_object)"] --> SG{{"⏸ shortlist_gate<br/>pick · what-if · back · save"}}
+    UG -- confirm --> GC["generate_candidates · 8–10 · cited rationale"] --> RC["resolve_candidates<br/>exact → semantic → composite (cached)"]
+    subgraph LA["Level A · lightweight cards, before any reaction"]
+      direction TB
+      GA["gather_forecasts · gather_research (once, cached)<br/>gather_outlook × candidate (local BLS + O*NET description)"] --> REC["reconcile · refs kept stable"] --> WO["write_outlook · facts only, no model call"] --> AFL["analyze_fit_light (code)<br/>cited rationale · outlook facts · deterministic mismatches"] --> RVL["review_cards_light · fast model"]
+    end
+    RC -- "Send × candidate" --> GA
+    RVL --> RR["render_results"] --> RG{{"⏸ reaction_gate"}}
+    RG --> UR["update_from_reactions · why → profile<br/>deep set = top 3 reacted-to careers"]
+    subgraph LB["Level B · deep evidence, only for the reacted-to (or picked) careers"]
+      direction TB
+      GE["gather_exposure × deep career<br/>O*NET tasks × Anthropic Economic Index · AIOE"] --> RECD["reconcile_deep · appends refs"] --> WOD["write_outlook_deep<br/>AI-change interpretation · 'more important' reasons"] --> AF["analyze_fit · card prose, own evidence only"] --> RV1["review_cards · thinking model<br/>failure → UNVERIFIED"] --> RF["refresh_results"]
+    end
+    UR -- "Send × deep career" --> GE
+    RF --> DI["discriminate · 0–2 questions"] --> DG{{"⏸ discriminator_gate"}} --> BS["build_shortlist · 8 dimensions · reviewed"] --> SG{{"⏸ shortlist_gate<br/>pick · what-if · back · save"}}
     DI -- none needed --> BS
-    SG -- pick --> DD["deep_dive · 10 sections · reviewed (review_object) · test_this_career"] --> XG{{"⏸ explore_gate<br/>what-if · compare · back · save"}}
+    SG -- "pick (deep evidence exists)" --> DD["deep_dive · 10 sections · reviewed · test_this_career<br/>reused until reactions or constraints change"] --> XG{{"⏸ explore_gate<br/>what-if · compare · back · save"}}
+    SG -- "pick (not yet deep)" --> DO["deepen_one"] -- "Send × 1" --> GE
+    RF -- "after deepen_one" --> DD
     SG -- what-if --> EX["explore · what-if note reviewed · reorder · add constraint · log"] --> SG
     XG -- what-if --> EX
-    XG -- save --> SV{{"⏸ save_gate"}} --> RECD["record · the only writer<br/>profile · shortlist · reactions · experiments · snapshot"]
+    XG -- save --> SV{{"⏸ save_gate"}} --> RECORD["record · the only writer<br/>profile · shortlist · reactions · experiments · snapshot"]
     SV -- reject --> E2((end · nothing written))
   end
   S0 --> INIT
@@ -32,4 +45,4 @@ flowchart TB
   classDef human fill:#E5A24A,stroke:#8a5a10,color:#111
   classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
   class IG,UG,RG,DG,SG,XG,SV human
-  class RECD write
+  class RECORD write

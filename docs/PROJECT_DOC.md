@@ -36,7 +36,7 @@
 
 ![architecture](../design/architecture-diagram.png)
 
-**Pattern: two LangGraph graphs.** Professional: supervisor, 14 nodes, 2 interrupts (diagram above). Student: interviewer, 27 nodes, 7 interrupt kinds, one thread (`design/architecture-student.png`) — the interview loop is a conditional cycle (`select_question → interview_gate → update_profile → evaluate_completeness`) whose exit is decided in code.
+**Pattern: two LangGraph graphs.** Professional: supervisor, 14 nodes, 2 interrupts (diagram above). Student: interviewer, 38 nodes, 7 interrupt kinds, one thread (`design/architecture-student.png`) — two evidence levels: lightweight cards for every direction before the student reacts, task-level AI evidence and the thinking reviewer only for the reacted-to careers — the interview loop is a conditional cycle (`select_question → interview_gate → update_profile → evaluate_completeness`) whose exit is decided in code.
 
 **Model roles.** Six model-driven roles — *understand*, market *relevance filter*, *outlook interpreter*, *"more important" judge*, *plan writer* (all Qwen3-235B-Instruct via Nebius) and the *reviewer* (Qwen3-Next-80B **Thinking** — deliberately a different model family so review doesn't share the writer's blind spots) — plus four deterministic gatherers that fan out with `Send` per occupation and merge through reducers. Numbers, groupings and probability ranges are always computed in code over evidence cards; models write prose and judgments only.
 
