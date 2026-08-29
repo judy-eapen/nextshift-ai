@@ -29,9 +29,12 @@ proj = os.path.join(RAW, "bls_occupation_projections.xlsx")
 df["growth_pct_10y"] = None
 if os.path.exists(proj):
     try:
-        p = pd.read_excel(proj, header=1); code_col = next(c for c in p.columns if "code" in str(c).lower()); pct_col = next(c for c in p.columns if "percent" in str(c).lower())
-        p = p[[code_col, pct_col]].rename(columns={code_col: "soc", pct_col: "growth_pct_10y"}); p["soc"] = p.soc.astype(str).str[:7]
-        df = df.drop(columns=["growth_pct_10y"]).merge(p.drop_duplicates("soc"), on="soc", how="left"); print("projections merged")
+        p = pd.read_excel(proj, "Table 1.2", header=1)   # BLS Employment Projections 2025–35, one row per detailed occupation
+        col = lambda *keys: next(c for c in p.columns if all(k in str(c).lower() for k in keys))
+        p = p.rename(columns={col("code"): "soc", col("change", "percent"): "growth_pct_10y", col("change", "numeric"): "emp_change_k_10y", col("openings"): "openings_annual_k", col("employment, 2025"): "emp_2025_k", col("employment, 2035"): "emp_2035_k", col("typical education"): "education_entry", col("work experience"): "experience_entry", col("on-the-job"): "training_entry"})
+        p = p[p["Occupation type"].astype(str).str.contains("Line item", na=False)][["soc", "growth_pct_10y", "emp_change_k_10y", "openings_annual_k", "emp_2025_k", "emp_2035_k", "education_entry", "experience_entry", "training_entry"]]
+        p["soc"] = p.soc.astype(str).str[:7]; p["projection_period"] = "2025–35"
+        df = df.drop(columns=["growth_pct_10y"]).merge(p.drop_duplicates("soc"), on="soc", how="left"); print(f"projections merged: {df.growth_pct_10y.notna().mean():.0%} coverage")
     except Exception as e: print("projections file present but not parsed:", e)
 df.to_parquet(OUT, index=False)
 print(f"wrote {OUT}: {len(df)} rows; employment coverage {df.employment.notna().mean():.0%}; wage coverage {df.median_wage.notna().mean():.0%}")
