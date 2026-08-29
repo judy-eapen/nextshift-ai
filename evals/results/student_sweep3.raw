@@ -4,3 +4,4 @@
 ▶ s05 asks for more questions when ready … PASS 539s turns=9 cands=10 stripped=29 review=verified $0.0693
 ▶ s07 corrects an earlier answer … PASS 654s turns=9 cands=10 stripped=35 review=verified $0.0843
 ▶ s09 likes a field, dislikes its daily work … FAIL 608s turns=9 cands=9 stripped=26 review=verified $0.0754  failed: ['contradiction_recorded', 'rubric_respects_constraints']
+▶ s14 external source fails (Polymarket) … FAIL 234s turns=8 cands=10 stripped=1 review=unverified $0.0268  failed: ['partial_badge']
