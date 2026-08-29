@@ -43,9 +43,14 @@ def strip_refs(text) -> str:
 def run_graph(inp, box):
     cfg = {"configurable": {"thread_id": S.thread_id}}
     for mode, ev in graph().stream(inp, cfg, stream_mode=["custom", "updates"]):
-        if mode == "custom": S.log.append(ev["say"]); box.write(f"· {ev['say']}")
-        elif "__interrupt__" in ev: return ev["__interrupt__"][0].value
-    return None
+        if mode == "custom":
+            if "phase" in ev:
+                S.phase = ev
+                if callable(S.get("on_phase")): S.on_phase()
+                continue
+            S.log.append(ev["say"]); box.write(f"· {ev['say']}")
+        elif "__interrupt__" in ev: S.phase = None; return ev["__interrupt__"][0].value
+    S.phase = None; return None
 
 # ═══════════════════════════ START ═══════════════════════════
 def screen_start():

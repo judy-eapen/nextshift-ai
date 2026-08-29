@@ -49,6 +49,11 @@ def _say(t: str):
     try: get_stream_writer()({"say": t, "t": time.time()})
     except Exception: pass
 
+def _phase(key: str, **kw):
+    """Structured 'what is being worked on now' event for the journey indicator. Emitted at the START of a node — real current work only."""
+    try: get_stream_writer()({"phase": key, **kw, "t": time.time()})
+    except Exception: pass
+
 # ───────────────────────────── question goals + fallback bank ─────────────────────────────
 GOALS = {   # goal → (priority, fields it informs, fallback questions in order of use)
     "energizing": (1, ["energizing_activities", "interests"], ["What do you find yourself doing when you lose track of time — in school or outside it?", "Think of the last project or activity you actually enjoyed. What were you doing, exactly?"]),
@@ -100,7 +105,7 @@ Rewrite the base question in one natural sentence. You MAY start with a lead-in 
 Never drift back to earlier topics, never ask about the same moment again, never turn it into a follow-up on their last answer. Everyday language; no survey tone; no more than five options if the base offers options. Return {"question": "..."}"""
 
 def select_question(state: StudentState) -> dict:
-    prof, turns, comp = state["profile"], state["turns"], state["completeness"]; goal = comp.get("next_question_goal") or "energizing"
+    _phase("question"); prof, turns, comp = state["profile"], state["turns"], state["completeness"]; goal = comp.get("next_question_goal") or "energizing"
     asked = sum(1 for t in turns if t.get("goal") == goal); bank = GOALS[goal][2]
     fallback = bank[min(asked, len(bank) - 1)]
     if goal == "clarify" and prof.get("contradictions"): c = prof["contradictions"][-1]; fallback = f"Earlier you said “{c.get('quote_a', '')[:80]}”, and also “{c.get('quote_b', '')[:80]}”. How do those fit together for you?"
@@ -142,7 +147,7 @@ CONTRA_SYS = """You spot tensions in a student's career profile. Given what they
 e.g. drawn to medicine but faints at blood; loves biology labs but wants no more than 2 years of school; wants to help people but dislikes talking to strangers. Only real tensions, max 2. Return {"contradictions":[{"fields":["interests","dislikes"],"quote_a":"...","quote_b":"...","note":"one line"}]}"""
 
 def update_profile(state: StudentState) -> dict:
-    prof = json.loads(json.dumps(state["profile"])); turns = state["turns"]; act = state.get("last_action")
+    _phase("profile"); prof = json.loads(json.dumps(state["profile"])); turns = state["turns"]; act = state.get("last_action")
     if act in ("skip", "recommend", "more") or not turns: return {"profile": prof}
     if act == "edit":
         i = state["pending"].get("edited_turn")
@@ -184,7 +189,7 @@ def update_profile(state: StudentState) -> dict:
 
 def evaluate_completeness(state: StudentState) -> dict:
     """Code decides readiness and the next goal; no model call. Returns the structured Completeness object the UI can show."""
-    prof, turns, act = state["profile"], state["turns"], state.get("last_action"); cov = _coverage(prof); rank = ["none", "weak", "moderate", "strong"]
+    _phase("completeness"); prof, turns, act = state["profile"], state["turns"], state.get("last_action"); cov = _coverage(prof); rank = ["none", "weak", "moderate", "strong"]
     substantive = sum(1 for t in turns if t.get("action") == "answer")
     missing = [c for c in CORE if rank.index(cov[c]) < 2]
     open_contra = [c for c in prof.get("contradictions", []) if c.get("status") == "open"]
@@ -221,7 +226,7 @@ SECTION_TITLES = {"energizes": "What energizes you", "strengths_demonstrated": "
                   "what_matters": "What matters in your future", "constraints": "Practical constraints", "already_on_your_mind": "Careers or directions already on your mind", "unresolved": "Questions that remain unresolved"}
 
 def render_understanding(state: StudentState) -> dict:
-    prof = state["profile"]; dump = {f: [{"value": e["value"], "quote": e.get("quote", "")} for e in prof.get(f, [])] for f in FIELDS if prof.get(f)}
+    _phase("understanding"); prof = state["profile"]; dump = {f: [{"value": e["value"], "quote": e.get("quote", "")} for e in prof.get(f, [])] for f in FIELDS if prof.get(f)}
     try: out, cost = llm.chat_json("planner", UNDERSTAND_SYS, f"Profile: {json.dumps(dump)}\nLeanings: {prof.get('pidth')}\nContradictions: {prof.get('contradictions')}\nUnresolved: {prof.get('unresolved_questions')}\nThin conversation: {state['completeness'].get('thin')}", max_tokens=1200)
     except Exception as e: out, cost = {"sections": {k: "(could not write this section)" for k in SECTION_TITLES}}, 0.0
     sections = {k: (out.get("sections") or {}).get(k, "You didn't mention this yet.") for k in SECTION_TITLES}

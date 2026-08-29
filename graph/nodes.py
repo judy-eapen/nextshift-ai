@@ -25,6 +25,11 @@ def _say(text: str):
     try: get_stream_writer()({"say": text, "t": time.time()})
     except Exception: pass
 
+def _phase(key: str, **kw):
+    """Structured current-work event for the journey indicator (see ui/journey.py). Emitted at node start."""
+    try: get_stream_writer()({"phase": key, **kw, "t": time.time()})
+    except Exception: pass
+
 def _disabled(name: str) -> bool:
     return name.lower() in {x.strip().lower() for x in os.environ.get("DISABLE_SOURCES", "").split(",") if x.strip()}
 
@@ -57,6 +62,7 @@ which occupation(s) the analysis will use and why (say plainly if a job has no o
 No jargon, no promises, no analysis yet. Return {"summary": "..."}"""
 
 def understand(state: State) -> dict:
+    _phase("understanding")
     p = state["profile"]; tg = state["targets"]
     occ_lines = [f"- {t['persona']['title']} ({'composite of ' + str(len(t['persona'].get('tasks', []))) + ' tasks from ' + ', '.join(t['persona'].get('source_occupations', [])[:4]) if t['persona'].get('composite') else 'official occupation ' + t['persona']['soc']}), role: {t['role']}" for t in tg]
     user = (f"Door: {p.get('door')}\nRole/title: {p.get('role_title')}\nWeek: {p.get('week_description')}\nIndustry: {p.get('industry')}\nInterests: {p.get('interests')}\nStrengths: {p.get('strengths')}\nConstraints: {p.get('constraints')}\n"
@@ -81,12 +87,14 @@ def fan_out(state: State) -> list[Send]:
     return sends
 
 def gather_outlook(inp: dict) -> dict:
+    _phase("gather")
     p = inp["persona"]; res = [("BLS", _call("BLS", outlook_tool.outlook_cards, p))]
     if not p.get("composite"): res.append(("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, p.get("onet_soc") or f"{p['soc']}.00")))
     _say(f"Employment outlook for {p['title']}: " + ("found BLS 2025–35 projections" if res[0][1].cards else "no official projection — will say so"))
     return _collect(res, _occ_key(p), len(res))
 
 def gather_exposure(inp: dict) -> dict:
+    _phase("gather")
     p = inp["persona"]
     if p.get("composite"):
         res = [("O*NET tasks", composite.task_cards(p)), ("Anthropic Economic Index", composite.no_official_stats("Anthropic Economic Index", p)), ("AIOE", composite.no_official_stats("AIOE", p))]
@@ -102,6 +110,7 @@ Exception — PROXY: a market that resolves on a leading lab/government *declari
 When in doubt, drop it. Return {"decisions":[{"i":market_index,"verdict":"keep|proxy|drop","why":"<10 words"}]}"""
 
 def gather_forecasts(inp: dict) -> dict:
+    _phase("gather")
     h = _year(inp.get("horizon")); calls = 0; cost_total = 0.0; cards, unknowns, errors, status = [], [], [], {}
     fn = {"polymarket": polymarket.polymarket_search, "manifold": manifold.manifold_search, "metaculus": metaculus.metaculus_search}
     for a in ANCHORS:
@@ -127,11 +136,13 @@ def gather_forecasts(inp: dict) -> dict:
     return {"evidence": cards, "unknowns": unknowns, "errors": errors, "source_status": status, "tool_calls": calls, "cost_usd": cost_total}
 
 def gather_research(inp: dict) -> dict:
+    _phase("gather")
     res = [("Epoch AI", _call("Epoch AI", epoch.epoch_recent)), ("FRED", _call("FRED", fred.fred_series, "UNRATE"))]
     return _collect(res, None, 2)
 
 # ───────────────────────────── reconcile (code) ─────────────────────────────
 def reconcile(state: State) -> dict:
+    _phase("outlook")
     yr = _year(state["profile"].get("horizon")); seen, cards = set(), []
     for c in state["evidence"]:
         if c.id not in seen: seen.add(c.id); cards.append(c)
@@ -186,6 +197,7 @@ accountability for a decision, judgment under ambiguity, relationships/trust, ph
 Return {"keep":[{"i":index,"why":"..."}]}"""
 
 def write_outlook(state: State) -> dict:
+    _phase("outlook")
     cards, refs, inv = state["evidence"], state["refs"], _inv(state); outlooks, changes = {}, {}; cost = 0.0
     for t in state["targets"]:
         p = t["persona"]; occ = _occ_key(p); mine = [c for c in cards if c.occ == occ and c.id in inv]
@@ -242,6 +254,7 @@ Return JSON:
 comparison and our_read: students only (one comparison row per occupation, every cell cited); leave empty for professionals."""
 
 def write_plan(state: State) -> dict:
+    _phase("plan")
     p = state["profile"]; refs = state["refs"]
     def occ_block(o, ch):
         g = lambda rows: "; ".join(f"{r['task'][:70]} [{r['ref']}]" for r in rows[:6]) or "none"
@@ -311,6 +324,7 @@ def _reviewable(state: State) -> dict:
 
 def skeptic(state: State) -> dict:
     """Reviews the structured objects line by line; removes failing leaves; records status. Failure of the reviewer model is loud, never silent."""
+    _phase("review", of="plan")
     from . import review as rv
     refs, cards = state["refs"], {c.id: c for c in state["evidence"]}; attempt = (state.get("skeptic") or {}).get("attempt", 0) + 1
     obj = _reviewable(state); leaves = rv.flatten(obj)
@@ -374,6 +388,7 @@ def plan_gate(state: State) -> dict:
 def after_plan(state: State) -> str: return "record" if state["approvals"]["plan"]["action"] in ("approve", "edit") else "end"
 
 def record(state: State) -> dict:
+    _phase("save")
     """The ONLY node that writes: plan file + snapshot + profile."""
     p = state["targets"][0]["persona"]; out_dir = ROOT / "data" / "briefs"; out_dir.mkdir(parents=True, exist_ok=True)
     tag = "_UNVERIFIED" if (state.get("skeptic") or {}).get("status") == "unverified" else ""

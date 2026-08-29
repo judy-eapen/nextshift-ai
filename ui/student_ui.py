@@ -21,10 +21,14 @@ def run(S, inp, box=None):
     cfg = {"configurable": {"thread_id": S.thread_id}}
     for mode, ev in sgraph().stream(inp, cfg, stream_mode=["custom", "updates"]):
         if mode == "custom":
+            if "phase" in ev:
+                S.phase = ev
+                if callable(S.get("on_phase")): S.on_phase()
+                continue
             S.log.append(ev["say"])
             if box is not None: box.write(f"· {ev['say']}")
-        elif "__interrupt__" in ev: return ev["__interrupt__"][0].value
-    return None
+        elif "__interrupt__" in ev: S.phase = None; return ev["__interrupt__"][0].value
+    S.phase = None; return None
 
 def route(S, payload):
     """Map an interrupt payload to a stage."""

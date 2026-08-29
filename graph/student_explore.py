@@ -5,7 +5,7 @@ from __future__ import annotations
 import json, re, time
 from langgraph.types import interrupt, Send
 from . import llm, memory, nodes as N, review as rv
-from .student import StudentState, FIELDS, _say, _coverage
+from .student import StudentState, FIELDS, _say, _phase, _coverage
 
 MAX_CANDIDATES = 10; MIN_CANDIDATES = 6
 GROUP_LABEL = {"strong": "Strong matches", "explore": "Worth exploring", "unexpected": "Unexpected possibilities", "reconsider": "Your ideas, reconsidered"}
@@ -31,7 +31,7 @@ Never infer from gender, race, background or school. No personality labels. Pref
 Return {"candidates":[{"label":"...","search_title":"O*NET-style title","group":"strong|explore|unexpected","needs_composite":false,"rationale":{"matches_interests":["..."],"uses_strengths":["..."],"fits_preferences":["..."],"constraints_ok":["..."],"constraints_conflict":["..."],"why_included":"...","poor_fit_if":"..."}}]}"""
 
 def generate_candidates(state: StudentState) -> dict:
-    prof = state["profile"]; out, cost = {"candidates": []}, 0.0
+    _phase("candidates"); prof = state["profile"]; out, cost = {"candidates": []}, 0.0
     for attempt, (mt, extra) in enumerate([(7000, ""), (7000, "\nKeep every rationale line under 20 words and produce at most 8 candidates so the JSON stays short and valid.")]):
         try: out, c_ = llm.chat_json("planner", GEN_SYS + extra, _profile_table(prof), max_tokens=mt, temperature=0.4 if attempt == 0 else 0.2); cost += c_; break
         except Exception as e: _say(f"Candidate generation attempt {attempt + 1} failed ({type(e).__name__}) — retrying" if attempt == 0 else f"Candidate generation failed twice: {e}")
@@ -51,7 +51,7 @@ def generate_candidates(state: StudentState) -> dict:
 # ───────────────────────────── C2 resolve to occupations ─────────────────────────────
 def resolve_candidates(state: StudentState) -> dict:
     from tools import resolve as rs, composite
-    cands = json.loads(json.dumps(state["candidates"])); seen_soc = {}
+    _phase("resolve"); cands = json.loads(json.dumps(state["candidates"])); seen_soc = {}
     for c in cands:
         title = c.get("search_title") or c["label"]; about = " ".join(c["rationale"].get("why_included", "") if isinstance(c["rationale"].get("why_included"), str) else "")
         try:
@@ -116,7 +116,7 @@ For each candidate return short, plain, warm text — every sentence cites [cNN]
 Never guarantee anything, never call a task automated/replaced, never invent schools, courses or employers. Return {"cards": {"k1": {...}, "k2": {...}}}"""
 
 def analyze_fit(state: StudentState) -> dict:
-    prof, refs, inv = state["profile"], state["refs"], {v: k for k, v in state["refs"].items()}
+    _phase("fit"); prof, refs, inv = state["profile"], state["refs"], {v: k for k, v in state["refs"].items()}
     outlooks, changes = state["outlooks"], state["changes"]
     blocks = []
     for c in state["candidates"]:
@@ -180,7 +180,7 @@ def add_citations(state: StudentState, obj: dict, refs_table: str) -> tuple[dict
 
 def review_object(state: StudentState, obj: dict, label: str) -> tuple[dict, dict, float]:
     """Structured review over any object. Returns (reviewed_obj, skeptic_record, cost). Reviewer failure → status 'unverified' (loud), never silent keep."""
-    refs = dict(state["refs"]); prefs = profile_refs(state["profile"]); cards = {c.id: c for c in state["evidence"]}
+    _phase("review", of=label); refs = dict(state["refs"]); prefs = profile_refs(state["profile"]); cards = {c.id: c for c in state["evidence"]}
     obj, c_fix = add_citations(state, obj, _profile_table(state["profile"]) + "\n" + N._table(state["evidence"], refs))
     allrefs = {**refs, **{k: "profile:" + v for k, v in prefs.items()}}
     ref_re = re.compile(r"\[([cu]\d{2,3}|p:[a-z_]+:\d+)\]")
@@ -261,7 +261,7 @@ RX_SYS = """A student reacted to career cards. For each reaction with a 'why', e
 Fields: interests · energizing_activities · dislikes · work_preferences · values · desired_impact · lifestyle_preferences · education_constraints · financial_constraints · location_constraints · uncertainties. Do not invent."""
 
 def update_from_reactions(state: StudentState) -> dict:
-    prof = json.loads(json.dumps(state["profile"])); rx = state["reactions"]; labels = {c["key"]: c["label"] for c in state["candidates"]}
+    _phase("reactions"); prof = json.loads(json.dumps(state["profile"])); rx = state["reactions"]; labels = {c["key"]: c["label"] for c in state["candidates"]}
     rejected = list(state.get("rejected", [])) + [{"key": r["key"], "label": labels.get(r["key"]), "why": r.get("why", ""), "at": time.time()} for r in rx if r["verdict"] == "no"]
     described = [r for r in rx if r.get("why")]
     cost = 0.0
@@ -325,6 +325,7 @@ Then "our_read": 2-4 sentences on how the options differ for THIS student and wh
 Return {"rows": {"k1": {...8 dims...}}, "our_read": "..."}"""
 
 def build_shortlist(state: StudentState) -> dict:
+    _phase("shortlist")
     if not state.get("candidates"): return {"shortlist": [], "views": {**state.get("views", {}), "shortlist": {"keys": [], "rows": {}, "our_read": "", "review": {"stripped": [], "total": 0}}}}
     rx = {r["key"]: r for r in state["reactions"]}; disc = state.get("discriminators", [])
     order = sorted([c for c in state["candidates"] if rx.get(c["key"], {}).get("verdict") in ("excited", "curious")], key=lambda c: (rx[c["key"]]["verdict"] != "excited", c["group"] != "strong"))
@@ -359,7 +360,7 @@ test_this_career (3-5 bullets — concrete, low-cost experiments: interview a pr
 Never invent named courses, certifications, schools or employers. Never guarantee. Return {"sections": {"why_fit": "...", "what_people_do": "...", "education_and_entry": "...", "outlook": "...", "how_ai_may_change": "...", "ai_already_used_for": ["..."], "human_capabilities": "...", "risks_tradeoffs_uncertainty": "...", "what_to_do_in_school": ["..."], "test_this_career": ["..."]}}"""
 
 def deep_dive(state: StudentState) -> dict:
-    c = next(c for c in state["candidates"] if c["key"] == state["selected"]); soc = c["persona"]["soc"]; o = state["outlooks"].get(soc, {}); ch = state["changes"].get(soc, {})
+    _phase("deep"); c = next(c for c in state["candidates"] if c["key"] == state["selected"]); soc = c["persona"]["soc"]; o = state["outlooks"].get(soc, {}); ch = state["changes"].get(soc, {})
     user = (f"PROFILE REFS:\n{_profile_table(state['profile'])}\n\nCAREER: {c['label']} → {c['persona']['title']} ({c['resolution']})\nrationale: {json.dumps(c['rationale'])}\ncard: {json.dumps({k: c['card'].get(k) for k in ('why_fit','what_work_is_like','how_ai_may_reshape','human_capabilities','tradeoff')})}\n"
             f"facts: {' | '.join(o.get('facts', []))}\nAI assists: {'; '.join(r['task'][:80] + ' [' + r['ref'] + ']' for r in ch.get('ai_assists', [])[:8])}\nmore important: {'; '.join(r['task'][:70] + ' — ' + (r.get('why') or '') + ' [' + r['ref'] + ']' for r in ch.get('more_important', [])[:6])}\n"
             f"uncertain: {'; '.join(r['task'][:70] + ' [' + r['ref'] + ']' for r in ch.get('uncertain', [])[:5])}\nForecast context: {state.get('forecast_context')}\nUnknowns: {state.get('unknowns')}\n\nEvidence table (this career + economy-wide):\n{N._table(state['evidence'], state['refs'], occ=soc)}")
@@ -388,7 +389,7 @@ Given their profile, all candidate cards and the question, return {"note": "2-4 
 Only reorder among existing candidates; never invent careers or numbers."""
 
 def explore(state: StudentState) -> dict:
-    q = (state.get("pending") or {}).get("whatif", ""); mode = (state.get("pending") or {}).get("mode", "whatif"); prof = json.loads(json.dumps(state["profile"]))
+    _phase("whatif"); q = (state.get("pending") or {}).get("whatif", ""); mode = (state.get("pending") or {}).get("mode", "whatif"); prof = json.loads(json.dumps(state["profile"]))
     cands = {c["key"]: c for c in state["candidates"]}
     user = f"WHAT-IF ({mode}): {q}\n\nPROFILE REFS:\n{_profile_table(prof)}\n\nCANDIDATES:\n" + "\n".join(f"{k} {c['label']} — demand {c['card'].get('demand_reading')} · education {c['card'].get('education_entry')} · tradeoff: {c['card'].get('tradeoff')}" for k, c in cands.items()) + f"\nCurrent shortlist: {state['shortlist']}"
     try: out, cost = llm.chat_json("planner", WHATIF_SYS, user, max_tokens=700, temperature=0.3)
@@ -416,6 +417,7 @@ def after_save(state: StudentState) -> str: return "record" if state["approvals"
 def record(state: StudentState) -> dict:
     """The ONLY writer in the student graph."""
     from pathlib import Path
+    _phase("save")
     out_dir = N.ROOT / "data" / "briefs"; out_dir.mkdir(parents=True, exist_ok=True); tag = "_UNVERIFIED" if (state.get("skeptic") or {}).get("status") == "unverified" else ""
     dd = state.get("deep_dive") or {}; cands = {c["key"]: c for c in state["candidates"]}
     md = [f"# Career exploration · {time.strftime('%Y-%m-%d')}", "_A guided exploration based on what you shared and available career data — not a test that determines what you should become._", "", "## What I understood about you"]
