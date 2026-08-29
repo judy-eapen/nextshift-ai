@@ -5,3 +5,8 @@
 ▶ s07 corrects an earlier answer … PASS 654s turns=9 cands=10 stripped=35 review=verified $0.0843
 ▶ s09 likes a field, dislikes its daily work … FAIL 608s turns=9 cands=9 stripped=26 review=verified $0.0754  failed: ['contradiction_recorded', 'rubric_respects_constraints']
 ▶ s14 external source fails (Polymarket) … FAIL 234s turns=8 cands=10 stripped=1 review=unverified $0.0268  failed: ['partial_badge']
+▶ s15 reviewer model fails … FAIL 420s turns=8 cands=10 stripped=12 review=verified $0.0498  failed: ['unverified_loud']
+▶ s18 no persistent write before approval … PASS 433s turns=9 cands=10 stripped=10 review=verified $0.0531
+▶ s17 student rejects the final save … PASS 511s turns=8 cands=10 stripped=21 review=verified $0.0646
+▶ s19 reviewer-removed content absent from UI … PASS 347s turns=8 cands=10 stripped=0 review=unverified $0.022
+▶ s22 exploration loop preserves decisions … FAIL 274s turns=9 cands=1 stripped=1 review=verified $0.0144 ERR IndexError('list index out of range')  failed: ['no_error', 'saved', 'exploration_preserved']

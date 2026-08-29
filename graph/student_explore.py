@@ -87,15 +87,17 @@ def resolve_candidates(state: StudentState) -> dict:
         except Exception: c["persona"] = None; c["resolution"] = "dropped (composite cap)"
     keep = [c for c in keep if c.get("persona")]
     majors = {c["persona"]["soc"][:2] for c in keep}
-    if keep and len(majors) < 3:   # too narrow (e.g. ten UX-flavoured roles): ask for directions outside these groups, resolve them, add up to 3
+    need = max(0, MIN_CANDIDATES - len(keep)); narrow = len(keep) > 0 and len(majors) < 3
+    if need or narrow:   # too few (generation truncated / many dropped) or too narrow (ten UX-flavoured roles): ask for more, resolve, add
         try:
-            out, cost = llm.chat_json("planner", GEN_SYS + f"\nProduce ONLY 3 additional directions that are NOT in these fields: {sorted({c['persona']['title'] for c in keep})}. They must still be justified by the profile.", _profile_table(state["profile"]), max_tokens=2500, temperature=0.5)
-            extra = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:3]
+            n_more = max(need, 3 if narrow else 0)
+            out, cost = llm.chat_json("planner", GEN_SYS + f"\nProduce ONLY {n_more} additional directions, each a REAL O*NET occupation title (needs_composite false), NOT in these fields: {sorted({c['persona']['title'] for c in keep})}. They must still be justified by the profile.", _profile_table(state["profile"]), max_tokens=3000, temperature=0.5)
+            extra = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:n_more]
             for j, c in enumerate(extra):
                 c["key"] = f"k{len(cands) + j + 1}"; c["group"] = c.get("group") if c.get("group") in GROUP_LABEL else "explore"; c.setdefault("rationale", {})
                 r0 = rs.resolve(c.get("search_title") or c["label"], "", k=3); m = r0["matches"][0] if r0.get("matches") else None
-                if m and m["soc"][:2] not in majors: c["persona"] = {"soc": m["soc"], "onet_soc": m.get("onet_soc") or f"{m['soc']}.00", "title": m["title"], "matched_via": f"tier {r0['tier']}"}; c["resolution"] = f"official (tier {r0['tier']})"; c["resolver_note"] = "added for breadth"; keep.append(c); majors.add(m["soc"][:2])
-            _say(f"Added {len(extra)} directions for breadth — the first set leaned on one field")
+                if m and (need or m["soc"][:2] not in majors) and m["soc"] not in {k["persona"]["soc"] for k in keep}: c["persona"] = {"soc": m["soc"], "onet_soc": m.get("onet_soc") or f"{m['soc']}.00", "title": m["title"], "matched_via": f"tier {r0['tier']}"}; c["resolution"] = f"official (tier {r0['tier']})"; c["resolver_note"] = "added for breadth"; keep.append(c); majors.add(m["soc"][:2])
+            _say(f"Added {len(extra)} directions " + ("to reach a full set" if need else "for breadth — the first set leaned on one field"))
         except Exception as e: _say(f"(breadth top-up skipped: {e})")
     if not keep: _say("⚠ I couldn't produce career directions this time — you'll see an empty results screen with a retry option")
     _say(f"Matched {len(keep)} directions to official occupations" + (f" ({sum(c['resolution']=='composite' for c in keep)} assembled as composites)" if any(c['resolution']=='composite' for c in keep) else ""))
