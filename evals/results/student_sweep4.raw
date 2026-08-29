@@ -3,3 +3,5 @@
 ▶ s02 three careers in mind … PASS 811s turns=8 cands=10 stripped=33 review=verified $0.0821
 ▶ s09 likes a field, dislikes its daily work … FAIL 3239s turns=9 cands=10 stripped=52 review=verified $0.0818  failed: ['under_15min']
 ▶ s23 max interview turns … FAIL 1061s turns=14 cands=0 stripped=0 review=verified $0.0045 ERR IndexError('list index out of range')  failed: ['no_error', 'under_15min']
+▶ s19 reviewer-removed content absent from UI … FAIL 4291s turns=10 cands=10 stripped=20 review=verified $0.0774  failed: ['under_15min']
+▶ s22 exploration loop preserves decisions … FAIL 4354s turns=8 cands=10 stripped=24 review=verified $0.0713  failed: ['under_15min']

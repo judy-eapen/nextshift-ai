@@ -1,0 +1,192 @@
+{
+  "summary": {
+    "passed": 7,
+    "total": 7,
+    "median_seconds": 567,
+    "total_cost_usd": 0.4081
+  },
+  "results": [
+    {
+      "id": "s09",
+      "seconds": 630,
+      "turns": 10,
+      "candidates": 9,
+      "cards": 296,
+      "stripped": 44,
+      "review_status": "verified",
+      "shortlist": [
+        "Medical Illustrators",
+        "Biological Science Teachers, Postsecondary"
+      ],
+      "cost_usd": 0.0725,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "contradiction_recorded": true,
+        "saved": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "All 'why_fit' lines directly reference specific student examples (e.g., 3-foot poster, comic neuron diagram). BLS facts are clearly separated from 'ai_change_reading_interpretation' labels. No guarantees of safety/happiness; tradeoffs highlight challenges. Education/cost constraints are acknowledged in practical_mismatch (e.g., doctoral/master's degree costs for student who avoids grad school). Experiments are low-cost, standard activities (interviews, shadowing, free projects, existing courses).",
+      "pass": true
+    },
+    {
+      "id": "s19",
+      "seconds": 595,
+      "turns": 10,
+      "candidates": 10,
+      "cards": 398,
+      "stripped": 38,
+      "review_status": "verified",
+      "shortlist": [
+        "Web and Digital Interface Designers",
+        "User Experience Designers"
+      ],
+      "cost_usd": 0.075,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s22",
+      "seconds": 647,
+      "turns": 10,
+      "candidates": 10,
+      "cards": 439,
+      "stripped": 25,
+      "review_status": "verified",
+      "shortlist": [
+        "UX Designer",
+        "Interaction Designer"
+      ],
+      "cost_usd": 0.0827,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": true,
+        "exploration_preserved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s23",
+      "seconds": 21,
+      "turns": 14,
+      "candidates": 0,
+      "cards": 10,
+      "stripped": 0,
+      "review_status": "verified",
+      "shortlist": [],
+      "cost_usd": 0.0024,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "max_turns": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s13",
+      "seconds": 531,
+      "turns": 11,
+      "candidates": 10,
+      "cards": 271,
+      "stripped": 24,
+      "review_status": "verified",
+      "shortlist": [
+        "Project Management Specialist",
+        "Meeting, Convention, and Event Planners"
+      ],
+      "cost_usd": 0.0743,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "unknown_outlook_labelled": true,
+        "partial_badge": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s14",
+      "seconds": 567,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 339,
+      "stripped": 38,
+      "review_status": "verified",
+      "shortlist": [
+        "Event Planner",
+        "Marketing Coordinator"
+      ],
+      "cost_usd": 0.076,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "partial_badge": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    },
+    {
+      "id": "s15",
+      "seconds": 206,
+      "turns": 11,
+      "candidates": 10,
+      "cards": 309,
+      "stripped": 0,
+      "review_status": "unverified",
+      "shortlist": [
+        "Event Planner",
+        "Community Outreach Coordinator"
+      ],
+      "cost_usd": 0.0252,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "unverified_loud": true,
+        "saved": true
+      },
+      "rubric_notes": null,
+      "pass": true
+    }
+  ]
+}

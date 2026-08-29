@@ -1,0 +1,9 @@
+▶ s09 likes a field, dislikes its daily work … PASS 630s turns=10 cands=9 stripped=44 review=verified $0.0725
+▶ s19 reviewer-removed content absent from UI … PASS 595s turns=10 cands=10 stripped=38 review=verified $0.075
+▶ s22 exploration loop preserves decisions … PASS 647s turns=10 cands=10 stripped=25 review=verified $0.0827
+▶ s23 max interview turns … PASS 21s turns=14 cands=0 stripped=0 review=verified $0.0024
+▶ s13 employment data unavailable (BLS down) … PASS 531s turns=11 cands=10 stripped=24 review=verified $0.0743
+▶ s14 external source fails (Polymarket) … PASS 567s turns=8 cands=10 stripped=38 review=verified $0.076
+▶ s15 reviewer model fails … PASS 206s turns=11 cands=10 stripped=0 review=unverified $0.0252
+
+■ 7/7 · median 567s · $0.4081 · /Users/judydarvin/Desktop/Projects/nextshift-ai/evals/results/student_20260829-100340.json
