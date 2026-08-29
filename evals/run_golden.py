@@ -42,13 +42,13 @@ def run_one(graph, g):
     snaps_before = _snapshot_count(); log = []
     try:
         for mode, ev in graph.stream({"profile": {k: v for k, v in profile.items() if k != "resolver_offers_composite"}, "targets": targets, "thread_id": cfg["configurable"]["thread_id"]}, cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom": log.append(ev["say"])
+            if mode == "custom" and "say" in ev: log.append(ev["say"])
         r1 = {"action": "reject"} if g.get("reject_at") == "understanding" else {"action": "edit", "profile": {"horizon": g["edit_horizon"]}} if g.get("edit_horizon") else {"action": "confirm"}
         for mode, ev in graph.stream(Command(resume=r1), cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom": log.append(ev["say"])
+            if mode == "custom" and "say" in ev: log.append(ev["say"])
         if g.get("reject_at") != "understanding":
             for mode, ev in graph.stream(Command(resume={"action": "reject" if g.get("reject_at") == "plan" else "approve"}), cfg, stream_mode=["custom", "updates"]):
-                if mode == "custom": log.append(ev["say"])
+                if mode == "custom" and "say" in ev: log.append(ev["say"])
     except Exception as e: err = repr(e)
     finally:
         if old_sk: os.environ["SKEPTIC_MODEL"] = old_sk

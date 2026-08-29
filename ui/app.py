@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv; load_dotenv(ROOT / ".env")
 import streamlit as st, pandas as pd
 from langgraph.types import Command
-from ui import student_ui
+from ui import student_ui, explain
 
 st.set_page_config(page_title="NextShift AI", page_icon="⟶", layout="centered")
 C = {"bg": "#0B0F14", "surface": "#121821", "line": "#2A3544", "ink": "#E6EAF0", "muted": "#8A94A6", "amber": "#E5A24A", "student": "#7FC8E8", "green": "#8FBF9F", "red": "#E07A5F", "purple": "#B48CFF"}
@@ -45,7 +45,7 @@ def run_graph(inp, box):
     for mode, ev in graph().stream(inp, cfg, stream_mode=["custom", "updates"]):
         if mode == "custom":
             if "phase" in ev:
-                S.phase = ev
+                S.phase = ev; S.setdefault("phase_log", []).append(ev)
                 if callable(S.get("on_phase")): S.on_phase()
                 continue
             S.log.append(ev["say"]); box.write(f"· {ev['say']}")
@@ -265,6 +265,8 @@ def screen_plan():
 
 def screen_done():
     st_ = graph().get_state({"configurable": {"thread_id": S.thread_id}}).values; ap = st_.get("approvals", {})
+    S.final_state = {"approvals": ap, "exported_path": st_.get("exported_path"), "views": st_.get("views")}
+    if callable(S.get("on_phase")): S.on_phase()   # journey indicator learns how the run ended
     if st_.get("exported_path"):
         st.success("Your plan is saved. Come back later and we'll show you what changed."); st.download_button("Download plan (.md)", st_["plan_md"], file_name=Path(st_["exported_path"]).name)
         st.markdown(strip_refs(st_["plan_md"].split("\n---\n")[0]))
@@ -275,13 +277,7 @@ def screen_done():
 
 # ───────────────────────── sidebar (demo controls) + router ─────────────────────────
 with st.sidebar:
-    st.markdown("<span class='kicker'>Demo controls</span>", unsafe_allow_html=True)
-    kill = st.multiselect("Simulate a source outage", ["Polymarket", "Manifold", "BLS", "Epoch AI", "FRED"], default=[x for x in os.environ.get("DISABLE_SOURCES", "").split(",") if x])
-    os.environ["DISABLE_SOURCES"] = ",".join(kill)
-    files = sorted((ROOT / "data/briefs").glob("*.md"), reverse=True) if (ROOT / "data/briefs").exists() else []
-    if files:
-        st.markdown("<span class='kicker'>Saved plans</span>", unsafe_allow_html=True)
-        for f in files[:6]: st.markdown(f"<div class='small'>{f.name}</div>", unsafe_allow_html=True)
+    explain.sidebar(S)
     if S.stage != "start" and st.button("↺ Start over"): reset(); st.rerun()
 
 if S.stage in student_ui.SCREENS: student_ui.SCREENS[S.stage](S)

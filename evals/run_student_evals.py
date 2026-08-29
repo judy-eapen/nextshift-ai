@@ -37,7 +37,7 @@ def run_case(g_):
     def _wrote(): return _snap_count(tid) > 0 or bool((graph.get_state(cfg).values or {}).get("exported_path"))
     def run(inp):
         for mode, ev in graph.stream(inp, cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom": log.append(ev["say"])
+            if mode == "custom" and "say" in ev: log.append(ev["say"])
             elif "__interrupt__" in ev: return ev["__interrupt__"][0].value
         return None
     def clean(t): return re.sub(r"\s*\[[^\]]+\]", "", str(t or ""))

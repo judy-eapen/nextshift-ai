@@ -17,7 +17,7 @@ def persona_for(code: str) -> dict:
 
 def stream(graph, inp, cfg):
     for mode, ev in graph.stream(inp, cfg, stream_mode=["custom", "updates"]):
-        if mode == "custom": print(f"  · {ev['say']}")
+        if mode == "custom" and "say" in ev: print(f"  · {ev['say']}")
         elif "__interrupt__" in ev: return ev["__interrupt__"][0].value
     return None
 

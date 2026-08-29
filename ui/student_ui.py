@@ -22,7 +22,7 @@ def run(S, inp, box=None):
     for mode, ev in sgraph().stream(inp, cfg, stream_mode=["custom", "updates"]):
         if mode == "custom":
             if "phase" in ev:
-                S.phase = ev
+                S.phase = ev; S.setdefault("phase_log", []).append(ev)
                 if callable(S.get("on_phase")): S.on_phase()
                 continue
             S.log.append(ev["say"])
@@ -216,6 +216,8 @@ def screen_save(S):
 
 def screen_done(S, reset):
     st_ = sgraph().get_state({"configurable": {"thread_id": S.thread_id}}).values; ap = st_.get("approvals", {})
+    S.final_state = {"approvals": ap, "exported_path": st_.get("exported_path"), "views": st_.get("views")}
+    if callable(S.get("on_phase")): S.on_phase()   # journey indicator learns how the run ended
     if st_.get("exported_path"):
         from pathlib import Path
         st.success("Saved. Come back any time to continue exploring — your shortlist, reactions and planned experiments are kept."); st.download_button("Download (.md)", Path(st_["exported_path"]).read_text(), file_name=Path(st_["exported_path"]).name)
