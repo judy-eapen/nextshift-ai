@@ -37,7 +37,7 @@ def reset():
 
 def strip_refs(text) -> str:
     """Hide [cNN]/[uNN]/[interpretation]/[advice] tags from the reader; the evidence drawer still shows them."""
-    return re.sub(r"\s*\[(?:[cu]\d{2}|interpretation|advice)\]", "", str(text or "")).strip()
+    return re.sub(r"\s*\[(?:[cu]\d{2,3}|interpretation|advice)\]", "", str(text or "")).strip()
 
 def run_graph(inp, box):
     cfg = {"configurable": {"thread_id": S.thread_id}}
