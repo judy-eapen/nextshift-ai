@@ -79,3 +79,9 @@ def test_professional_plan_stage_journey():
                                                                  "changes": {"15-1252": {"ai_assists": [], "more_important": [], "uncertain": [], "method_note": "n"}}, "plan": {"direct_answer": "Demand holds.", "d30": [], "m6": [], "y1": [], "confidence": {}}, "deltas": [], "refs": {}}}
     at = app_at(stage="plan", door="professional", payload=pl); md = all_markdown(at)
     assert not at.exception and "Waiting for your approval" in md and "aria-label='current step'" in md
+
+def test_inline_markdown_converted_inside_html_blocks():
+    from ui.explain import _inline
+    assert _inline("press *Recommend careers now* or **BLS** and O\\*NET") == "press <i>Recommend careers now</i> or <b>BLS</b> and O*NET"
+    at = open_button(app_at()).click().run(); t = all_markdown(at)
+    assert "*Recommend careers now*" not in t and "<i>Recommend careers now</i>" in t

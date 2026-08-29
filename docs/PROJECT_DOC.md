@@ -16,6 +16,8 @@
 
 **What a professional sees.** Start → two doors → 4-turn guided intake → *"Here's what I understood — fix anything that's off"* (gate 1) → plain-language progress → **Your plan**: direct answer · 1 outlook · 2 how the work may change · 3 what this means for you · 4 preparation plan (30 days / 6 months / 1 year) · 5 other paths · 6 confidence & uncertainty · 7 ▸ how we reached this answer → approve / edit / reject (gate 2) → saved; a later run shows what changed.
 
+**How the system explains itself.** A sidebar *Your journey* indicator (nine student steps / seven professional) is derived from the graph's stage and node phase events — never from a timer — and flags *partial evidence* and *UNVERIFIED* where they actually occurred. *Open behind the scenes →* opens a dialog with three levels: *How NextShift works* (seven plain-language steps tagged [you] / [code] / [AI], with "you are here"), *What is saved?* (wording verified against the checkpoint and memory code — including that interview answers sit in a resumable session file before approval and go to the model provider), and *For builders* (architecture, model-assisted vs deterministic work, state and memory, failure handling, diagrams). Each career card offers *Why this appeared →*: what you told us (your quoted words) and career evidence, from the reviewed objects only — no score, nothing generated in the UI. Developer mode (`NEXTSHIFT_DEV=1`) is the only place model names, cost and node timings appear, and the only mode in which LangSmith tracing is on.
+
 ## 2. The agent framework (handout Part 2)
 
 | Field | Answer |
@@ -87,6 +89,7 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 | 13 | Reviewer judged a Markdown shadow while the UI showed the structured object | Removed claims could still appear on screen | Structured review: flatten → judge → delete in the object the UI renders; export generated afterwards |
 | 14 | Reviewer on 234 lines in one call (thinking model) | Output truncated → "unverified" | Batches of 12 in parallel, halving retry, raw-failure log; labels/ids skipped; rationale checked deterministically |
 | 15 | "Nonprofit Program Coordinator" → Clinical Research Coordinators | Semantic match on a shared generic word | Reject matches that share only generic words below 0.72 similarity → composite instead |
+| 16 | Architecture explained only in docs; the one in-app expander mixed model names and cost with unknowns and leaked raw log lines | Reviewers couldn't see the gates, the deterministic controls or why a card appeared; a privacy line ("nothing is stored until you approve") was inaccurate — answers are checkpointed to SQLite each turn and tracing was on | Progressive disclosure: journey indicator from real phase events · behind-the-scenes dialog (plain / what is saved / builders) · *Why this appeared* from reviewed data · developer mode gated by env, tracing follows it · copy pinned to code constants by tests |
 
 ## 7. Learnings
 
@@ -95,6 +98,7 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 - **A different model as reviewer catches real things** — "fully automated" from a 0.92 usage score, a card about AGI probability cited for a task claim — and also exposed my own bugs faster than I would have.
 - **Honesty is a feature users notice.** "No official category exists for your job; here's what I assembled and how" landed better than any confident match. Same for "no forecast exists — not estimated."
 - **The taxonomy gap is the thesis.** SOC 2018 has no Product Manager, Product Owner or Head of Product. Official statistics lag how modern work is organized, which is exactly why a tool like this is needed.
+- **Explaining the system found an inaccuracy in it.** Writing "what is saved?" against the actual checkpointer showed the interview line was wrong (answers *are* written to a session file before approval) and that tracing sent student text to LangSmith by default. Accurate copy forced accurate behaviour.
 - **Evals found the bugs I'd have shipped.** Two of the four first-pass failures were harness bugs, two were prompt gaps; none were visible in a happy-path demo.
 
 ## 8. Evaluation results (evals/results/)

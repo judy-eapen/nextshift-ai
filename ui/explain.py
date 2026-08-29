@@ -2,7 +2,7 @@
 and the developer-mode gate. Reads only existing session state — opening it never runs the graph (tests/test_ui_panel.py).
 Developer mode: available only when NEXTSHIFT_DEV=1 is set in the environment; LangSmith tracing follows developer mode."""
 from __future__ import annotations
-import os
+import os, re
 from pathlib import Path
 import streamlit as st
 from ui import journey as J, copy as CP
@@ -92,12 +92,17 @@ def _here(S, door) -> int | None:
     if cur is None: return None
     return (CP.STUDENT_JOURNEY_TO_STEP if door == "student" else CP.PRO_JOURNEY_TO_STEP).get(cur)
 
+_B = re.compile(r"\*\*(.+?)\*\*"); _I = re.compile(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)")
+def _inline(s: str) -> str:
+    """Inline markdown (**bold**, *italic*) does not render inside an HTML block, so convert it; also unescape the O\\*NET escape."""
+    return _I.sub(r"<i>\1</i>", _B.sub(r"<b>\1</b>", s)).replace("O\\*NET", "O*NET")
+
 def tab_how(S, door):
     st.markdown(f"<p class='bts-small'>{CP.INTRO}</p>", unsafe_allow_html=True)
     here = _here(S, door)
     for s in CP.steps(door):
         tags = "".join(f"<span class='bts-tag'>{t}</span>" for t in s["tags"])
-        st.markdown(f"<div class='bts-step {'bts-here' if here == s['n'] else ''}'><span class='bts-n'>{s['n']}</span><b>{s['title']}</b>{tags}{' <span class=\"bts-small\">◀ you are here</span>' if here == s['n'] else ''}<br>{s['body']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='bts-step {'bts-here' if here == s['n'] else ''}'><span class='bts-n'>{s['n']}</span><b>{s['title']}</b>{tags}{' <span class=\"bts-small\">◀ you are here</span>' if here == s['n'] else ''}<br>{_inline(s['body'])}</div>", unsafe_allow_html=True)
         if s.get("callout"): st.markdown(f"<div class='bts-callout'>{s['callout']}</div>", unsafe_allow_html=True)
         with st.expander(s["more_title"]): st.markdown(s["more"])
     st.markdown(f"<p class='bts-small'>{CP.LEGEND}</p>", unsafe_allow_html=True)

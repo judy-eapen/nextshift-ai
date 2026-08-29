@@ -11,6 +11,13 @@ You approved the student redesign ("do all of it"). It's built, both journeys, a
 - **Reactions → discriminators → shortlist → deep dive → what-ifs → save.** Ten-section deep dive with *Test this career before committing*; nothing written until the save gate.
 - **Evals:** professional 12/12 (g05 retired — superseded by the interviewer); student 24-case sweep with simulated students: **24/24** across the sweeps (17 in the parallel sweep on current code, 7 rerun serially after a process stall; every case passes its deterministic checks and, where judged, the 5-point rubric). Median ≈ 9–10 min and ≈ $0.07 per full exploration when run alone; parallel runs share one Nebius endpoint and slow each other down — run evals with `EVAL_WORKERS=1` for timing.
 
+## Saturday afternoon — "Behind the scenes" (approved plan, all four phases built)
+- Sidebar **Your journey** (9 student / 7 professional steps, from real stage + phase events) · **Open behind the scenes →** dialog: *How NextShift works* · *What is saved?* · *For builders* · card **Why this appeared →** (what you told us / career evidence) · **What NextShift currently understands about you** during the interview (with *Edit Qn*) · *How we reached this* now shows run facts, not model names/cost.
+- **Developer mode:** add `NEXTSHIFT_DEV=1` to `.env`, restart, tick *Developer mode* under *Demo & developer*. Only then is LangSmith tracing on — turn it on to record the video if you want traces.
+- **Restart the app after pulling** (`@st.cache_resource` holds the compiled graph): `streamlit run ui/app.py`.
+- `pytest tests` → 67 pass. Evals rerun after the change: see the recap in chat / `evals/results/` (latest files).
+- Fixed on the way: the interview said "Nothing you type is stored until you approve" — answers *are* checkpointed to `data/processed/checkpoints.sqlite` each turn; wording now says so.
+
 ## Your Sunday (~3 h)
 1. **Click through the student door yourself** (10 min). Try "I'm not sure" and "Edit an earlier answer". Tell me any wording that jars.
 2. **Record the video** — `docs/VIDEO_SCRIPT.md` (updated: 3:55 is the student beat). Pre-run both paths once so caches are warm; each full analysis is 5–9 min, so cut or narrate over the working panel.

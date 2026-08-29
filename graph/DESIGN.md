@@ -153,3 +153,25 @@ Approved design (see chat, 15-part proposal). Built in `graph/student.py` (inter
 
 ## Known-issue fixes (both journeys, Phase A)
 UI renders only reviewed structured objects (`state.reviewed`/`views`) · horizon comes from the profile (no hardcoded 2030) · reviewer failure is loud (UNVERIFIED status, banner, save warning, filename tag; no rewrite loop on an absent reviewer) · `*.sqlite-wal/-shm` ignored · current-use wording lint.
+
+
+---
+# BEHIND THE SCENES (Sat 2026-08-29 afternoon) — the system explains itself
+
+Goal: make the architecture inspectable from the UI without turning the result screens into a dashboard. Progressive disclosure: plain language first, technical detail on request, developer facts only in developer mode.
+
+## Built
+- **`ui/journey.py`** (pure, no Streamlit): stage/phase → journey steps (student 9, professional 7) with states done · current · todo · attention · unverified · stopped; `resolve_refs` turns `[p:field:i]` into the student's quote; `understands_sections` (10 sections from the profile), `why_this_appeared` (two groups from the checked rationale + reviewed card), `run_details` (user-facing run facts), `resolution_label` (exact / proxy / composite from the resolver record).
+- **Phase events**: `_phase(key, of=…)` emitted at node *start* in `graph/student.py`, `graph/student_explore.py`, `graph/nodes.py` alongside `_say`. Real current work only; the UI maps keys to copy (`PHASE_COPY`). Consumers that read `ev["say"]` skip phase events.
+- **`ui/copy.py`**: all panel copy; numbers pinned to code constants (`MAX_TURNS`, `TARGET_TURNS`, `UNCITED_LIMIT`, reviewer ≠ writer) and tested in `tests/test_copy_facts.py`.
+- **`ui/explain.py`**: sidebar (journey placeholder updated live from phase events via `S.on_phase`; entry card; *Demo & developer* expander) and the `@st.dialog` with three tabs. Button is disabled during run stages so a click cannot interrupt a stream.
+- **Developer mode** = `NEXTSHIFT_DEV=1` env + sidebar checkbox. Shows stage, interrupt kind, phase, model roles, tool calls, cost, review record, source status, phase timeline, raw `_say` log, card ids. **LangSmith tracing follows developer mode** (`apply_tracing`): a normal session forces `LANGSMITH_TRACING=false` even if `.env` says true; the *What is saved?* tab reads the live flag.
+- **Interview**: side column shows coverage of the six core areas (glyph + text, from `completeness.coverage`); *What NextShift currently understands about you* expander lists the ten sections with *Based on your answer (Qn): "…"* and an *Edit Qn* button that pre-selects the existing edit form. The interview interrupt payload now carries the profile fields (no extra model call).
+- **Cards**: *Why this appeared →* — *Based on what you told us* (rationale lines, deterministically checked to `[p:…]` refs, with quotes) · *May conflict with what you said* (rationale conflicts + deterministic practical-mismatch lines) · *Based on career evidence* (BLS facts, entry education, observed-AI-use tasks, stays-human tasks, tradeoff, unknowns, evidence confidence) · exact/proxy/composite label · count of reviewer removals. No score, no generation.
+- **How we reached this** (both journeys) → `render_run_details`: sources with status words, occupations with labels, evidence count, review verdict (UNVERIFIED loud), removed lines with reasons, disagreements, unknowns, forecast context, your decisions so far, verified/unverified for the saved result, evidence list. Model names, cost, tool counts and the raw log moved to developer mode.
+- **Privacy copy verified**: interview state is checkpointed to `data/processed/checkpoints.sqlite` before approval (the old "nothing is stored until you approve" line was wrong and is fixed); answers go to Nebius; LangSmith only in developer mode; `record` is the only writer of `memory.sqlite` / `data/briefs`.
+- Old scenario-tree diagram archived to `design/archive/`; `architecture.mmd` corrected (no retry claim; tracing optional; reviewer failure → UNVERIFIED).
+
+## Tests (`tests/`, pytest) — 67
+journey mapping for every stage/phase/flag · copy facts pinned to constants · AppTest: opening/closing the dialog keeps stage+payload and never constructs a graph · no secrets/env names/`<think>` in any rendered string · dev mode hidden without the flag, present with it, tracing forced off without it · UNVERIFIED and partial-evidence flags reach the journey · a11y roles/aria on every status glyph · understands-sections from state with `llm.chat` patched to raise · why-this-appeared uses reviewed rationale and never leaks removed sentences · exact/proxy/composite labels · cards stay answer-first · professional run details shared.
+Student evals gained explanation-layer checks: `composite_labelled`, `journey_unverified`, `run_details_partial`, `removed_absent_in_why`, `why_uses_profile_refs`.
