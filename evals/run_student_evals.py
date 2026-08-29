@@ -52,7 +52,12 @@ def run_case(g_):
             if _wrote(): writes_before_approval = True
             act = g_.get("understanding_action", "confirm")
             if act == "edit": edited_understanding = True; p = run(Command(resume={"action": "edit", "sections": {"constraints": p["sections"].get("constraints", "") + " I also need to stay within a 2-year program."}}))
-            elif act == "back": p = run(Command(resume={"action": "back"})); p = run(Command(resume={"action": "recommend"})) if p and p["kind"] == "interview" else p; p = run(Command(resume={"action": "confirm"})) if p and p["kind"] == "understanding" else p
+            elif act == "back":   # "Back to the interview": answer two more questions, then ask for recommendations and confirm
+                p = run(Command(resume={"action": "back"})); extra = 0
+                while p and p["kind"] == "interview" and extra < 2:
+                    a = answer(persona, p["question"], history, {}, turn=p["turn"]); history.append({"question": p["question"], "answer": a.get("text", "")}); p = run(Command(resume=a)); extra += 1
+                if p and p["kind"] == "interview": p = run(Command(resume={"action": "recommend"}))
+                if p and p["kind"] == "understanding": p = run(Command(resume={"action": "confirm"}))
             elif act == "reject": p = run(Command(resume={"action": "reject"}))
             else: p = run(Command(resume={"action": "confirm"}))
         if p and p["kind"] == "results":
