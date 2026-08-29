@@ -71,7 +71,8 @@ def resolve(title: str, about: str = "", k: int = 3) -> dict:
     if exact and exact[0]["exact"] and not about.strip():
         return {"tier": 1, "confident": True, "matches": exact, "explanation": f"“{title}” is a listed job title under {exact[0]['title']} (O*NET)."}
     desc = describe_title(title, about); sem = semantic_match(f"{title}. {about or desc}", k)
-    conf = sem[0]["similarity"] >= 0.60 and (sem[0]["similarity"] - sem[1]["similarity"]) >= 0.03
+    sem = semantic_match(f"{title}. {about or desc}", max(k, 2)) if len(sem) < 2 else sem   # need two for the margin test
+    conf = bool(sem) and sem[0]["similarity"] >= 0.60 and (len(sem) < 2 or (sem[0]["similarity"] - sem[1]["similarity"]) >= 0.03)
     expl = (f"No official category lists “{title}”. By meaning it is closest to {sem[0]['title']} (similarity {sem[0]['similarity']:.2f})"
             + (f", then {sem[1]['title']} ({sem[1]['similarity']:.2f})" if len(sem) > 1 else "") + ". Confirm which fits.")
     if about.strip() and exact and exact[0]["exact"]:   # merge: what O*NET files the title under, after what the description matches

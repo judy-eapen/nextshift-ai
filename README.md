@@ -15,4 +15,6 @@ python -m tools.smoke_test 11-2021                  # hit every data source once
 
 First run builds two embedding caches with Nebius (occupations, and all 18K O*NET task statements — ~5 min, a few cents); they are gitignored under `data/processed/*.npy`.
 
+**Evals:** 13/13 end-to-end cases (both journeys, both gates, injected failures, memory) — `evals/results/`. Samples: `samples/`. Architecture: `design/architecture-diagram.png`.
+
 Docs: `PLAN.md` (scope + contract) · `graph/DESIGN.md` (architecture, as built) · `GOOD_MORNING.md` (tools layer notes).
