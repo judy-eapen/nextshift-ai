@@ -6,13 +6,15 @@
 
 ## 1. Overview
 
-**One-liner (handout Part 2):** My agent helps a student choosing a direction, or a professional worried about their role, plan a career for an AI-shaped job market in a web app — replacing hours of podcasts, headlines and Reddit threads that never say how confident anyone is or what to do. It restates what it understood about the person, gathers employment projections, task-level AI-exposure data and forecaster expectations in parallel using 10 read-only tools across 4 gatherers, writes a plan that leads with the answer, has a second model strip every line it can't verify, hands off to the person **before any evidence is gathered** (to confirm it understood them) and **before anything is saved**, and I'll know it works when a person gets a cited, actionable plan that addresses each of their stated concerns in under 10 minutes, 8 times out of 10.
+**One-liner (handout Part 2):** My agent helps a student who doesn't yet know what they want, or a professional worried about their role, plan a career for an AI-shaped job market in a web app — replacing hours of podcasts, headlines and Reddit threads that never say how confident anyone is or what to do. It restates what it understood about the person, gathers employment projections, task-level AI-exposure data and forecaster expectations in parallel using 10 read-only tools across 4 gatherers, writes a plan that leads with the answer, has a second model strip every line it can't verify, hands off to the person **before any evidence is gathered** (to confirm it understood them) and **before anything is saved**, and I'll know it works when a person gets a cited, actionable plan that addresses each of their stated concerns in under 10 minutes, 8 times out of 10.
 
 **The problem.** Students don't know which fields will still offer meaningful work; professionals don't know whether their role will shrink, how it will change, or what to learn. The information exists — BLS projections, O\*NET task lists, Anthropic's data on what AI is actually used for, prediction markets on AI progress — but nobody assembles it for *one person's* situation, and the sources that do exist rarely say how sure they are.
 
 **The product promise.** NextShift helps students and professionals understand how AI may change a career, whether demand is likely to grow or shrink, and what they can do now to build a more resilient future — without promising any career is "safe."
 
-**What the user sees.** Start → two doors → 4-turn guided intake → *"Here's what I understood — fix anything that's off"* (gate 1) → plain-language progress → **Your plan**: direct answer · 1 outlook · 2 how the work may change · 3 what this means for you · 4 preparation plan (30 days / 6 months / 1 year) · 5 other paths · 6 confidence & uncertainty · 7 ▸ how we reached this answer → approve / edit / reject (gate 2) → saved; a later run shows what changed.
+**What a student sees.** Start → *"You don't need to know what career you want yet"* → a career-discovery interview, one question at a time (8–12; the next question depends on what is still unclear, on contradictions, and on the student's choices: *I'm not sure · Skip · Recommend careers now · Ask me more · Edit an earlier answer*) → *"Here's what I understand about you"* in nine editable sections (gate 1; no career data has been gathered yet) → 8–10 career directions in three groups — strong matches · worth exploring · unexpected possibilities — each with a rationale that cites the student's own words, official outlook, education, how AI may reshape the work, human capabilities, a possible mismatch and evidence confidence → reactions (😀 🤔 ✕ + why) that update the profile → 0–2 discriminating questions → a shortlist with eight dimensions shown separately and "Our read" labelled as interpretation → a deep dive with ten sections including **Test this career before committing** → what-ifs (no grad school? salary? remote?) that reorder within the same candidates → save (gate 2).
+
+**What a professional sees.** Start → two doors → 4-turn guided intake → *"Here's what I understood — fix anything that's off"* (gate 1) → plain-language progress → **Your plan**: direct answer · 1 outlook · 2 how the work may change · 3 what this means for you · 4 preparation plan (30 days / 6 months / 1 year) · 5 other paths · 6 confidence & uncertainty · 7 ▸ how we reached this answer → approve / edit / reject (gate 2) → saved; a later run shows what changed.
 
 ## 2. The agent framework (handout Part 2)
 
@@ -78,6 +80,11 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 | 8 | Worldview gate (edit forecast anchors) | Asked the user to approve concepts they don't have | Understanding gate: confirm what the agent understood *about them*, before any tool spend |
 | 9 | Reviewer stripped 52% of the student plan | Bug: refs above `c99` didn't match a 2-digit regex | Fixed; strip rate fell to 0–3% |
 | 10 | Eval rubric said 30-day plans weren't actionable | Judge saw only the first 6,000 chars — never reached §4 | Pass the whole plan to the judge; 13/13 |
+| 11 | Student intake as a 4-turn form asking for careers | Students who don't know were stuck | Adaptive interviewer: code picks the goal by coverage gap and contradictions, model words the question |
+| 12 | Question writer told to "build on what they said" | Riffed on one moment for eight turns; constraints never asked | Topic lock: base question per goal, ≤8-word lead-in |
+| 13 | Reviewer judged a Markdown shadow while the UI showed the structured object | Removed claims could still appear on screen | Structured review: flatten → judge → delete in the object the UI renders; export generated afterwards |
+| 14 | Reviewer on 234 lines in one call (thinking model) | Output truncated → "unverified" | Batches of 12 in parallel, halving retry, raw-failure log; labels/ids skipped; rationale checked deterministically |
+| 15 | "Nonprofit Program Coordinator" → Clinical Research Coordinators | Semantic match on a shared generic word | Reject matches that share only generic words below 0.72 similarity → composite instead |
 
 ## 7. Learnings
 
@@ -89,6 +96,10 @@ Offline join: `data/processed/landscape.parquet` — 867 occupations × outlook 
 - **Evals found the bugs I'd have shipped.** Two of the four first-pass failures were harness bugs, two were prompt gaps; none were visible in a happy-path demo.
 
 ## 8. Evaluation results (evals/results/)
+
+**Student journey (24 cases, simulated students):** see `evals/student_golden.json` — no career ideas · three careers in mind · "I don't know" ×5 · recommend early · ask for more · edit the summary · correct an earlier answer · strict cost constraint · likes a field but dislikes its daily work · claimed vs demonstrated strengths · composite role · declining demand with many openings · BLS unavailable · Polymarket down · reviewer model down · reject profile · reject save · no write before approval · removed content absent from the UI · feedback changes the shortlist · concrete experiments · exploration preserves decisions · max turns · professional regression. Result: **STUDENT_RESULT** (≈ $0.06 and 8–10 min per full exploration).
+
+**Professional journey (12 cases):**
 
 13 cases · both journeys · both gates · failure injection · memory. First pass 9/13; after fixing the ref regex, the rubric truncation, and the plan prompt: **13/13**. Median ≈ 3 min per plan, ≈ $0.01 per plan on open-weight models. Details: `evals/golden.json`, `evals/run_golden.py`, `graph/DESIGN.md`.
 
