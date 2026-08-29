@@ -21,8 +21,9 @@ RUBRIC = """Grade a student's career-exploration output. Answer true/false with 
 5 concrete_experiments: are the 'test this career' items low-cost and doable by a student (interview, shadow, project, class, activity), with no invented named courses/schools?
 Return {"grounded_in_profile":bool,"facts_vs_interpretation":bool,"no_guarantees":bool,"respects_constraints":bool,"concrete_experiments":bool,"notes":"..."}"""
 
-def _snap_count():
-    c = sqlite3.connect(memory.DB); n = c.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0]; c.close(); return n
+def _snap_count(thread_id: str | None = None):
+    """Parallel-safe: count only THIS run's snapshots (by thread_id) so concurrent cases don't trip each other's write checks."""
+    c = sqlite3.connect(memory.DB); n = c.execute("SELECT COUNT(*) FROM snapshots WHERE thread_id=?", (thread_id,)).fetchone()[0] if thread_id else c.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0]; c.close(); return n
 
 def run_case(g_):
     if g_.get("professional"):   # regression guard: the professional journey's clean-match case must still pass
@@ -32,7 +33,8 @@ def run_case(g_):
     persona = g_["persona"]; sc = g_.get("script", {}); exp = g_["expect"]; os.environ["DISABLE_SOURCES"] = g_.get("disable", ""); old_sk = os.environ.get("SKEPTIC_MODEL")
     if g_.get("break_skeptic"): os.environ["SKEPTIC_MODEL"] = "not/a-real-model"
     graph = build_student_graph(memory_checkpointer()); cfg = {"configurable": {"thread_id": f"s-{g_['id']}-{uuid.uuid4().hex[:6]}"}}; t0 = time.time(); err = None; log = []
-    n_files, n_snap = len(glob.glob(str(ROOT / "data/briefs/*.md"))), _snap_count(); writes_before_approval = False
+    tid = cfg["configurable"]["thread_id"]; writes_before_approval = False
+    def _wrote(): return _snap_count(tid) > 0 or bool((graph.get_state(cfg).values or {}).get("exported_path"))
     def run(inp):
         for mode, ev in graph.stream(inp, cfg, stream_mode=["custom", "updates"]):
             if mode == "custom": log.append(ev["say"])
@@ -47,14 +49,14 @@ def run_case(g_):
             if a["action"] == "answer": history.append({"question": p["question"], "answer": a["text"]})
             p = run(Command(resume=a))
         if p and p["kind"] == "understanding":
-            if len(glob.glob(str(ROOT / "data/briefs/*.md"))) != n_files or _snap_count() != n_snap: writes_before_approval = True
+            if _wrote(): writes_before_approval = True
             act = g_.get("understanding_action", "confirm")
             if act == "edit": edited_understanding = True; p = run(Command(resume={"action": "edit", "sections": {"constraints": p["sections"].get("constraints", "") + " I also need to stay within a 2-year program."}}))
             elif act == "back": p = run(Command(resume={"action": "back"})); p = run(Command(resume={"action": "recommend"})) if p and p["kind"] == "interview" else p; p = run(Command(resume={"action": "confirm"})) if p and p["kind"] == "understanding" else p
             elif act == "reject": p = run(Command(resume={"action": "reject"}))
             else: p = run(Command(resume={"action": "confirm"}))
         if p and p["kind"] == "results":
-            if len(glob.glob(str(ROOT / "data/briefs/*.md"))) != n_files or _snap_count() != n_snap: writes_before_approval = True
+            if _wrote(): writes_before_approval = True
             keys = [c["key"] for grp in p["views"]["groups"].values() for c in grp]
             rx = g_.get("reactions") or [{"key": keys[0], "verdict": "excited", "why": "I like working directly with people"}, {"key": keys[1], "verdict": "curious", "why": "not sure about the amount of school"}, {"key": keys[-1], "verdict": "no", "why": "too solitary"}]
             rx = [{**r, "key": keys[r["key"]] if isinstance(r["key"], int) else r["key"]} for r in rx]
@@ -67,7 +69,7 @@ def run_case(g_):
             for w in g_.get("deep_whatifs", []): p = run(Command(resume={"action": "whatif", "whatif": w}));  p = run(Command(resume={"action": "pick", "key": p["shortlist"][0]})) if p and p["kind"] == "shortlist" else p
             p = run(Command(resume={"action": "save"}))
         if p and p["kind"] == "save":
-            if len(glob.glob(str(ROOT / "data/briefs/*.md"))) != n_files or _snap_count() != n_snap: writes_before_approval = True
+            if _wrote(): writes_before_approval = True
             p = run(Command(resume={"action": "reject" if g_.get("reject_final") else "approve"}))
     except Exception as e: err = repr(e)
     finally:
@@ -96,8 +98,8 @@ def run_case(g_):
     if exp.get("partial_badge"): checks["partial_badge"] = any("Partial evidence" in b for b in views.get("badges", []))
     if exp.get("unverified_loud"): checks["unverified_loud"] = sk.get("status") == "unverified" and any("UNVERIFIED" in b for b in views.get("badges", []))
     if exp.get("profile_rejected"): checks["profile_rejected"] = (st.get("approvals") or {}).get("understanding", {}).get("action") == "reject" and not cands and (st.get("tool_calls") or 0) == 0
-    if exp.get("final_rejected"): checks["final_rejected"] = not st.get("exported_path") and _snap_count() == n_snap
-    if exp.get("saved"): checks["saved"] = bool(st.get("exported_path")) and _snap_count() == n_snap + 1
+    if exp.get("final_rejected"): checks["final_rejected"] = not st.get("exported_path") and _snap_count(tid) == 0
+    if exp.get("saved"): checks["saved"] = bool(st.get("exported_path")) and Path(st["exported_path"]).exists() and _snap_count(tid) == 1
     if exp.get("removed_absent"): checks["removed_absent"] = not any((r["sentence"].split(" [")[0][:50] in ui_text) for r in (sk.get("stripped") or []) if len(r["sentence"]) > 30)
     if exp.get("feedback_changes_shortlist"): rej = {r["key"] for r in st.get("rejected") or []}; checks["feedback_changes_shortlist"] = bool(rej) and not (rej & set(st.get("shortlist") or []))
     if exp.get("experiments"): ex = st.get("experiments_planned") or []; checks["experiments"] = len(ex) >= 3 and not FEAR.search(" ".join(ex))
