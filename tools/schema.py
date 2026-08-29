@@ -10,6 +10,7 @@ class Card(BaseModel):
     id: str
     family: Family
     subq_id: Optional[str] = None
+    occ: Optional[str] = None       # which occupation (soc / composite slug) this card is about; None = economy-wide
     claim: str                      # plain-English statement of what this card supports
     value: Optional[float] = None   # the number (probability 0-1, %, count, $, score)
     unit: str = ""                  # "probability" | "percent" | "jobs" | "usd" | "score" | "count"

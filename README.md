@@ -1,13 +1,15 @@
 # NextShift AI
 *What AI does to your work, with receipts.*
 
-Give it your occupation, a horizon (2030 / 2035) and a question. It gathers live forecasts (Polymarket, Manifold, Metaculus), AI-exposure research (AIOE, Anthropic Economic Index, O*NET tasks), labor statistics (BLS, FRED) and frontier-model data (Epoch AI), then returns a short brief: **what changes for your tasks, which worlds we might be in, where sources disagree, what nobody knows, and what to lean into.** Every line cites a source card; a second model strips anything it can't verify; a human approves the assumptions before scenarios are built and the brief before it's exported.
+**Plan your career for an AI-shaped job market.** Students compare 2–3 directions; professionals ask about their own role. A guided intake, then the agent restates what it understood (you confirm or fix it), gathers evidence in parallel — BLS Employment Projections 2025–35, O*NET tasks × Anthropic Economic Index, AIOE, prediction markets, Epoch AI, FRED — and writes a plan that leads with the answer: **your outlook · how the work may change · what this means for you · a 30-day / 6-month / 1-year preparation plan · other paths · confidence and uncertainty**. Every factual line cites evidence; a second model (different family) strips what it can't verify; you approve the plan before it is saved. Jobs the SOC taxonomy doesn't have (Product Manager…) are assembled as composites from 18,000 O*NET task statements — and labelled as such.
 
 Built for Maven *Mastering Agentic AI*, Week 3. LangGraph supervisor · Nebius open-weight models · Streamlit.
 
 ```
-python run_cli.py --soc 11-2021 --horizon 2030      # Marketing Managers (the Product Manager persona)
-python -m evals.run_golden                          # 10-occupation golden set
+python run_cli.py --soc 15-1252 --industry fintech --week "backend services, PR review, on-call" --auto
+python run_cli.py --composite "Product Manager" --industry "real-estate software" --week "user research, requirements, prioritization" --auto
+python run_cli.py --student --careers 27-1024 15-1255 19-3039 --interests "psychology, design, technology" --auto
+python -m evals.run_golden                          # 13-case golden set (both journeys, gates, failures, memory)
 python -m tools.smoke_test 11-2021                  # hit every data source once
 ```
 

@@ -108,3 +108,27 @@ Judy's second catch: even IT Project Managers "isn't my job". Root cause: SOC 20
 - **Human picks tasks**: the Ask screen shows both composites first (★), each with a tick-list; unticked tasks leave the persona. Official categories stay listed below.
 - **Honesty rule**: `persona.soc = "composite:<slug>"`; AIOE / BLS / Anthropic job-level tools return *"no official statistics exist for this occupation"* as citable unknowns — never borrowed from a neighbouring category. FRED national series still gathered.
 - Write-up: "the government has no category for my job, so the agent assembled one from 18,000 task statements and showed me its work." Tuning item: the skeptic strips conditional scenario bullets more often on composites (35% on the first PM run → escalation banner); consider softening `SKEPTIC_SYS` on scenario sections or letting the writer cite the scenario's probability card.
+
+---
+# REDESIGN (Sat 2026-08-28 night) — answer first, evidence behind it
+
+Judy's UX critique: the app was an analyst's control panel (scenario tree, forecast ranges, penetration math, skeptic metrics) and never answered the person's question. Rebuilt around **"Given an uncertain future, what is the best career decision I can make now?"** Two journeys (student · professional), guided intake, two gates.
+
+## Graph (as built)
+`START → load_memory → understand → ⏸ understanding_gate ⇉ Send×{forecasts, research, outlook×occupation, exposure×occupation} → reconcile → write_outlook → write_plan → skeptic ⟲(once) → render → ⏸ plan_gate → record → END`
+- **understanding_gate** replaces the worldview gate: the user confirms/edits *what the agent understood about them* (summary, horizon, occupation, composite task list) before any evidence is gathered. Reject → END with zero tool calls.
+- **plan_gate** replaces the publish gate: approve / edit / reject the plan; `record` is still the only writer.
+- Fan-out is **per occupation**, so a student's 2–3 careers run in parallel through the same gatherers (`Card.occ` tags each card's occupation).
+- `gather_outlook` is new: BLS Employment Projections 2025–35 (growth %, numeric change, annual openings, entry education) from `tools/outlook.py`; composites get the closest official categories as **labelled proxies** plus an explicit unknown.
+
+## State
+`Profile` (door, interests, strengths, constraints, role, week, industry, concerns, horizon, summary) · `targets: [OccupationTarget]` · `outlooks: {soc: Outlook}` (demand_reading from BLS only; ai_change_reading labelled interpretation) · `changes: {soc: WorkChange}` · `plan: Plan` (direct_answer, for_you, d30/m6/y1, adjacent, comparison, our_read, confidence) · `plan_md` (one claim per line — what the skeptic checks and what is exported). Removed as primary: scenarios, task_diff, worldview, brief.
+
+## Task-diff replacement (the special review)
+No multipliers. Three groups from *observed* penetration: **AI will probably assist** (≥0.60 — a fact about current use), **may become more important** (low use *and* a stated reason it resists delegation — a cited interpretation chosen by the planner, tagged), **still uncertain** (everything else). The method note is shown inline. Forecast markets appear only as conditional sentences about *pace* in section 6.
+
+## Citation discipline
+Facts cite `[cNN]`; unknowns cite `[uNN]`; interpretive lines add `[interpretation]`; practical advice with no factual claim carries `[advice]` and is kept unchecked; any line with a number must cite. The skeptic (Qwen3-Next-80B Thinking) reviews `plan_md` line by line; >30% stripped → one rewrite → escalation banner.
+
+## Evaluation (evals/golden.json, 13 cases)
+Professional clean match · PM composite · "Head of Product" needing clarification · low-exposure nurses (no fear words) · student 3-way comparison (must surface Graphic Designers −1.7%) · occupation with no projection · Polymarket disabled · conflicting forecasts · edit at gate 1 changes horizon · reject at gate 1 (0 tool calls) · reject at gate 2 (no file, no snapshot) · broken skeptic model (fallback flagged) · second run computes deltas. Plus a 5-point answer-quality rubric judged by the reviewer model.
