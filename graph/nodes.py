@@ -10,7 +10,7 @@ from langgraph.config import get_stream_writer
 from tools.schema import Card, SourceResult
 from tools import polymarket, manifold, metaculus, exposure, fred, epoch, onet_ws, composite
 from tools import outlook as outlook_tool
-from . import llm, memory
+from . import llm, memory, diag
 from .state import State
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,9 +34,11 @@ def _disabled(name: str) -> bool:
     return name.lower() in {x.strip().lower() for x in os.environ.get("DISABLE_SOURCES", "").split(",") if x.strip()}
 
 def _call(name: str, fn, *args) -> SourceResult:
-    if _disabled(name): return SourceResult(source=name, ok=False, error="source disabled for failure demo (DISABLE_SOURCES)")
-    try: return fn(*args)
-    except Exception as e: return SourceResult(source=name, ok=False, error=f"{type(e).__name__}: {e}")
+    soc = (args[0].get("soc") if args and isinstance(args[0], dict) else args[0] if args and isinstance(args[0], str) and re.match(r"\d{2}-\d{4}", args[0]) else None)
+    if _disabled(name): diag.emit("tool", name=name, soc=soc, ms=0, ok=False, disabled=True); return SourceResult(source=name, ok=False, error="source disabled for failure demo (DISABLE_SOURCES)")
+    t0 = time.perf_counter()
+    try: r = fn(*args); diag.emit("tool", name=name, soc=soc, ms=round((time.perf_counter() - t0) * 1000), ok=r.ok, cards=len(r.cards)); return r
+    except Exception as e: diag.emit("tool", name=name, soc=soc, ms=round((time.perf_counter() - t0) * 1000), ok=False, error=type(e).__name__); return SourceResult(source=name, ok=False, error=f"{type(e).__name__}: {e}")
 
 def _collect(results, occ: str | None, calls: int) -> dict:
     cards, unknowns, errors, status = [], [], [], {}

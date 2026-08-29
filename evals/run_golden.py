@@ -10,7 +10,7 @@ import pandas as pd
 from langgraph.types import Command
 from graph import review as _rv
 from graph.build import build_graph
-from graph import llm, memory
+from graph import llm, memory, diag as _diag
 
 ROOT = Path(__file__).resolve().parents[1]; OCC = pd.read_csv(ROOT / "data/raw/onet_occupation_data.csv")
 FEAR = re.compile(r"\b(doomed|obsolete|will be replaced|will disappear|safe from AI|guaranteed|100% safe)\b", re.I)
@@ -40,16 +40,19 @@ def run_one(graph, g):
     profile, targets = build_inputs(g); cfg = {"configurable": {"thread_id": f"golden-{g['id']}-{uuid.uuid4().hex[:6]}"}}; t0 = time.time(); err = None
     os.environ["DISABLE_SOURCES"] = g.get("disable", ""); old_sk = os.environ.get("SKEPTIC_MODEL")
     if g.get("break_skeptic"): os.environ["SKEPTIC_MODEL"] = "not/a-real-model"
-    snaps_before = _snapshot_count(); log = []
+    snaps_before = _snapshot_count(); log = []; diag_events, segments = [], []
+    def _run(inp, kind):
+        _t = time.time()
+        for mode, ev in graph.stream(inp, cfg, stream_mode=["custom", "updates"]):
+            if mode == "custom" and "diag" in ev: diag_events.append(ev)
+            elif mode == "custom" and "say" in ev: log.append(ev["say"])
+        segments.append({"kind": kind, "wall_s": round(time.time() - _t, 1)})
     try:
-        for mode, ev in graph.stream({"profile": {k: v for k, v in profile.items() if k != "resolver_offers_composite"}, "targets": targets, "thread_id": cfg["configurable"]["thread_id"]}, cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom" and "say" in ev: log.append(ev["say"])
+        _run({"profile": {k: v for k, v in profile.items() if k != "resolver_offers_composite"}, "targets": targets, "thread_id": cfg["configurable"]["thread_id"]}, "understanding")
         r1 = {"action": "reject"} if g.get("reject_at") == "understanding" else {"action": "edit", "profile": {"horizon": g["edit_horizon"]}} if g.get("edit_horizon") else {"action": "confirm"}
-        for mode, ev in graph.stream(Command(resume=r1), cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom" and "say" in ev: log.append(ev["say"])
+        _run(Command(resume=r1), "plan")
         if g.get("reject_at") != "understanding":
-            for mode, ev in graph.stream(Command(resume={"action": "reject" if g.get("reject_at") == "plan" else "approve"}), cfg, stream_mode=["custom", "updates"]):
-                if mode == "custom" and "say" in ev: log.append(ev["say"])
+            _run(Command(resume={"action": "reject" if g.get("reject_at") == "plan" else "approve"}), "end")
     except Exception as e: err = repr(e)
     finally:
         if old_sk: os.environ["SKEPTIC_MODEL"] = old_sk
@@ -93,7 +96,7 @@ def run_one(graph, g):
             for k in ("answers_concerns", "facts_vs_interpretation", "no_guarantees", "no_invented_products", "actionable"): checks[f"rubric_{k}"] = bool(rubric.get(k))
         except Exception as e: rubric = {"error": repr(e)}
     return {"id": g["id"], "kind": g["kind"], "seconds": round(time.time() - t0), "cards": len(st.get("evidence") or []), "stripped": len(sk.get("stripped") or []), "uncited_final": len(uncited), "tool_calls": st.get("tool_calls"),
-            "cost_usd": round(st.get("cost_usd") or 0, 4), "demand": [o["demand_reading"] for o in ol], "deltas": len(st.get("deltas") or []), "exported": st.get("exported_path"), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "pass": all(checks.values())}
+            "cost_usd": round(st.get("cost_usd") or 0, 4), "demand": [o["demand_reading"] for o in ol], "deltas": len(st.get("deltas") or []), "exported": st.get("exported_path"), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "perf": _diag.summarize(diag_events, segments), "pass": all(checks.values())}
 
 def _snapshot_count():
     import sqlite3; c = sqlite3.connect(memory.DB); n = c.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0]; c.close(); return n

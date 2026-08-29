@@ -74,7 +74,7 @@ def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int) -> 
     from . import llm
     local = {j: idx for j, (idx, _) in enumerate(chunk)}
     listing = "\n\n".join(f"{j}. {txt}" for j, (_, txt) in enumerate(chunk))
-    text, c = llm.chat("skeptic", system + "\nRespond with valid JSON only: {\"verdicts\":[{\"i\":0,\"verdict\":\"keep\",\"reason\":\"...\"}]}", listing, max_tokens=max_tokens, temperature=0.0)
+    text, c = llm.chat("skeptic", system + "\nRespond with valid JSON only: {\"verdicts\":[{\"i\":0,\"verdict\":\"keep\",\"reason\":\"...\"}]}", listing, max_tokens=max_tokens, temperature=0.0, purpose="review_batch")
     try: got = {int(v["i"]): v for v in _json.loads(re.search(r"\{.*\}", text, flags=re.S).group(0)).get("verdicts", []) if "i" in v}
     except Exception:
         got = {int(i): {"verdict": v, "reason": (rs or "")[:200]} for i, v, rs in re.findall(r'"i"\s*:\s*(\d+)\s*,\s*"verdict"\s*:\s*"(keep|strip)"(?:\s*,\s*"reason"\s*:\s*"([^"]*))?', text)}
@@ -86,12 +86,15 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_
     Raw output of a failing batch is written to data/processed/review_failures.log for diagnosis."""
     from concurrent.futures import ThreadPoolExecutor
     import pathlib as _pl, time as _t
-    verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None
+    from . import diag
+    verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None; _w = diag.capture_writer(); _t0 = _t.perf_counter()
     chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
     def one(chunk):
+        diag.bind_writer(_w)
         try: return _judge_batch(chunk, system, max_tokens), None
         except Exception as e:
             out, err = {}, f"{type(e).__name__}: {str(e)[:300]}"; c_total = 0.0
+            diag.emit("retry", what="review_batch", size=len(chunk), error=err[:80])
             for half in (chunk[: len(chunk) // 2 or 1], chunk[len(chunk) // 2 or 1:]):
                 if not half: continue
                 try: got, c = _judge_batch(half, system, max_tokens); out.update(got); c_total += c
@@ -105,4 +108,5 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_
         for (got, c), err in ex.map(one, chunks):
             verdicts.update(got); cost += c
             if err: status = "unverified"; judge_lines.last_error = err
+    diag.emit("review", lines=len(items), batches=len(chunks), batch_size=batch, ms=round((_t.perf_counter() - _t0) * 1000), status=status)
     return verdicts, cost, status

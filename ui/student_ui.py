@@ -24,6 +24,7 @@ def run(S, inp, box=None):
     cfg = {"configurable": {"thread_id": S.thread_id}}
     for mode, ev in sgraph().stream(inp, cfg, stream_mode=["custom", "updates"]):
         if mode == "custom":
+            if "diag" in ev: S.setdefault("diag", []).append(ev); continue
             if "phase" in ev:
                 S.phase = ev; S.setdefault("phase_log", []).append(ev)
                 if callable(S.get("on_phase")): S.on_phase()

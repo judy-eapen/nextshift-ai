@@ -30,14 +30,11 @@ def _occ_index():
 
 def describe_title(title: str, about: str = "") -> str:
     """Cheap LLM step: turn a bare title into a 2-sentence description of the work, so the embedder has something to match."""
-    key = os.environ["NEBIUS_API_KEY"]; base = os.environ.get("NEBIUS_BASE_URL", "https://api.studio.nebius.com/v1/").rstrip("/")
-    model = os.environ.get("EXTRACTOR_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507")
+    from graph import llm
     prompt = (f"Job title: {title}. " + (f"The person says: {about}. " if about else "") +
               "In two plain sentences, describe the day-to-day work of this job in the style of a US Bureau of Labor Statistics occupation description "
               "(what they plan, direct, analyze, coordinate, build). No preamble.")
-    r = httpx.post(f"{base}/chat/completions", headers={"Authorization": f"Bearer {key}"},
-                   json={"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 120, "temperature": 0.2}, timeout=60)
-    r.raise_for_status(); return r.json()["choices"][0]["message"]["content"].strip()
+    text, _ = llm.chat("extractor", "You describe jobs plainly.", prompt, temperature=0.2, max_tokens=120, purpose="describe_title"); return text.strip()
 
 def semantic_match(text: str, k: int = 5) -> list[dict]:
     """text = a description of the work (use describe_title first for bare titles)."""

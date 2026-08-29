@@ -3,7 +3,7 @@ discriminators → shortlist → ⏸ shortlist gate → deep dive → ⏸ explor
 from __future__ import annotations
 from langgraph.graph import StateGraph, START, END
 from .student import StudentState
-from . import student as s, student_explore as x, nodes as n
+from . import student as s, student_explore as x, nodes as n, diag
 from .build import sqlite_checkpointer
 
 GATHERERS = ["gather_forecasts", "gather_research", "gather_outlook", "gather_exposure"]
@@ -18,7 +18,7 @@ def build_student_graph(checkpointer=None):
                      ("reaction_gate", x.reaction_gate), ("update_from_reactions", x.update_from_reactions), ("discriminate", x.discriminate), ("discriminator_gate", x.discriminator_gate), ("apply_discriminators", x.apply_discriminators),
                      ("build_shortlist", x.build_shortlist), ("shortlist_gate", x.shortlist_gate), ("deep_dive", x.deep_dive), ("explore_gate", x.explore_gate), ("explore", x.explore),
                      ("save_gate", x.save_gate), ("record", x.record)]:
-        g.add_node(name, fn)
+        g.add_node(name, diag.timed(name, fn))
     # interview loop
     g.add_edge(START, "init_interview"); g.add_edge("init_interview", "select_question"); g.add_edge("select_question", "interview_gate")
     g.add_edge("interview_gate", "update_profile"); g.add_edge("update_profile", "evaluate_completeness")

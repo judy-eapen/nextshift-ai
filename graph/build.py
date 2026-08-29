@@ -8,7 +8,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from .state import State
-from . import nodes as n
+from . import nodes as n, diag
 
 CKPT = Path(__file__).resolve().parents[1] / "data" / "processed" / "checkpoints.sqlite"
 GATHERERS = ["gather_forecasts", "gather_research", "gather_outlook", "gather_exposure"]
@@ -19,7 +19,7 @@ def build_graph(checkpointer=None):
                      ("gather_forecasts", n.gather_forecasts), ("gather_research", n.gather_research), ("gather_outlook", n.gather_outlook), ("gather_exposure", n.gather_exposure),
                      ("reconcile", n.reconcile), ("write_outlook", n.write_outlook), ("write_plan", n.write_plan), ("skeptic", n.skeptic),
                      ("render", n.render), ("plan_gate", n.plan_gate), ("record", n.record)]:
-        g.add_node(name, fn)
+        g.add_node(name, diag.timed(name, fn))
     g.add_edge(START, "load_memory"); g.add_edge("load_memory", "understand"); g.add_edge("understand", "understanding_gate")
     g.add_conditional_edges("understanding_gate", lambda s: n.fan_out(s) if n.after_understanding(s) == "gather" else END, GATHERERS + [END])
     for x in GATHERERS: g.add_edge(x, "reconcile")

@@ -9,6 +9,7 @@ from dotenv import load_dotenv; load_dotenv()
 from langgraph.types import Command
 from graph.student_build import build_student_graph
 from graph.build import memory_checkpointer
+from graph import diag as _diag
 from graph import llm, memory
 from evals.sim_student import answer
 
@@ -35,11 +36,14 @@ def run_case(g_):
     graph = build_student_graph(memory_checkpointer()); cfg = {"configurable": {"thread_id": f"s-{g_['id']}-{uuid.uuid4().hex[:6]}"}}; t0 = time.time(); err = None; log = []
     tid = cfg["configurable"]["thread_id"]; writes_before_approval = False
     def _wrote(): return _snap_count(tid) > 0 or bool((graph.get_state(cfg).values or {}).get("exported_path"))
+    diag_events, segments = [], []
     def run(inp):
+        _t = time.time()
         for mode, ev in graph.stream(inp, cfg, stream_mode=["custom", "updates"]):
-            if mode == "custom" and "say" in ev: log.append(ev["say"])
-            elif "__interrupt__" in ev: return ev["__interrupt__"][0].value
-        return None
+            if mode == "custom" and "diag" in ev: diag_events.append(ev)
+            elif mode == "custom" and "say" in ev: log.append(ev["say"])
+            elif "__interrupt__" in ev: v = ev["__interrupt__"][0].value; segments.append({"kind": v.get("kind"), "wall_s": round(time.time() - _t, 1)}); return v
+        segments.append({"kind": "end", "wall_s": round(time.time() - _t, 1)}); return None
     def clean(t): return re.sub(r"\s*\[[^\]]+\]", "", str(t or ""))
     st = {}; p = None; history = []; turns = 0; edited_understanding = False
     try:
@@ -164,7 +168,7 @@ def run_case(g_):
             for k in ("grounded_in_profile", "facts_vs_interpretation", "no_guarantees", "respects_constraints", "concrete_experiments"): checks[f"rubric_{k}"] = bool(rubric.get(k))
         except Exception as e: rubric = {"error": repr(e)}
     return {"id": g_["id"], "seconds": round(time.time() - t0), "turns": len(st.get("turns") or []), "candidates": len(cands), "cards": len(st.get("evidence") or []), "stripped": len(sk.get("stripped") or []), "review_status": sk.get("status"),
-            "shortlist": [c["label"] for c in cands if c["key"] in (st.get("shortlist") or [])], "cost_usd": round(st.get("cost_usd") or 0, 4), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "diagnostics": [l for l in log if l.startswith("LEAKS:")], "pass": all(checks.values())}
+            "shortlist": [c["label"] for c in cands if c["key"] in (st.get("shortlist") or [])], "cost_usd": round(st.get("cost_usd") or 0, 4), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "diagnostics": [l for l in log if l.startswith("LEAKS:")], "perf": _diag.summarize(diag_events, segments), "pass": all(checks.values())}
 
 def main():
     from concurrent.futures import ThreadPoolExecutor
