@@ -75,7 +75,10 @@ def run_one(graph, g):
     if exp.get("no_export"): checks["no_export"] = not st.get("exported_path")
     if exp.get("no_snapshot"): checks["no_snapshot"] = _snapshot_count() == snaps_before
     if "max_tool_calls" in exp: checks["no_gathering_after_reject"] = (st.get("tool_calls") or 0) <= exp["max_tool_calls"] and not st.get("evidence")
-    if exp.get("skeptic_fallback_flagged"): checks["skeptic_fallback_flagged"] = any("Reviewer model failed" in l for l in log) and bool(st.get("plan_md"))
+    if exp.get("skeptic_fallback_flagged"): checks["skeptic_fallback_flagged"] = sk.get("status") == "unverified" and any("UNVERIFIED" in b for b in (st.get("views") or {}).get("badges", [])) and (st.get("views") or {}).get("review_status") == "unverified"
+    if "min_cards" in exp and sk.get("stripped"):   # removed content must not reach the UI (compare against the reviewed views)
+        v_ = st.get("views") or {}; ui_text = json.dumps(v_.get("plan")) + json.dumps(v_.get("outlooks")) + json.dumps(v_.get("changes"))
+        checks["removed_absent_from_ui"] = not any((r["sentence"].split(" [")[0][:50] if r["path"].endswith(".why") else r["sentence"][:60]) in ui_text for r in sk["stripped"])
     if exp.get("deltas_computed"): checks["deltas_computed"] = st.get("prior_snapshot") is not None and isinstance(st.get("deltas"), list)
     rubric = {}
     if "min_cards" in exp and plan.get("direct_answer") and not g.get("break_skeptic"):

@@ -18,6 +18,7 @@ CFG = json.loads((ROOT / "data" / "anchor_questions.json").read_text()); ANCHORS
 MAX_TOOL_CALLS, MAX_COST_USD, UNCITED_LIMIT = 40, 1.00, 0.30
 CONCERN_LABEL = {"demand": "whether demand for the role holds", "change": "how the work changes", "learn": "what to learn", "pivot": "whether to consider a different path"}
 HORIZON_LABEL = {"1-2y": "the next 1–2 years", "2030": "by 2030", "2035": "by 2035"}
+def _year(h) -> int: return {"1-2y": 2030, "2030": 2030, "2035": 2035}.get(str(h), 2030)
 
 def _say(text: str):
     """Plain-language progress the UI shows live. No-op outside a graph run."""
@@ -101,7 +102,7 @@ Exception — PROXY: a market that resolves on a leading lab/government *declari
 When in doubt, drop it. Return {"decisions":[{"i":market_index,"verdict":"keep|proxy|drop","why":"<10 words"}]}"""
 
 def gather_forecasts(inp: dict) -> dict:
-    h = {"1-2y": 2030, "2030": 2030, "2035": 2035}.get(str(inp.get("horizon")), 2030); calls = 0; cost_total = 0.0; cards, unknowns, errors, status = [], [], [], {}
+    h = _year(inp.get("horizon")); calls = 0; cost_total = 0.0; cards, unknowns, errors, status = [], [], [], {}
     fn = {"polymarket": polymarket.polymarket_search, "manifold": manifold.manifold_search, "metaculus": metaculus.metaculus_search}
     for a in ANCHORS:
         topic = a["topic"].format(horizon=h); got = []
@@ -131,7 +132,7 @@ def gather_research(inp: dict) -> dict:
 
 # ───────────────────────────── reconcile (code) ─────────────────────────────
 def reconcile(state: State) -> dict:
-    seen, cards = set(), []
+    yr = _year(state["profile"].get("horizon")); seen, cards = set(), []
     for c in state["evidence"]:
         if c.id not in seen: seen.add(c.id); cards.append(c)
     refs = {f"c{i+1:02d}": c.id for i, c in enumerate(cards)}
@@ -142,13 +143,13 @@ def reconcile(state: State) -> dict:
         vals = [c for c in cards if c.subq_id == a["id"] and c.value is not None and c.unit == "probability"]
         if len({c.source for c in vals}) > 1:
             lo, hi = min(c.value for c in vals), max(c.value for c in vals)
-            if hi - lo >= 0.05: dis.append({"anchor": a["id"], "topic": a["topic"].format(horizon=2030), "card_ids": [c.id for c in vals], "low": lo, "high": hi, "spread": f"{lo:.0%}–{hi:.0%}", "sources": sorted({c.source for c in vals})})
+            if hi - lo >= 0.05: dis.append({"anchor": a["id"], "topic": a["topic"].format(horizon=yr), "card_ids": [c.id for c in vals], "low": lo, "high": hi, "spread": f"{lo:.0%}–{hi:.0%}", "sources": sorted({c.source for c in vals})})
     fc = []   # conditional sentences about *pace*, cited — never per-task predictions
     for a in ANCHORS:
         vals = [c for c in cards if c.subq_id == a["id"] and c.value is not None]
         if vals:
             lo, hi = min(c.value for c in vals), max(c.value for c in vals); rng = f"{lo:.0%}" if hi - lo < 0.01 else f"{lo:.0%}–{hi:.0%}"
-            fc.append(f"Forecasters currently put {rng} on “{a['topic'].format(horizon=2030)}” — if that world arrives, the shifts above would come sooner " + " ".join(f"[{inv[c.id]}]" for c in vals[:3]))
+            fc.append(f"Forecasters currently put {rng} on “{a['topic'].format(horizon=yr)}” — if that world arrives, the shifts above would come sooner " + " ".join(f"[{inv[c.id]}]" for c in vals[:3]))
     deltas = memory.diff_snapshots(state.get("prior_snapshot"), cards)
     _say(f"Reconciled {len(cards)} pieces of evidence · {len(dis)} places where sources disagree · {len(state.get('unknowns') or [])} known unknowns")
     return {"refs": refs, "disagreements": dis, "forecast_context": fc, "deltas": deltas}
@@ -257,21 +258,22 @@ def write_plan(state: State) -> dict:
     except Exception as e: plan, cost = {"direct_answer": f"(the planner failed: {e})", "d30": [], "m6": [], "y1": [], "confidence": {}}, 0.0
     if p.get("door") != "student": plan["comparison"], plan["our_read"] = [], ""
     _say("Wrote your plan — now every line gets checked against the evidence")
-    return {"plan": plan, "plan_md": _plan_md(state, plan), "cost_usd": cost}
+    return {"plan": plan, "cost_usd": cost}
 
-def _plan_md(state: State, plan: dict) -> str:
-    """One line per claim so the skeptic judges lines. Headings/labels are exempt; the export is this text."""
+def _plan_md(state: State, plan: dict, outlooks: dict | None = None, changes: dict | None = None) -> str:
+    """Markdown export, generated FROM the reviewed structured objects (never the other way round)."""
+    outlooks = outlooks if outlooks is not None else state["outlooks"]; changes = changes if changes is not None else state["changes"]
     L = []; add = L.append
     add(f"# {' vs '.join(t['persona']['title'] for t in state['targets'])} · your plan"); add(plan.get("direct_answer", ""))
     add("## 1. Your outlook")
-    for k, o in state["outlooks"].items():
+    for k, o in outlooks.items():
         add(f"### {o['title']} — demand {o['demand_reading']} (BLS projection) · AI-related change {o['ai_change_reading']} (interpretation)")
         for f in o["facts"]: add(f"- {f}")
         for i in o["interpretation"]: add(f"- {i}")
     if plan.get("outlook_takeaway"): add(f"- {plan['outlook_takeaway']}")
     add("## 2. How the work may change")
-    for k, ch in state["changes"].items():
-        add(f"### {state['outlooks'][k]['title']}")
+    for k, ch in changes.items():
+        add(f"### {outlooks[k]['title']}")
         add("**AI will probably assist with these tasks**"); [add(f"- {r['task']} (observed AI use {r['penetration']:.2f}) [{r['ref']}]") for r in ch["ai_assists"][:8]]
         add("**These responsibilities may become more important**"); [add(f"- {r['task']} — {r['why']} [{r['ref']}] [interpretation]") for r in ch["more_important"][:8]]
         add("**These areas remain uncertain**"); [add(f"- {r['task']} [{r['ref']}]") for r in ch["uncertain"][:6]]
@@ -298,52 +300,74 @@ STRIP if: a number is not on a cited card or is misquoted; a card about X is use
 KEEP otherwise. For [interpretation] lines, KEEP if the cited cards make the reading reasonable, even if unproven. For conditional lines ("if AI progress is faster…"), judge only the consequence, not the premise.
 Return {"verdicts":[{"i":0,"verdict":"keep|strip","reason":"..."}]}"""
 
+def _reviewable(state: State) -> dict:
+    """The exact objects the UI renders. Task statements themselves are verbatim cards (skipped); the model-written 'why' lines are reviewed."""
+    import copy
+    return {"plan": copy.deepcopy(state["plan"]),
+            "outlooks": {k: {"facts": list(o["facts"]), "interpretation": list(o["interpretation"])} for k, o in state["outlooks"].items()},
+            "changes": {k: {"more_important": [{"task": r["task"], "ref": r["ref"], "why": r.get("why", ""), "card_id": r["card_id"], "penetration": r.get("penetration")} for r in ch["more_important"]]} for k, ch in state["changes"].items()}}
+
 def skeptic(state: State) -> dict:
+    """Reviews the structured objects line by line; removes failing leaves; records status. Failure of the reviewer model is loud, never silent."""
+    from . import review as rv
     refs, cards = state["refs"], {c.id: c for c in state["evidence"]}; attempt = (state.get("skeptic") or {}).get("attempt", 0) + 1
-    lines = [l for l in state["plan_md"].split("\n") if l.strip()]
-    keep_idx, stripped, to_check = {}, [], []
-    for i, l in enumerate(lines):
-        if l.startswith(("#", "**", "_")): keep_idx[i] = l; continue
-        cited = [r for r in re.findall(r"\[([cu]\d{2,3})\]", l) if r in refs]
-        if not cited and ("[advice]" in l or "[interpretation]" in l) and not re.search(r"\d", l): keep_idx[i] = l; continue   # practical advice with no factual claim: kept, labelled, not fact-checked
-        if not cited: stripped.append({"sentence": l, "reason": "no evidence ref" + (" (contains a number)" if re.search(r"\d", l) else "")}); continue
-        if all(refs[r].startswith("unknown:") for r in cited): keep_idx[i] = l; continue
-        to_check.append((i, l, cited))
-    verdicts, cost = {}, 0.0
+    obj = _reviewable(state); leaves = rv.flatten(obj)
+    # 'why' reasons in more_important have their card on the row, not inline — give them the row's ref for the check
+    leaves = [(p, (t + f" [{_leaf_ref(obj, p)}] [interpretation]" if p.endswith(".why") else t)) for p, t in leaves]
+    removed, to_check, kept_paths = [], [], []
+    for p, t in leaves:
+        kind = rv.classify(t, refs)
+        if rv.certainty_violation(t): removed.append({"path": p, "sentence": t, "reason": "certainty about the future (lint)"}); continue
+        if kind in ("heading", "unknown_only", "advice"): kept_paths.append(p); continue
+        if kind == "uncited": removed.append({"path": p, "sentence": t, "reason": "no evidence ref" + (" (contains a number)" if re.search(r"\d", t) else "")}); continue
+        to_check.append((p, t, [r for r in rv.REF.findall(t) if r in refs]))
+    verdicts, cost, status = {}, 0.0, "verified"
     if to_check:
-        listing = "\n\n".join(f"{i}. {l}\n   cards: " + " | ".join(f"[{r}] {cards[refs[r]].claim} (value {cards[refs[r]].value} {cards[refs[r]].unit})" for r in cited if refs[r] in cards) for i, l, cited in to_check)
+        listing = "\n\n".join(f"{i}. {t}\n   cards: " + " | ".join(f"[{r}] {cards[refs[r]].claim} (value {cards[refs[r]].value} {cards[refs[r]].unit})" for r in cited if refs[r] in cards) for i, (p, t, cited) in enumerate(to_check))
         try:
             text, cost = llm.chat("skeptic", SKEPTIC_SYS + "\nRespond with valid JSON only.", listing, max_tokens=14000, temperature=0.0)
             try: verdicts = {int(v["i"]): v for v in json.loads(re.search(r"\{.*\}", text, flags=re.S).group(0)).get("verdicts", []) if "i" in v}
             except Exception:
                 verdicts = {int(i): {"verdict": v, "reason": (r or "")[:200]} for i, v, r in re.findall(r'"i"\s*:\s*(\d+)\s*,\s*"verdict"\s*:\s*"(keep|strip)"(?:\s*,\s*"reason"\s*:\s*"([^"]*))?', text)}
                 if not verdicts: raise ValueError("no verdicts parseable")
-        except Exception as e: _say(f"Reviewer model failed ({e}); falling back to citation-only check")
-    for i, l, _ in to_check:
-        v = verdicts.get(i, {"verdict": "keep", "reason": "cited; reviewer did not object"})
-        if v.get("verdict") == "strip": stripped.append({"sentence": l, "reason": v.get("reason", "")})
-        else: keep_idx[i] = l
-    total = len(to_check) + sum(1 for s in stripped if s["reason"] == "no evidence ref"); ratio = len(stripped) / total if total else 0.0
+        except Exception as e:
+            status = "unverified"; _say(f"⚠ Reviewer model failed ({type(e).__name__}) — cards were checked for citations only, NOT for accuracy")
+    for i, (p, t, _) in enumerate(to_check):
+        v = verdicts.get(i, {"verdict": "keep", "reason": "cited; reviewer did not object" if status == "verified" else "UNVERIFIED — reviewer unavailable"})
+        if v.get("verdict") == "strip": removed.append({"path": p, "sentence": t, "reason": v.get("reason", "")})
+        else: kept_paths.append(p)
+    rv.apply_removals(obj, [r["path"] for r in removed])
+    total = len(to_check) + sum(1 for r in removed if r["reason"].startswith("no evidence ref")); ratio = len(removed) / total if total else 0.0
     escalated = ratio > UNCITED_LIMIT and attempt >= 2
-    kept = [keep_idx[i] for i in sorted(keep_idx)]
-    _say(f"Reviewed {total} lines: {len(stripped)} removed for lacking support" + (" — rewriting once" if ratio > UNCITED_LIMIT and not escalated else ""))
-    return {"skeptic": {"stripped": stripped, "kept": len(kept), "total": total, "ratio": round(ratio, 3), "attempt": attempt, "escalated": escalated, "model": llm.model_name("skeptic")},
-            "plan_md": "\n".join(kept) if ratio <= UNCITED_LIMIT or escalated else state["plan_md"], "cost_usd": cost}
+    _say(f"Reviewed {total} lines: {len(removed)} removed" + (" — rewriting once" if ratio > UNCITED_LIMIT and not escalated and status == "verified" else ""))
+    return {"skeptic": {"stripped": removed, "kept": len(kept_paths), "total": total, "ratio": round(ratio, 3), "attempt": attempt, "escalated": escalated, "status": status, "model": llm.model_name("skeptic")},
+            "reviewed": obj if (ratio <= UNCITED_LIMIT or escalated or status == "unverified") else None, "cost_usd": cost}
+
+def _leaf_ref(obj: dict, path: str) -> str:
+    from .review import _resolve
+    parent, _ = _resolve(obj, path); return parent.get("ref", "?")
 
 def after_skeptic(state: State) -> str:
     sk = state["skeptic"]
+    if sk.get("status") == "unverified": return "render"          # loud failure path: show it, don't loop on a reviewer that isn't there
     return "render" if (sk["ratio"] <= UNCITED_LIMIT or sk["escalated"] or state.get("cost_usd", 0) > MAX_COST_USD) else "rewrite"
 
 # ───────────────────────────── render → ⏸ plan gate → record ─────────────────────────────
 def render(state: State) -> dict:
-    cards, inv, sk = state["evidence"], _inv(state), state["skeptic"]
+    cards, inv, sk = state["evidence"], _inv(state), state["skeptic"]; rv = state["reviewed"]
+    # reviewed objects → the only things the UI shows
+    outlooks = {k: {**o, "facts": rv["outlooks"][k]["facts"], "interpretation": rv["outlooks"][k]["interpretation"]} for k, o in state["outlooks"].items()}
+    changes = {k: {**ch, "more_important": rv["changes"][k]["more_important"]} for k, ch in state["changes"].items()}
+    plan = rv["plan"]
     unavailable = [k for k, v in state.get("source_status", {}).items() if v == "unavailable"]
-    badges = ([f"Partial evidence — unavailable: {', '.join(unavailable)}"] if unavailable else []) + ([f"{len(sk['stripped'])} line(s) removed by the reviewer for lacking support"] if sk.get("stripped") else []) + (["⚠ The reviewer could not verify much of the draft after two attempts — read with care"] if sk.get("escalated") else [])
+    badges = ([f"Partial evidence — unavailable: {', '.join(unavailable)}"] if unavailable else []) + ([f"{'Citation check' if sk.get('status') == 'unverified' else 'Checked'} — {len(sk['stripped'])} line(s) removed for lacking support"] if sk.get("stripped") else ([] if sk.get("status") == "unverified" else ["Checked — 0 lines removed"])) + (["⚠ The reviewer could not verify much of the draft after two attempts — read with care"] if sk.get("escalated") else [])
+    if sk.get("status") == "unverified": badges.insert(0, "⚠ UNVERIFIED — our independent review step failed, so this plan was checked for citations only, not for accuracy. Treat it as a draft.")
+    md = _plan_md(state, plan, outlooks, changes)
     footer = "\n\n---\n### Evidence\n" + "\n".join(f"- [{inv[c.id]}] {c.claim} — {c.source}{', ' + c.as_of if c.as_of else ''}{' · ' + c.url if c.url else ''}" for c in cards if c.id in inv)
-    views = {"badges": badges, "outlooks": state["outlooks"], "changes": state["changes"], "plan": state["plan"], "disagreements": state["disagreements"], "forecast_context": state.get("forecast_context", []),
+    views = {"badges": badges, "review_status": sk.get("status", "verified"), "outlooks": outlooks, "changes": changes, "plan": plan, "disagreements": state["disagreements"], "forecast_context": state.get("forecast_context", []),
              "unknowns": state.get("unknowns", []), "deltas": state.get("deltas", []), "source_status": state.get("source_status", {}), "skeptic": sk, "refs": state["refs"],
              "cards_by_family": {f: [c.model_dump() for c in cards if c.family == f] for f in ("statistics", "exposure", "forecasts", "research")}, "budget": {"tool_calls": state.get("tool_calls", 0), "cost_usd": round(state.get("cost_usd", 0), 4)}}
-    return {"views": views, "plan_md": state["plan_md"] + footer}
+    return {"views": views, "plan": plan, "outlooks": outlooks, "changes": changes, "plan_md": md + footer}
 
 def plan_gate(state: State) -> dict:
     """⏸ Gate 2. Resume: {"action": "approve"|"edit"|"reject", "plan_md": str (if edit)}."""
@@ -356,8 +380,9 @@ def after_plan(state: State) -> str: return "record" if state["approvals"]["plan
 def record(state: State) -> dict:
     """The ONLY node that writes: plan file + snapshot + profile."""
     p = state["targets"][0]["persona"]; out_dir = ROOT / "data" / "briefs"; out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"{re.sub(r'[^A-Za-z0-9.-]+', '_', p['soc'])}_{state['profile'].get('horizon', 'h')}_{time.strftime('%Y%m%d-%H%M%S')}.md"; path.write_text(state["plan_md"])
-    sid = memory.save_snapshot(state["thread_id"], p["soc"], str(state["profile"].get("horizon", "2030")), state["evidence"], [state["plan"]], p)
+    tag = "_UNVERIFIED" if (state.get("skeptic") or {}).get("status") == "unverified" else ""
+    path = out_dir / f"{re.sub(r'[^A-Za-z0-9.-]+', '_', p['soc'])}_{state['profile'].get('horizon', 'h')}_{time.strftime('%Y%m%d-%H%M%S')}{tag}.md"; path.write_text(state["plan_md"])
+    sid = memory.save_snapshot(state["thread_id"], p["soc"], str(state["profile"].get("horizon", "2030")), state["evidence"], {"plan": state["plan"], "profile": {k: v for k, v in state["profile"].items() if k != "summary"}, "review_status": (state.get("skeptic") or {}).get("status")}, p)
     memory.save_profile(last_profile={k: v for k, v in state["profile"].items() if k != "summary"}, last_soc=p["soc"])
     _say(f"Saved your plan ({path.name}) and a snapshot so next time we can show what changed")
     return {"exported_path": str(path)}

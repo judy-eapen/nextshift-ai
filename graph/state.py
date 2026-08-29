@@ -72,5 +72,6 @@ class State(TypedDict, total=False):
     plan_md: str                  # the whole plan as markdown (what the skeptic checks and what gets exported)
     # review
     skeptic: dict
+    reviewed: Optional[dict]        # the structured objects AFTER review — the only thing render/UI read
     # output
     views: dict; approvals: dict; exported_path: Optional[str]

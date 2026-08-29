@@ -13,8 +13,9 @@ def _conn():
     c.execute("CREATE TABLE IF NOT EXISTS profile (key TEXT PRIMARY KEY, value TEXT, ts REAL)")
     return c
 
-def save_snapshot(thread_id: str, soc: str, horizon: int, cards: list[Card], scenarios: list[dict], persona: dict) -> int:
-    payload = {"ts": time.time(), "persona": persona, "cards": [c.model_dump() for c in cards], "scenarios": scenarios}
+def save_snapshot(thread_id: str, soc: str, horizon, cards: list[Card], extra: dict, persona: dict) -> int:
+    """One snapshot per APPROVED run: every card + whatever the journey wants to remember (plan, profile, shortlist, reactions…)."""
+    payload = {"ts": time.time(), "persona": persona, "cards": [c.model_dump() for c in cards], **(extra or {})}
     with _conn() as c:
         cur = c.execute("INSERT INTO snapshots (thread_id, soc, horizon, ts, payload) VALUES (?,?,?,?,?)", (thread_id, soc, horizon, payload["ts"], json.dumps(payload)))
         return cur.lastrowid

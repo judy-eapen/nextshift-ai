@@ -186,6 +186,7 @@ CHANGE = {"substantial": ("◆ Substantial", C["purple"]), "moderate": ("◆ Mod
 def screen_plan():
     pl = S.payload; v = pl["views"]; plan = v["plan"]; outlooks = v["outlooks"]; changes = v["changes"]
     st.markdown("<span class='kicker'>Your plan</span>", unsafe_allow_html=True); st.markdown(f"## {' vs '.join(o['title'] for o in outlooks.values())}")
+    if v.get("review_status") == "unverified": st.error("Our independent review step failed, so this plan has only been checked for citations — not for accuracy. Treat it as a draft; re-run later for a reviewed version.")
     if v["badges"]: st.markdown(" ".join(f"<span class='badge'>{b}</span>" for b in v["badges"]), unsafe_allow_html=True)
     st.markdown(f"<div class='card answer'>{strip_refs(plan.get('direct_answer', ''))}</div>", unsafe_allow_html=True)
 
@@ -245,6 +246,7 @@ def screen_plan():
                 st.markdown(f"_{fam}_ ({len(cards)})"); [st.markdown(f"<div class='task'>{c['claim'][:160]}<br><span class='p'>{c['source']} · {c.get('as_of') or ''} · <a href='{c.get('url')}'>source</a></span></div>", unsafe_allow_html=True) for c in cards[:12]]
 
     st.markdown("---"); st.markdown("<span class='kicker'>⏸ Your approval</span>", unsafe_allow_html=True)
+    if v.get("review_status") == "unverified": st.warning("This plan is unverified (review step failed). If you save it, the file will be marked UNVERIFIED.")
     with st.expander("Edit the plan text before saving"):
         md = st.text_area("plan", value=pl["plan_md"], height=300, label_visibility="collapsed")
     b = st.columns([2, 1, 1])
