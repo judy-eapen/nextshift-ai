@@ -1,0 +1,4 @@
+▶ s03 vague — I don't know ×5 … PASS 659s turns=13 cands=9 stripped=35 review=verified $0.0628
+▶ s01 no career ideas … PASS 765s turns=9 cands=10 stripped=28 review=verified $0.0791
+▶ s02 three careers in mind … PASS 811s turns=8 cands=10 stripped=33 review=verified $0.0821
+▶ s09 likes a field, dislikes its daily work … FAIL 3239s turns=9 cands=10 stripped=52 review=verified $0.0818  failed: ['under_15min']

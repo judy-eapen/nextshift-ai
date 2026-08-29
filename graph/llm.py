@@ -15,7 +15,7 @@ def model_name(role: str) -> str: return os.environ.get(ROLE_ENV[role], DEFAULTS
 def _client(role: str, temperature: float, max_tokens: int) -> ChatOpenAI:
     return ChatOpenAI(model=model_name(role), api_key=os.environ["NEBIUS_API_KEY"],
                       base_url=os.environ.get("NEBIUS_BASE_URL", "https://api.studio.nebius.com/v1/"),
-                      temperature=temperature, max_tokens=max_tokens, timeout=180, max_retries=2)
+                      temperature=temperature, max_tokens=max_tokens, timeout=120, max_retries=1)   # fail fast into node-level fallbacks rather than stall a run
 
 def chat(role: str, system: str, user: str, temperature: float = 0.2, max_tokens: int = 2000) -> tuple[str, float]:
     msg = _client(role, temperature, max_tokens).invoke([("system", system), ("user", user)])
