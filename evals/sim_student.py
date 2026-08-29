@@ -17,7 +17,8 @@ SIM_SYS = """You are role-playing a real student in a career-discovery interview
 def answer(persona_key: str, question: str, history: list[dict], scripted: dict | None = None, turn: int | None = None) -> dict:
     """Returns a resume payload for interview_gate. scripted: {"unsure_until": 5, "recommend_at": 3, "more_at": 9, "edit": {"turn": 2, "text": "..."}}"""
     turn = turn or (len(history) + 1); sc = scripted or {}
-    if sc.get("edit") and turn == sc["edit"].get("at"): return {"action": "edit", "edit_turn": sc["edit"]["turn"], "text": sc["edit"]["text"]}
+    if sc.get("edit") and turn == sc["edit"].get("at") and not sc["edit"].get("done"):
+        sc["edit"]["done"] = True; return {"action": "edit", "edit_turn": sc["edit"]["turn"], "text": sc["edit"]["text"]}   # one-shot: the interviewer's turn number doesn't advance on an edit
     if turn == sc.get("recommend_at"): return {"action": "recommend"}
     if turn == sc.get("more_at"): return {"action": "more"}
     if turn <= sc.get("unsure_until", 0): return {"action": "unsure"}
