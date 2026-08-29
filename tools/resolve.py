@@ -62,8 +62,17 @@ def with_composites(result: dict, title: str, about: str = "") -> dict:
     result["composites"] = comps; return result
 
 def resolve(title: str, about: str = "", k: int = 3) -> dict:
-    """Returns {tier, matches:[...], confident:bool, explanation}. Tier 0 curated · 1 exact title · 2 semantic (always when `about` is given) · 3 web hook."""
+    """Returns {tier, matches:[...], confident:bool, explanation}. Tier 0 curated · 1 exact title · 2 semantic (always when `about` is given) · 3 web hook.
+    Tier-2 results (an LLM description + embeddings) are cached by normalised title/about + resolver version — occupation matching is stable, not personal."""
+    from . import cache
     if not about.strip() and (cur := _curated(title)): return cur
+    key = cache.key_for("resolver", title=title, about=about, k=k)
+    if not cache.disabled() and (hit := cache.get("resolver", key)) is not None: return hit
+    out = _resolve_uncached(title, about, k)
+    if out.get("tier") == 2 and not cache.disabled(): cache.put("resolver", key, out)
+    return out
+
+def _resolve_uncached(title: str, about: str = "", k: int = 3) -> dict:
     exact = search_occupations(title, k)
     if exact and exact[0]["exact"] and not about.strip():
         return {"tier": 1, "confident": True, "matches": exact, "explanation": f"“{title}” is a listed job title under {exact[0]['title']} (O*NET)."}

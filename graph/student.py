@@ -40,6 +40,7 @@ class StudentState(TypedDict, total=False):
     # later phases (C–E) reuse the professional gatherers, so the same reducers live here
     targets: list[dict]; candidates: list[dict]; reactions: list[dict]; discriminators: list[Turn]; shortlist: list[str]; rejected: list[dict]; selected: Optional[str]; deep_dive: dict
     experiments_planned: list[str]; exploration_log: list[dict]
+    evidence_stage: str; deep_socs: list[str]; deep_done_socs: list[str]; deep_dives: dict; pending_after_deep: Optional[str]; evidence_meta: dict
     evidence: Annotated[list[Card], operator.add]; unknowns: Annotated[list[str], operator.add]; errors: Annotated[list[str], operator.add]
     source_status: Annotated[dict, merge_dicts]; tool_calls: Annotated[int, operator.add]; cost_usd: Annotated[float, operator.add]
     refs: dict; disagreements: list[dict]; forecast_context: list[str]; outlooks: dict; changes: dict

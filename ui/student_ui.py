@@ -8,7 +8,7 @@ from ui import journey as J
 
 C = {"amber": "#E5A24A", "student": "#7FC8E8", "green": "#8FBF9F", "red": "#E07A5F", "purple": "#B48CFF", "muted": "#8A94A6", "line": "#2A3544"}
 DEMAND = {"growing": ("▲ Growing", C["green"]), "stable": ("● Stable", C["amber"]), "declining": ("▼ Declining", C["red"]), "unknown": ("? No official projection", C["muted"])}
-CHANGE = {"substantial": "◆ Substantial", "moderate": "◆ Moderate", "limited": "◆ Limited", "unknown": "? Unknown"}
+CHANGE = {"substantial": "◆ Substantial", "moderate": "◆ Moderate", "limited": "◆ Limited", "unknown": "? Unknown", "pending": "◔ Analyzed after you react"}
 CORE_LABELS = {"interests_or_energizing": "what energizes you", "strengths": "strengths you've shown", "negatives": "what to avoid or build", "pidth": "people · ideas · data · tech · hands", "constraints": "practical limits", "values_or_impact": "what matters to you"}
 COVERAGE_GLYPH = {"none": ("○", "not yet"), "weak": ("◔", "a little"), "moderate": ("◑", "enough"), "strong": ("●", "clear")}
 BOUNDARY = "This is a guided exploration based on what you shared and available career data — not a test that determines what you should become."
@@ -28,11 +28,25 @@ def run(S, inp, box=None):
             if "phase" in ev:
                 S.phase = ev; S.setdefault("phase_log", []).append(ev)
                 if callable(S.get("on_phase")): S.on_phase()
+                if box is not None and J.phase_copy(ev): box.write(f"· {J.phase_copy(ev)}")
                 continue
             S.log.append(ev["say"])
             if box is not None: box.write(f"· {ev['say']}")
         elif "__interrupt__" in ev: S.phase = None; return ev["__interrupt__"][0].value
     S.phase = None; return None
+
+def act(S, resume: dict, label: str, done: str = "Ready", guard: str | None = None):
+    """Run a resume with a visible status box from the first millisecond; stream phase/say lines; keep the person's input on failure; ignore a duplicate submit.
+    guard = a token for this exact submission (e.g. 'answer:turn 3') — a repeat with the same token while it is in flight, or after it succeeded, is ignored."""
+    if guard and S.get("submitted") == guard: return
+    if guard: S.submitted = guard
+    with st.status(label, expanded=True) as box:
+        try: p = run(S, Command(resume=resume), box)
+        except Exception as e:
+            box.update(label="Something went wrong — nothing was lost. Try again.", state="error", expanded=True); st.write(f"{type(e).__name__}: {str(e)[:160]}")
+            S.last_error = f"{type(e).__name__}"; S.submitted = None; return
+        box.update(label=done, state="complete", expanded=False)
+    S.pending_answer = None; route(S, p)
 
 def route(S, payload):
     """Map an interrupt payload to a stage."""
@@ -64,14 +78,17 @@ def screen_interview(S):
         st.markdown("<div class='small' style='margin-top:6px'>A fixed rule picks the next topic from these gaps and the next question from a curated set; the AI reads your answers, it doesn't write the questions.</div>", unsafe_allow_html=True)
     with col:
         st.markdown(f"### {p['question']}")
-        text = st.text_area("answer", placeholder="Type as much or as little as you like…", height=110, label_visibility="collapsed", key=f"ans{p['turn']}")
-        b = st.columns([1.4, 1, 1, 1, 1])
-        if b[0].button("Send →", type="primary", width="stretch"):
-            if text.strip(): route(S, run(S, Command(resume={"action": "answer", "text": text.strip()})))
-        if b[1].button("I'm not sure"): route(S, run(S, Command(resume={"action": "unsure"})))
-        if b[2].button("Skip"): route(S, run(S, Command(resume={"action": "skip"})))
-        if p.get("can_recommend") and b[3].button("Recommend careers now"): route(S, run(S, Command(resume={"action": "recommend"})))
-        if p["turn"] > 8 and b[4].button("Ask me more"): route(S, run(S, Command(resume={"action": "more"})))
+        if S.get("last_error"): st.warning("The last step didn't complete — your answer is still here. Send it again."); S.last_error = None
+        with st.form(key=f"answer_form_{p['turn']}", clear_on_submit=False, border=False):
+            text = st.text_area("answer", value=S.get("pending_answer") or "", placeholder="Type as much or as little as you like…", height=110, label_visibility="collapsed", key=f"ans{p['turn']}")
+            sent = st.form_submit_button("Send →", type="primary", width="stretch")
+        if sent and text.strip():
+            S.pending_answer = text.strip(); act(S, {"action": "answer", "text": text.strip()}, "Understanding your answer…", "Next question ready", guard=f"answer:{p['turn']}")
+        b = st.columns([1, 1, 1.4, 1.2])
+        if b[0].button("I'm not sure"): act(S, {"action": "unsure"}, "Noting that — choosing the next question…", "Next question ready", guard=f"unsure:{p['turn']}")
+        if b[1].button("Skip"): act(S, {"action": "skip"}, "Skipping — choosing the next question…", "Next question ready", guard=f"skip:{p['turn']}")
+        if p.get("can_recommend") and b[2].button("Recommend careers now"): act(S, {"action": "recommend"}, "Wrapping up the interview…", "Ready to check what we understood", guard=f"recommend:{p['turn']}")
+        if p["turn"] > 8 and b[3].button("Ask me more"): act(S, {"action": "more"}, "Choosing another question…", "Next question ready", guard=f"more:{p['turn']}")
     if p.get("profile") is not None:
         with st.expander("What NextShift currently understands about you"):
             st.markdown("<p class='small'>Built only from your answers — each item shows the words it rests on. Nothing here is a verdict; edit an answer to change it.</p>", unsafe_allow_html=True)
@@ -90,7 +107,7 @@ def screen_interview(S):
                 labels = [f"Q{t['i']}: {t['question'][:70]}" for t in p["previous"]]; idx = next((i for i, t in enumerate(p["previous"]) if t["i"] == S.get("edit_turn")), 0)
                 pick = st.selectbox("Which one?", labels, index=idx, label_visibility="collapsed")
                 t = p["previous"][labels.index(pick)]; new = st.text_area("Your new answer", value=t["answer"], key=f"edit{t['i']}", height=80)
-                if st.button("Save this answer"): S.edit_turn = None; route(S, run(S, Command(resume={"action": "edit", "edit_turn": t["i"], "text": new})))
+                if st.button("Save this answer"): S.edit_turn = None; act(S, {"action": "edit", "edit_turn": t["i"], "text": new}, "Updating what we understood from that answer…", "Updated", guard=f"edit:{t['i']}:{hash(new)}")
 
 # ───────────────────────────── understanding gate ─────────────────────────────
 def screen_understanding(S):
@@ -106,8 +123,8 @@ def screen_understanding(S):
         with st.status("Thinking of directions, matching them to real occupations, checking employment outlook and where AI is already used…", expanded=True) as box:
             p2 = run(S, Command(resume={"action": "edit" if changed else "confirm", "sections": edited if changed else None}), box)
         route(S, p2)
-    if b[1].button("Back to the interview"): route(S, run(S, Command(resume={"action": "back"})))
-    if b[3].button("Stop here"): route(S, run(S, Command(resume={"action": "reject"})))
+    if b[1].button("Back to the interview"): act(S, {"action": "back"}, "Returning to the interview…", "Next question ready")
+    if b[3].button("Stop here"): act(S, {"action": "reject"}, "Stopping — nothing is saved", "Stopped")
 
 # ───────────────────────────── results + reactions ─────────────────────────────
 def card_html(c: dict) -> str:
@@ -129,8 +146,8 @@ def screen_results(S):
     st.markdown(f"<p class='small'>{BOUNDARY}</p>", unsafe_allow_html=True)
     if not any(v["groups"].values()):
         st.warning("I couldn't put together career directions this time (the generation step failed). Nothing was saved.")
-        if st.button("Try again from my profile"): route(S, run(S, Command(resume={"action": "back_to_understanding"})))
-        if st.button("Stop"): route(S, run(S, Command(resume={"action": "stop"}))); return
+        if st.button("Try again from my profile"): act(S, {"action": "back_to_understanding"}, "Thinking of directions again…", "Ready")
+        if st.button("Stop"): act(S, {"action": "stop"}, "Stopping — nothing is saved", "Stopped"); return
     reactions = {}
     for g, cs in v["groups"].items():
         if not cs: continue
@@ -148,16 +165,14 @@ def screen_results(S):
     st.markdown("---"); st.markdown("### Which of these speaks to you, and what about it appeals?")
     b = st.columns([2, 1, 1])
     if b[0].button("Continue with my reactions →", type="primary", width="stretch", disabled=not reactions):
-        with st.status("Taking in your reactions…", expanded=True) as box: p2 = run(S, Command(resume={"action": "continue", "reactions": list(reactions.values())}), box)
-        route(S, p2)
-    if b[2].button("Stop here"): route(S, run(S, Command(resume={"action": "stop"})))
+        act(S, {"action": "continue", "reactions": list(reactions.values())}, "Taking in your reactions — then looking deeper at the careers you liked…", "Ready")
+    if b[2].button("Stop here"): act(S, {"action": "stop"}, "Stopping — nothing is saved", "Stopped")
 
 def screen_discriminate(S):
     p = S.payload; st.markdown("<span class='kicker'>One or two more questions</span>", unsafe_allow_html=True); st.markdown("## To help separate your options")
     answers = [st.text_area(q["text"], key=f"disc{i}", height=80) for i, q in enumerate(p["questions"])]
     if st.button("Continue →", type="primary"):
-        with st.status("Building your shortlist…", expanded=True) as box: p2 = run(S, Command(resume={"answers": answers}), box)
-        route(S, p2)
+        act(S, {"answers": answers}, "Building your shortlist…", "Shortlist ready")
 
 # ───────────────────────────── shortlist ─────────────────────────────
 def screen_shortlist(S):
@@ -174,14 +189,11 @@ def screen_shortlist(S):
     key = next(k for k in sl["keys"] if cands[k]["label"] == pick)
     b = st.columns([1.6, 1.6, 1.2, 1, 1])
     if b[0].button("Deep dive →", type="primary", width="stretch"):
-        with st.status("Writing the deep dive and checking it…", expanded=True) as box: p2 = run(S, Command(resume={"action": "pick", "key": key}), box)
-        route(S, p2)
+        act(S, {"action": "pick", "key": key}, "Writing the deep dive and checking it…", "Deep dive ready")
     wi = b[1].selectbox("what if", ["What if…", "What if I don't want graduate school?", "What if salary matters more?", "What if I want remote work?", "Show me similar careers"], label_visibility="collapsed")
-    if wi != "What if…" and b[2].button("Ask"):
-        with st.status("Reconsidering…", expanded=True) as box: p2 = run(S, Command(resume={"action": "whatif", "whatif": wi}), box)
-        route(S, p2)
-    if b[3].button("Back to all cards"): route(S, run(S, Command(resume={"action": "back_to_results"})))
-    if b[4].button("Save & finish"): route(S, run(S, Command(resume={"action": "save"})))
+    if wi != "What if…" and b[2].button("Ask"): act(S, {"action": "whatif", "whatif": wi}, "Reconsidering your shortlist…", "Updated")
+    if b[3].button("Back to all cards"): act(S, {"action": "back_to_results"}, "Returning to your career cards…", "Ready")
+    if b[4].button("Save & finish"): act(S, {"action": "save"}, "Preparing to save…", "Ready")
 
 # ───────────────────────────── deep dive + explore ─────────────────────────────
 TITLES = {"why_fit": "1. Why this career may fit you", "what_people_do": "2. What people in this career actually do", "education_and_entry": "3. Education and entry paths", "outlook": "4. Employment outlook", "how_ai_may_change": "5. How AI may change the role",
@@ -202,13 +214,11 @@ def screen_deep(S):
     st.markdown("---"); st.markdown("### Keep exploring")
     b = st.columns([1.6, 1.4, 1.2, 1, 1.2])
     wi = b[0].selectbox("what if", ["What if…", "What if I don't want graduate school?", "What if salary matters more?", "What if I want remote work?", "Show me similar careers", "Help me test whether I'd enjoy this"], label_visibility="collapsed")
-    if wi != "What if…" and b[1].button("Ask"):
-        with st.status("Reconsidering…", expanded=True) as box: p2 = run(S, Command(resume={"action": "whatif", "whatif": wi}), box)
-        route(S, p2)
+    if wi != "What if…" and b[1].button("Ask"): act(S, {"action": "whatif", "whatif": wi}, "Reconsidering…", "Updated")
     others = [k for k in p["shortlist"] if k != dd["key"]]
-    if others and b[2].button("Compare with another"): route(S, run(S, Command(resume={"action": "compare", "key": others[0]})))
-    if b[3].button("Back to shortlist"): route(S, run(S, Command(resume={"action": "back_to_shortlist"})))
-    if b[4].button("Save & finish", type="primary"): route(S, run(S, Command(resume={"action": "save"})))
+    if others and b[2].button("Compare with another"): act(S, {"action": "compare", "key": others[0]}, "Opening the other career…", "Ready")
+    if b[3].button("Back to shortlist"): act(S, {"action": "back_to_shortlist"}, "Returning to your shortlist…", "Ready")
+    if b[4].button("Save & finish", type="primary"): act(S, {"action": "save"}, "Preparing to save…", "Ready")
 
 # ───────────────────────────── save gate ─────────────────────────────
 def screen_save(S):

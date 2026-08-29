@@ -4,7 +4,7 @@ words ([p:field:i]) and/or evidence cards ([cNN]); the reviewer checks both. Not
 from __future__ import annotations
 import json, re, time
 from langgraph.types import interrupt, Send
-from . import llm, memory, nodes as N, review as rv
+from . import llm, memory, nodes as N, review as rv, diag
 from .student import StudentState, FIELDS, _say, _phase, _coverage
 
 MAX_CANDIDATES = 10; MIN_CANDIDATES = 6
@@ -32,8 +32,8 @@ Return {"candidates":[{"label":"...","search_title":"O*NET-style title","group":
 
 def generate_candidates(state: StudentState) -> dict:
     _phase("candidates"); prof = state["profile"]; out, cost = {"candidates": []}, 0.0
-    for attempt, (mt, extra) in enumerate([(7000, ""), (7000, "\nKeep every rationale line under 20 words and produce at most 8 candidates so the JSON stays short and valid.")]):
-        try: out, c_ = llm.chat_json("planner", GEN_SYS + extra, _profile_table(prof), max_tokens=mt, temperature=0.4 if attempt == 0 else 0.2); cost += c_; break
+    for attempt, (mt, extra) in enumerate([(4500, "\nKeep every rationale line under 15 words; at most two lines per rationale list."), (4500, "\nKeep every rationale line under 12 words and produce at most 8 candidates so the JSON stays short and valid.")]):
+        try: out, c_ = llm.chat_json("planner", GEN_SYS + extra, _profile_table(prof), max_tokens=mt, temperature=0.4 if attempt == 0 else 0.2, purpose="generate_candidates"); cost += c_; break
         except Exception as e: _say(f"Candidate generation attempt {attempt + 1} failed ({type(e).__name__}) — retrying" if attempt == 0 else f"Candidate generation failed twice: {e}")
     if not out.get("candidates"): out = {"candidates": []}
     cands = [c for c in out.get("candidates", []) if isinstance(c, dict) and c.get("label")][:MAX_CANDIDATES]
@@ -101,12 +101,36 @@ def resolve_candidates(state: StudentState) -> dict:
         except Exception as e: _say(f"(breadth top-up skipped: {e})")
     if not keep: _say("⚠ I couldn't produce career directions this time — you'll see an empty results screen with a retry option")
     _say(f"Matched {len(keep)} directions to official occupations" + (f" ({sum(c['resolution']=='composite' for c in keep)} assembled as composites)" if any(c['resolution']=='composite' for c in keep) else ""))
-    return {"candidates": keep, "targets": [{"persona": c["persona"], "role": "candidate"} for c in keep]}
+    for c in keep: c["evidence_level"] = "light"
+    return {"candidates": keep, "targets": [{"persona": c["persona"], "role": "candidate"} for c in keep], "evidence_stage": "light", "deep_socs": [], "deep_dives": {}, "pending_after_deep": None,
+            "evidence_meta": {"light_done": False, "deep_done": False, "cache": "see developer diagnostics", "invalidates": []}}
 
-def fan_out_candidates(state: StudentState) -> list[Send]:
+def fan_out_light(state: StudentState) -> list[Send]:
+    """Level A: global context once + official outlook per candidate (local data). No task-level exposure work before the student reacts."""
     sends = [Send("gather_forecasts", {"horizon": "2035"}), Send("gather_research", {})]
-    for t in state["targets"]: sends += [Send("gather_outlook", {"persona": t["persona"]}), Send("gather_exposure", {"persona": t["persona"]})]
+    for t in state["targets"]: sends += [Send("gather_outlook", {"persona": t["persona"], "light": True})]
     return sends
+
+def _soc_of(state: StudentState, key: str) -> str | None:
+    c = next((c for c in state["candidates"] if c["key"] == key), None); return c["persona"]["soc"] if c else None
+
+def _needs_deepen(state: StudentState, key: str | None) -> bool:
+    soc = _soc_of(state, key or ""); return bool(soc) and soc not in set(state.get("deep_socs") or [])
+
+def fan_out_deep(state: StudentState):
+    """Level B: task-level exposure evidence for the shortlisted / picked careers only. Returns Sends, or the next node when nothing new needs gathering."""
+    todo = [s for s in (state.get("deep_socs") or []) if s not in set(state.get("deep_done_socs") or [])]
+    if not todo: return state.get("pending_after_deep") or "discriminate"
+    _say(f"Looking deeper at {len(todo)} career(s): which tasks AI is already used for, and what stays human")
+    return [Send("gather_exposure", {"persona": next(c["persona"] for c in state["candidates"] if c["persona"]["soc"] == s)}) for s in todo]
+
+def deepen_one(state: StudentState) -> dict:
+    """A career outside the deep set was picked (after a what-if reorder, or 'compare'): deepen just that one, then go to its deep dive."""
+    soc = _soc_of(state, state.get("selected") or ""); socs = list(state.get("deep_socs") or [])
+    if soc and soc not in socs: socs.append(soc)
+    return {"deep_socs": socs, "evidence_stage": "deep", "pending_after_deep": "deep_dive"}
+
+def after_refresh(state: StudentState) -> str: return state.get("pending_after_deep") or "discriminate"
 
 # ───────────────────────────── C3 fit + tradeoffs (code facts, model prose) ─────────────────────────────
 FIT_SYS = """You write the reader-facing text for career cards for ONE student. For each candidate you get: the student's profile refs, the candidate's rationale (already cited), official outlook facts, the three task groups and forecast context.
@@ -116,40 +140,71 @@ For each candidate return short, plain, warm text — every sentence cites [cNN]
 Never guarantee anything, never call a task automated/replaced, never invent schools, courses or employers. Return {"cards": {"k1": {...}, "k2": {...}}}"""
 
 def analyze_fit(state: StudentState) -> dict:
+    """Level B: model-written card prose for the deep set only, each career given only its own evidence."""
     _phase("fit"); prof, refs, inv = state["profile"], state["refs"], {v: k for k, v in state["refs"].items()}
-    outlooks, changes = state["outlooks"], state["changes"]
+    outlooks, changes = state["outlooks"], state["changes"]; deep = set(state.get("deep_socs") or []) or {c["persona"]["soc"] for c in state["candidates"]}
     blocks = []
     for c in state["candidates"]:
-        soc = c["persona"]["soc"]; o = outlooks.get(soc, {}); ch = changes.get(soc, {})
+        soc = c["persona"]["soc"]
+        if soc not in deep: continue
+        o = outlooks.get(soc, {}); ch = changes.get(soc, {})
         blocks.append(f"### {c['key']} {c['label']} → {c['persona']['title']} ({c['resolution']})\nrationale: {json.dumps(c['rationale'])}\ndemand: {o.get('demand_reading')} · AI change: {o.get('ai_change_reading')}\nfacts: {' | '.join(o.get('facts', []))}\n"
                       f"AI assists: {'; '.join(r['task'][:70] + ' [' + r['ref'] + ']' for r in ch.get('ai_assists', [])[:5]) or 'none'}\nmore important: {'; '.join(r['task'][:60] + ' — ' + (r.get('why') or '') + ' [' + r['ref'] + ']' for r in ch.get('more_important', [])[:5]) or 'none'}")
-    user = f"PROFILE REFS:\n{_profile_table(prof)}\n\nCANDIDATES:\n" + "\n\n".join(blocks) + f"\n\nForecast context: {state.get('forecast_context')}\nUnknowns: {state.get('unknowns')}\n\nEvidence table:\n{N._table(state['evidence'], refs)}"
-    try: out, cost = llm.chat_json("planner", FIT_SYS, user, max_tokens=6000, temperature=0.3); cards = out.get("cards", {})
+    tables = "\n".join(f"— {soc} —\n" + N._table(state['evidence'], refs, occ=soc, max_tasks=15) for soc in sorted(deep))
+    user = f"PROFILE REFS:\n{_profile_table(prof)}\n\nCANDIDATES:\n" + "\n\n".join(blocks) + f"\n\nForecast context (one line each): {[f[:160] for f in state.get('forecast_context') or []][:2]}\nUnknowns: {[u[:120] for u in state.get('unknowns') or []][:6]}\n\nEvidence (each career's own cards + economy-wide):\n{tables}"
+    try: out, cost = llm.chat_json("planner", FIT_SYS, user, max_tokens=min(1400 * max(1, len(deep)), 4500), temperature=0.3, purpose="analyze_fit"); cards = out.get("cards", {})
     except Exception as e: cards, cost = {}, 0.0; _say(f"Fit analysis failed: {e}")
-    EDU_RANK = [("high school", 0), ("postsecondary nondegree", 1), ("certificate", 1), ("some college", 1), ("associate", 2), ("2-year", 2), ("two-year", 2), ("bachelor", 3), ("4-year", 3), ("four-year", 3), ("master", 4), ("doctoral", 5), ("professional degree", 5), ("graduate", 4)]
-    def _rank(text):
-        t = (text or "").lower(); hits = [r for k, r in EDU_RANK if k in t]; return max(hits) if hits else None
-    def constraint_flags(card_edu: str | None, edu_ref: str | None) -> list[str]:
-        """Deterministic: typical entry education vs the student's stated education/cost constraints — cited to the BLS card and the student's words."""
-        out = []
-        for i, e in enumerate(prof.get("education_constraints") or []):
-            lim = _rank(e["value"] + " " + e.get("quote", "")); have = _rank(card_edu)
-            neg = any(w in (e["value"] + " " + e.get("quote", "")).lower() for w in ("no grad", "not grad", "avoid a long", "no more than", "max", "at most", "short", "quick", "earn early", "can't afford", "cannot afford"))
-            if lim is not None and have is not None and have > lim and (neg or lim <= 2): out.append(f"Typical entry is a {card_edu.split(';')[0].lower()}, which is more school than the limit you mentioned [p:education_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
-        for i, e in enumerate(prof.get("financial_constraints") or []):
-            if (_rank(card_edu) or 0) >= 3: out.append(f"A {card_edu.split(';')[0].lower()} path has real cost, which you said matters [p:financial_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
-        return out[:2]
     cands = json.loads(json.dumps(state["candidates"]))
     for c in cands:
+        if c["persona"]["soc"] not in deep: continue
         soc = c["persona"]["soc"]; o = outlooks.get(soc, {}); txt = cards.get(c["key"], {})
-        edu_fact = next((f for f in o.get("facts", []) if "Typical education" in f), None); edu_ref = re.search(r"\[(c\d{2,3})\]", edu_fact).group(1) if edu_fact and re.search(r"\[(c\d{2,3})\]", edu_fact) else None
-        flags = constraint_flags(o.get("education_entry"), edu_ref)
-        c["card"] = {"why_fit": txt.get("why_fit", ""), "what_work_is_like": txt.get("what_work_is_like", ""), "how_ai_may_reshape": txt.get("how_ai_may_reshape", ""), "human_capabilities": txt.get("human_capabilities", ""),
-                     "tradeoff": txt.get("tradeoff", ""), "constraint_flags": flags, "evidence_confidence": txt.get("evidence_confidence", "low"),
-                     "demand_reading": o.get("demand_reading", "unknown"), "ai_change_reading": o.get("ai_change_reading", "unknown"), "facts": o.get("facts", []), "education_entry": o.get("education_entry"), "proxy_note": o.get("proxy_note"),
-                     "ai_assists": changes.get(soc, {}).get("ai_assists", [])[:6], "more_important": changes.get(soc, {}).get("more_important", [])[:6]}
-    _say("Wrote the career cards — now the reviewer checks every line against the evidence and your own words")
+        base = _light_card(c, o, prof, changes)   # facts, flags, readings — deterministic
+        c["card"] = {**base, "why_fit": txt.get("why_fit") or base["why_fit"], "what_work_is_like": txt.get("what_work_is_like") or base["what_work_is_like"], "how_ai_may_reshape": txt.get("how_ai_may_reshape", ""),
+                     "human_capabilities": txt.get("human_capabilities", ""), "tradeoff": txt.get("tradeoff") or base["tradeoff"], "evidence_confidence": txt.get("evidence_confidence", base["evidence_confidence"])}
+        c["evidence_level"] = "deep"
+    _say(f"Wrote detailed cards for {len(deep)} career(s) — now the reviewer checks every line against the evidence and your own words")
     return {"candidates": cands, "cost_usd": cost}
+
+EDU_RANK = [("high school", 0), ("postsecondary nondegree", 1), ("certificate", 1), ("some college", 1), ("associate", 2), ("2-year", 2), ("two-year", 2), ("bachelor", 3), ("4-year", 3), ("four-year", 3), ("master", 4), ("doctoral", 5), ("professional degree", 5), ("graduate", 4)]
+def _rank(text):
+    t = (text or "").lower(); hits = [r for k, r in EDU_RANK if k in t]; return max(hits) if hits else None
+
+def constraint_flags(prof: dict, card_edu: str | None, edu_ref: str | None) -> list[str]:
+    """Deterministic: typical entry education vs the student's stated education/cost constraints — cited to the BLS card and the student's words."""
+    out = []
+    for i, e in enumerate(prof.get("education_constraints") or []):
+        lim = _rank(e["value"] + " " + e.get("quote", "")); have = _rank(card_edu)
+        neg = any(w in (e["value"] + " " + e.get("quote", "")).lower() for w in ("no grad", "not grad", "avoid a long", "no more than", "max", "at most", "short", "quick", "earn early", "can't afford", "cannot afford"))
+        if lim is not None and have is not None and have > lim and (neg or lim <= 2): out.append(f"Typical entry is a {card_edu.split(';')[0].lower()}, which is more school than the limit you mentioned [p:education_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
+    for i, e in enumerate(prof.get("financial_constraints") or []):
+        if (_rank(card_edu) or 0) >= 3: out.append(f"A {card_edu.split(';')[0].lower()} path has real cost, which you said matters [p:financial_constraints:{i}]" + (f" [{edu_ref}]" if edu_ref else ""))
+    return out[:2]
+
+def _edu_ref(o: dict) -> str | None:
+    f = next((f for f in o.get("facts", []) if "Typical education" in f), None); m = re.search(r"\[(c\d{2,3})\]", f) if f else None; return m.group(1) if m else None
+
+def _light_card(c: dict, o: dict, prof: dict, changes: dict | None = None) -> dict:
+    """Level A card: everything deterministic or already cited. why_fit = the candidate's own cited reason; tradeoff = the honest poor-fit line (interpretation) + deterministic practical mismatches."""
+    soc = c["persona"]["soc"]; rat = c.get("rationale") or {}; desc = c.get("description_ref")
+    why = rat.get("why_included") or next((l for l in (rat.get("matches_interests") or []) if l), "")
+    poor = (rat.get("poor_fit_if") or "").strip(); tradeoff = (poor + ("" if "[" in poor else " [interpretation]")) if poor else ""
+    conf = "moderate — official projection found" if o.get("growth_pct") is not None else ("low — proxy figures from the closest official categories" if c.get("resolution") == "composite" else "low — no official projection row")
+    return {"why_fit": why, "what_work_is_like": desc or "", "how_ai_may_reshape": "", "human_capabilities": "", "tradeoff": tradeoff, "constraint_flags": constraint_flags(prof, o.get("education_entry"), _edu_ref(o)),
+            "evidence_confidence": conf, "demand_reading": o.get("demand_reading", "unknown"), "ai_change_reading": o.get("ai_change_reading", "pending"), "facts": o.get("facts", []), "education_entry": o.get("education_entry"), "proxy_note": o.get("proxy_note"),
+            "growth_pct": o.get("growth_pct"), "openings": o.get("openings"), "median_wage": o.get("median_wage"), "evidence_level": o.get("evidence_level", "light"),
+            "ai_assists": (changes or {}).get(soc, {}).get("ai_assists", [])[:6], "more_important": (changes or {}).get(soc, {}).get("more_important", [])[:6]}
+
+def analyze_fit_light(state: StudentState) -> dict:
+    """Level A: no model call. Cards are assembled from the cited rationale, the official outlook facts and deterministic mismatch lines."""
+    _phase("fit"); prof, inv = state["profile"], {v: k for k, v in state["refs"].items()}
+    cands = json.loads(json.dumps(state["candidates"]))
+    for c in cands:
+        soc = c["persona"]["soc"]; o = state["outlooks"].get(soc, {})
+        desc = next((x for x in state["evidence"] if x.occ == soc and x.id.startswith(("onet:desc:", "onetws:desc:")) and x.id in inv), None)
+        c["description_ref"] = f"{desc.claim.split(': ', 1)[-1][:220]} [{inv[desc.id]}]" if desc else ""
+        c["card"] = _light_card(c, o, prof); c["evidence_level"] = "light"
+    _say(f"Assembled {len(cands)} lightweight cards from official outlook data and your own words — detailed AI-change analysis comes after you react")
+    return {"candidates": cands, "evidence_meta": {**(state.get("evidence_meta") or {}), "light_done": True}}
 
 # ───────────────────────────── shared structured reviewer (cards + profile refs) ─────────────────────────────
 REVIEW_SYS = N.SKEPTIC_SYS + """
@@ -178,10 +233,14 @@ def add_citations(state: StudentState, obj: dict, refs_table: str) -> tuple[dict
         return obj, cost
     except Exception: return obj, 0.0
 
-def review_object(state: StudentState, obj: dict, label: str) -> tuple[dict, dict, float]:
-    """Structured review over any object. Returns (reviewed_obj, skeptic_record, cost). Reviewer failure → status 'unverified' (loud), never silent keep."""
+def review_object(state: StudentState, obj: dict, label: str, role: str = "skeptic", batch: int = 16, repair: bool = True) -> tuple[dict, dict, float]:
+    """Structured review over any object. Returns (reviewed_obj, skeptic_record, cost). Reviewer failure → status 'unverified' (loud), never silent keep.
+    role='skeptic' (thinking model) for shortlist / deep dive / deep cards; role='extractor' (fast) for lightweight initial cards whose lines are short cited rationales.
+    Identical (text, sources) seen earlier in this process → the same verdicts are re-applied without a model call (REVIEW_MEMO)."""
+    import hashlib
     _phase("review", of=label); refs = dict(state["refs"]); prefs = profile_refs(state["profile"]); cards = {c.id: c for c in state["evidence"]}
-    obj, c_fix = add_citations(state, obj, _profile_table(state["profile"]) + "\n" + N._table(state["evidence"], refs))
+    if repair: obj, c_fix = add_citations(state, obj, _profile_table(state["profile"]) + "\n" + N._table(state["evidence"], refs))
+    else: c_fix = 0.0
     allrefs = {**refs, **{k: "profile:" + v for k, v in prefs.items()}}
     ref_re = re.compile(r"\[([cu]\d{2,3}|p:[a-z_]+:\d+)\]")
     leaves = rv.flatten(obj); removed, to_check, kept = [], [], 0
@@ -197,7 +256,13 @@ def review_object(state: StudentState, obj: dict, label: str) -> tuple[dict, dic
     if to_check:
         def src(r): return f"[{r}] " + (allrefs[r][8:] if r.startswith("p:") else (f"{cards[refs[r]].claim} (value {cards[refs[r]].value} {cards[refs[r]].unit})" if r in refs and refs[r] in cards else allrefs[r]))
         items = [(i, f"{t}\n   sources: " + " | ".join(src(r) for r in cited)) for i, (p, t, cited) in enumerate(to_check)]
-        verdicts, cost, status = rv.judge_lines(items, REVIEW_SYS)
+        memo_key = hashlib.sha256(json.dumps([x[1] for x in items] + [role, llm.model_name(role)]).encode()).hexdigest()
+        if memo_key in rv.REVIEW_MEMO:
+            verdicts, status = rv.REVIEW_MEMO[memo_key]; diag.emit("cache", ns="review_memo", result="hit", key=memo_key[:12]); _say(f"Review of {label}: unchanged since last check — reusing verdicts")
+        else:
+            diag.emit("cache", ns="review_memo", result="miss", key=memo_key[:12])
+            verdicts, cost, status = rv.judge_lines(items, REVIEW_SYS, batch=batch, role=role)
+            if status == "verified": rv.REVIEW_MEMO[memo_key] = (verdicts, status)
         if status == "unverified": _say(f"⚠ Reviewer model failed ({rv.judge_lines.last_error}) — {label} checked for citations only, NOT for accuracy")
     for i, (p, t, _) in enumerate(to_check):
         v = verdicts.get(i, {"verdict": "keep", "reason": "cited; reviewer did not object" if status == "verified" else "UNVERIFIED"})
@@ -206,7 +271,7 @@ def review_object(state: StudentState, obj: dict, label: str) -> tuple[dict, dic
     rv.apply_removals(obj, [r["path"] for r in removed])
     total = len(to_check) + sum(1 for r in removed if r["reason"].startswith("no evidence")); ratio = len(removed) / total if total else 0.0
     _say(f"Reviewed {label}: {total} lines, {len(removed)} removed" + (" — UNVERIFIED" if status == "unverified" else ""))
-    return obj, {"stripped": removed, "kept": kept, "total": total, "ratio": round(ratio, 3), "status": status, "model": llm.model_name("skeptic"), "attempt": 1, "escalated": False}, cost + c_fix
+    return obj, {"stripped": removed, "kept": kept, "total": total, "ratio": round(ratio, 3), "status": status, "model": llm.model_name(role), "role": role, "attempt": 1, "escalated": False}, cost + c_fix
 
 def _check_rationale(rationale: dict, prefs: dict) -> tuple[dict, int]:
     """Deterministic: a rationale line survives only if every [p:...] it cites exists and it cites at least one. Returns (cleaned, removed_count)."""
@@ -218,22 +283,43 @@ def _check_rationale(rationale: dict, prefs: dict) -> tuple[dict, int]:
         else: out[k] = v
     return out, removed
 
+def _merge_review(prev: dict | None, new: dict) -> dict:
+    """Combine review records across the light and deep passes: removals accumulate, status is the worst seen, models are listed."""
+    if not prev: return new
+    status = "unverified" if "unverified" in (prev.get("status"), new.get("status")) else "verified"
+    return {**new, "stripped": (prev.get("stripped") or []) + (new.get("stripped") or []), "kept": prev.get("kept", 0) + new.get("kept", 0), "total": prev.get("total", 0) + new.get("total", 0),
+            "ratio": round(((len(prev.get("stripped") or []) + len(new.get("stripped") or [])) / max(1, prev.get("total", 0) + new.get("total", 0))), 3), "status": status,
+            "model": " + ".join(dict.fromkeys([prev.get("model", ""), new.get("model", "")])), "rationale_lines_removed": prev.get("rationale_lines_removed", 0) + new.get("rationale_lines_removed", 0), "passes": prev.get("passes", 1) + 1}
+
 def review_cards(state: StudentState) -> dict:
-    prefs = profile_refs(state["profile"]); rat_removed = 0
+    """Light stage: deterministic checks + a fast reviewer over the few model-written lines (rationale, poor-fit) of every card.
+    Deep stage: the thinking reviewer over the detailed prose of the deep set only. Removed content is deleted in the object the UI renders, in both stages."""
+    prefs = profile_refs(state["profile"]); rat_removed = 0; stage = state.get("evidence_stage") or "deep"
+    deep = set(state.get("deep_socs") or []); scope = [c for c in state["candidates"] if stage != "deep" or c["persona"]["soc"] in deep]
     for c in state["candidates"]: c["rationale"], n_ = _check_rationale(c["rationale"], prefs); rat_removed += n_
-    obj = {"candidates": [{"key": c["key"], "label": c["label"], "group": c["group"], "card": {k: v for k, v in c["card"].items() if k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "evidence_confidence")},
-                           "more_important": [{"task": r["task"], "ref": r["ref"], "why": r.get("why", ""), "card_id": r["card_id"]} for r in c["card"]["more_important"]]} for c in state["candidates"]]}
-    # 'why' reasons get their row ref + tag so they are judged as interpretation
-    for c in obj["candidates"]:
-        for r in c["more_important"]: r["why"] = (r["why"] + f" [{r['ref']}] [interpretation]") if r["why"] and "[" not in r["why"] else r["why"]
-    reviewed, sk, cost = review_object(state, obj, "career cards")
+    if stage == "light":
+        obj = {"candidates": [{"key": c["key"], "label": c["label"], "group": c["group"], "card": {"why_fit": c["card"].get("why_fit", ""), "tradeoff": c["card"].get("tradeoff", "")}} for c in scope]}
+        reviewed, sk, cost = review_object(state, obj, "career cards", role="extractor", batch=30, repair=False)
+    else:
+        obj = {"candidates": [{"key": c["key"], "label": c["label"], "group": c["group"], "card": {k: v for k, v in c["card"].items() if k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "evidence_confidence")},
+                               "more_important": [{"task": r["task"], "ref": r["ref"], "why": r.get("why", ""), "card_id": r["card_id"]} for r in c["card"]["more_important"]]} for c in scope]}
+        for c in obj["candidates"]:   # 'why' reasons get their row ref + tag so they are judged as interpretation
+            for r in c["more_important"]: r["why"] = (r["why"] + f" [{r['ref']}] [interpretation]") if r["why"] and "[" not in r["why"] else r["why"]
+        reviewed, sk, cost = review_object(state, obj, "career cards", role="skeptic", batch=16)
     cands = json.loads(json.dumps(state["candidates"])); by = {c["key"]: c for c in reviewed["candidates"]}
     for c in cands:
-        r = by.get(c["key"]);
+        r = by.get(c["key"])
         if not r: continue
-        c["card"].update(r["card"]); c["card"]["more_important"] = r["more_important"]; c["review"] = {"removed": [x for x in sk["stripped"] if re.match(rf"candidates\[{reviewed['candidates'].index(r)}\]\.", x["path"])]}   # exact index — 'candidates[1]' must not match 'candidates[10]' 
-    sk["rationale_lines_removed"] = rat_removed
-    return {"candidates": cands, "skeptic": sk, "cost_usd": cost}
+        c["card"].update(r["card"])
+        if "more_important" in r: c["card"]["more_important"] = r["more_important"]
+        mine = [x for x in sk["stripped"] if re.match(rf"candidates\[{reviewed['candidates'].index(r)}\]\.", x["path"])]   # exact index — 'candidates[1]' must not match 'candidates[10]'
+        c["review"] = {"removed": (c.get("review") or {}).get("removed", []) + mine} if stage == "deep" else {"removed": mine}
+    sk["rationale_lines_removed"] = rat_removed; sk["stage"] = stage
+    merged = _merge_review(state.get("skeptic") if stage == "deep" else None, sk)
+    meta = {**(state.get("evidence_meta") or {}), **({"deep_done": True} if stage == "deep" else {"light_done": True})}
+    upd = {"candidates": cands, "skeptic": merged, "cost_usd": cost, "evidence_meta": meta}
+    if stage == "deep": upd["deep_done_socs"] = sorted(set(state.get("deep_done_socs") or []) | deep)
+    return upd
 
 # ───────────────────────────── C4 results + reactions ─────────────────────────────
 def render_results(state: StudentState) -> dict:
@@ -245,7 +331,7 @@ def render_results(state: StudentState) -> dict:
     views = {"badges": badges, "review_status": sk.get("status", "verified"), "groups": {g: [c for c in state["candidates"] if c["group"] == g] for g in GROUP_LABEL}, "group_label": GROUP_LABEL,
              "disagreements": state["disagreements"], "forecast_context": state.get("forecast_context", []), "unknowns": state.get("unknowns", []), "source_status": state.get("source_status", {}), "skeptic": sk,
              "cards_by_family": {f: [c.model_dump() for c in state["evidence"] if c.family == f] for f in ("statistics", "exposure", "forecasts", "research")}, "budget": {"tool_calls": state.get("tool_calls", 0), "cost_usd": round(state.get("cost_usd", 0), 4)},
-             "profile_refs": profile_refs(state["profile"])}
+             "profile_refs": profile_refs(state["profile"]), "evidence_stage": state.get("evidence_stage"), "deep_socs": state.get("deep_socs") or []}
     return {"views": views}
 
 def reaction_gate(state: StudentState) -> dict:
@@ -267,7 +353,7 @@ def update_from_reactions(state: StudentState) -> dict:
     cost = 0.0
     if described:
         try:
-            out, cost = llm.chat_json("planner", RX_SYS, "\n".join(f"{labels.get(r['key'])}: {r['verdict']} — “{r['why']}”" for r in described), max_tokens=800, temperature=0.1)
+            out, cost = llm.chat_json("planner", RX_SYS, "\n".join(f"{labels.get(r['key'])}: {r['verdict']} — “{r['why']}”" for r in described), max_tokens=800, temperature=0.1, purpose="reactions")
             tn = len(state["turns"]) + 100
             for f, items in (out.get("add") or {}).items():
                 if f in FIELDS:
@@ -279,7 +365,14 @@ def update_from_reactions(state: StudentState) -> dict:
         except Exception as e: _say(f"(reaction update skipped: {e})")
     prof["confidence_by_field"] = _coverage(prof)
     _say(f"Took in your reactions: {sum(r['verdict']=='excited' for r in rx)} excited · {sum(r['verdict']=='curious' for r in rx)} curious · {sum(r['verdict']=='no' for r in rx)} not for you")
-    return {"profile": prof, "rejected": rejected, "cost_usd": cost}
+    # Level B set: the careers the shortlist will be built from (same ordering as build_shortlist) — deep evidence only for these
+    rxk = {r["key"]: r for r in rx}
+    order = sorted([c for c in state["candidates"] if rxk.get(c["key"], {}).get("verdict") in ("excited", "curious")], key=lambda c: (rxk[c["key"]]["verdict"] != "excited", c["group"] != "strong"))
+    top = order[:3] or [c for c in state["candidates"] if c["group"] == "strong"][:2]
+    deep_socs = sorted({c["persona"]["soc"] for c in top} | set(state.get("deep_socs") or []))
+    meta = {**(state.get("evidence_meta") or {}), "invalidates": ["shortlist", "deep_dives"]}   # reactions changed → shortlist and deep dives are stale; candidate evidence is not
+    return {"profile": prof, "rejected": rejected, "cost_usd": cost, "deep_socs": deep_socs, "evidence_stage": "deep", "pending_after_deep": "discriminate", "deep_dives": {}, "evidence_meta": meta,
+            "views": {k: v for k, v in (state.get("views") or {}).items() if k not in ("shortlist", "whatif", "deep_dive_review")}}
 
 # ───────────────────────────── D1 discriminating questions ─────────────────────────────
 DISC_SYS = """A student is deciding among a few careers. Given the shortlisted careers (with education path and demand), the student's profile and their reactions, write 0-2 discriminating questions that would most help separate the options —
@@ -333,7 +426,7 @@ def build_shortlist(state: StudentState) -> dict:
     cands = {c["key"]: c for c in state["candidates"]}
     blocks = "\n\n".join(f"### {k} {cands[k]['label']} → {cands[k]['persona']['title']}\ncard: {json.dumps({x: cands[k]['card'].get(x) for x in ('why_fit','what_work_is_like','how_ai_may_reshape','human_capabilities','tradeoff','education_entry','demand_reading')})}\nfacts: {' | '.join(cands[k]['card'].get('facts', [])[:4])}\nreaction: {rx.get(k, {}).get('verdict')} — {rx.get(k, {}).get('why', '')}" for k in short)
     user = f"PROFILE REFS:\n{_profile_table(state['profile'])}\n\nDiscriminating answers: {[(t['question'], t['answer']) for t in disc]}\n\nSHORTLIST:\n{blocks}"
-    try: out, cost = llm.chat_json("planner", SHORT_SYS, user, max_tokens=2200, temperature=0.3)
+    try: out, cost = llm.chat_json("planner", SHORT_SYS, user, max_tokens=2000, temperature=0.3, purpose="shortlist")
     except Exception as e: out, cost = {"rows": {}, "our_read": ""}, 0.0
     obj = {"rows": {k: out.get("rows", {}).get(k, {}) for k in short}, "our_read": out.get("our_read", "")}
     reviewed, sk, c2 = review_object(state, obj, "shortlist")
@@ -351,6 +444,7 @@ def shortlist_gate(state: StudentState) -> dict:
 
 def after_shortlist(state: StudentState) -> str:
     a = state["last_action"]
+    if a == "pick" and _needs_deepen(state, state.get("selected")): return "deepen"
     return {"pick": "deep_dive", "whatif": "explore", "compare": "explore", "back_to_results": "results", "save": "save", "stop": "end"}.get(a, "deep_dive")
 
 # ───────────────────────────── D3 deep dive ─────────────────────────────
@@ -361,15 +455,21 @@ Never invent named courses, certifications, schools or employers. Never guarante
 
 def deep_dive(state: StudentState) -> dict:
     _phase("deep"); c = next(c for c in state["candidates"] if c["key"] == state["selected"]); soc = c["persona"]["soc"]; o = state["outlooks"].get(soc, {}); ch = state["changes"].get(soc, {})
+    memo = (state.get("deep_dives") or {}).get(c["key"])
+    if memo:   # already written for this career against the current reactions/constraints — reuse, no model call
+        diag.emit("cache", ns="deep_dive", result="hit", key=c["key"]); _say(f"Reopening your deep dive on {c['label']}")
+        return {"deep_dive": memo, "experiments_planned": [x for x in memo["sections"].get("test_this_career", []) if isinstance(x, str)], "views": {**state["views"], "deep_dive_review": memo["review"]}, "pending_after_deep": None}
+    diag.emit("cache", ns="deep_dive", result="miss", key=c["key"])
     user = (f"PROFILE REFS:\n{_profile_table(state['profile'])}\n\nCAREER: {c['label']} → {c['persona']['title']} ({c['resolution']})\nrationale: {json.dumps(c['rationale'])}\ncard: {json.dumps({k: c['card'].get(k) for k in ('why_fit','what_work_is_like','how_ai_may_reshape','human_capabilities','tradeoff')})}\n"
             f"facts: {' | '.join(o.get('facts', []))}\nAI assists: {'; '.join(r['task'][:80] + ' [' + r['ref'] + ']' for r in ch.get('ai_assists', [])[:8])}\nmore important: {'; '.join(r['task'][:70] + ' — ' + (r.get('why') or '') + ' [' + r['ref'] + ']' for r in ch.get('more_important', [])[:6])}\n"
             f"uncertain: {'; '.join(r['task'][:70] + ' [' + r['ref'] + ']' for r in ch.get('uncertain', [])[:5])}\nForecast context: {state.get('forecast_context')}\nUnknowns: {state.get('unknowns')}\n\nEvidence table (this career + economy-wide):\n{N._table(state['evidence'], state['refs'], occ=soc)}")
-    try: out, cost = llm.chat_json("planner", DEEP_SYS, user, max_tokens=3500, temperature=0.3); sections = out.get("sections", {})
+    try: out, cost = llm.chat_json("planner", DEEP_SYS, user, max_tokens=3000, temperature=0.3, purpose="deep_dive"); sections = out.get("sections", {})
     except Exception as e: sections, cost = {"why_fit": f"(writer failed: {e})"}, 0.0
     reviewed, sk, c2 = review_object(state, {"sections": sections}, "deep dive")
     experiments = [x for x in reviewed["sections"].get("test_this_career", []) if isinstance(x, str)]
     _say(f"Deep dive on {c['label']} ready — {len(experiments)} ways to test it before committing")
-    return {"deep_dive": {"key": c["key"], "label": c["label"], "title": c["persona"]["title"], "sections": reviewed["sections"], "review": sk}, "experiments_planned": experiments, "views": {**state["views"], "deep_dive_review": sk}, "cost_usd": cost + c2}
+    dd = {"key": c["key"], "label": c["label"], "title": c["persona"]["title"], "sections": reviewed["sections"], "review": sk}
+    return {"deep_dive": dd, "deep_dives": {**(state.get("deep_dives") or {}), c["key"]: dd}, "experiments_planned": experiments, "views": {**state["views"], "deep_dive_review": sk}, "cost_usd": cost + c2, "pending_after_deep": None}
 
 def explore_gate(state: StudentState) -> dict:
     """⏸ After the deep dive. Resume: {"action": "similar"|"compare"|"whatif"|"changed_mind"|"back_to_shortlist"|"save"|"stop", "whatif": "...", "key": "..."}"""
@@ -381,6 +481,7 @@ def explore_gate(state: StudentState) -> dict:
     return upd
 
 def after_explore(state: StudentState) -> str:
+    if state["last_action"] == "compare" and _needs_deepen(state, state.get("selected")): return "deepen"
     return {"save": "save", "stop": "end", "back_to_shortlist": "shortlist", "compare": "deep_dive", "changed_mind": "results"}.get(state["last_action"], "explore")
 
 # ───────────────────────────── E exploration (what-if / similar) ─────────────────────────────
@@ -392,15 +493,19 @@ def explore(state: StudentState) -> dict:
     _phase("whatif"); q = (state.get("pending") or {}).get("whatif", ""); mode = (state.get("pending") or {}).get("mode", "whatif"); prof = json.loads(json.dumps(state["profile"]))
     cands = {c["key"]: c for c in state["candidates"]}
     user = f"WHAT-IF ({mode}): {q}\n\nPROFILE REFS:\n{_profile_table(prof)}\n\nCANDIDATES:\n" + "\n".join(f"{k} {c['label']} — demand {c['card'].get('demand_reading')} · education {c['card'].get('education_entry')} · tradeoff: {c['card'].get('tradeoff')}" for k, c in cands.items()) + f"\nCurrent shortlist: {state['shortlist']}"
-    try: out, cost = llm.chat_json("planner", WHATIF_SYS, user, max_tokens=700, temperature=0.3)
+    try: out, cost = llm.chat_json("planner", WHATIF_SYS, user, max_tokens=700, temperature=0.3, purpose="whatif")
     except Exception as e: out, cost = {"note": f"(could not evaluate: {e})", "reorder": []}, 0.0
-    ac = out.get("add_constraint") or {}
-    if ac.get("field") in FIELDS and ac.get("value"): prof[ac["field"]].append({"value": ac["value"][:80], "quote": (ac.get("quote") or q)[:160], "source_turn": 300 + len(state.get("exploration_log", [])), "kind": "stated"})
+    ac = out.get("add_constraint") or {}; upd_extra = {}
+    if ac.get("field") in FIELDS and ac.get("value"):
+        prof[ac["field"]].append({"value": ac["value"][:80], "quote": (ac.get("quote") or q)[:160], "source_turn": 300 + len(state.get("exploration_log", [])), "kind": "stated"})
+        cands2 = json.loads(json.dumps(state["candidates"]))
+        for c in cands2: c["card"]["constraint_flags"] = constraint_flags(prof, c["card"].get("education_entry"), _edu_ref(state["outlooks"].get(c["persona"]["soc"], {})))
+        upd_extra = {"candidates": cands2, "deep_dives": {}, "evidence_meta": {**(state.get("evidence_meta") or {}), "invalidates": ["fit:constraint_flags", "shortlist", "deep_dives"]}}
     reviewed, sk, c2 = review_object(state, {"note": out.get("note", "")}, "what-if")
     order = [k for k in out.get("reorder", []) if k in cands] or state["shortlist"]
     log = list(state.get("exploration_log", [])); log[-1] = {**log[-1], "note": reviewed["note"], "shortlist_after": order[:3]}
     _say(f"Considered: {q or mode} → shortlist now {', '.join(cands[k]['label'] for k in order[:3])}")
-    return {"profile": prof, "shortlist": order[:3], "exploration_log": log, "views": {**state["views"], "whatif": {"question": q, "note": reviewed["note"], "review": sk}}, "cost_usd": cost + c2}
+    return {"profile": prof, "shortlist": order[:3], "exploration_log": log, "views": {**state["views"], "whatif": {"question": q, "note": reviewed["note"], "review": sk}}, "cost_usd": cost + c2, **upd_extra}
 
 # ───────────────────────────── save ─────────────────────────────
 def save_gate(state: StudentState) -> dict:

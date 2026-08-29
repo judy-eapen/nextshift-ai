@@ -69,19 +69,21 @@ def classify(text: str, refs: dict) -> str:
 def certainty_violation(text: str) -> bool: return bool(CERTAINTY.search(text))
 
 
-def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int) -> tuple[dict, float]:
+def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int, role: str = "skeptic") -> tuple[dict, float]:
     import json as _json
     from . import llm
     local = {j: idx for j, (idx, _) in enumerate(chunk)}
     listing = "\n\n".join(f"{j}. {txt}" for j, (_, txt) in enumerate(chunk))
-    text, c = llm.chat("skeptic", system + "\nRespond with valid JSON only: {\"verdicts\":[{\"i\":0,\"verdict\":\"keep\",\"reason\":\"...\"}]}", listing, max_tokens=max_tokens, temperature=0.0, purpose="review_batch")
+    text, c = llm.chat(role, system + "\nRespond with valid JSON only: {\"verdicts\":[{\"i\":0,\"verdict\":\"keep\",\"reason\":\"...\"}]}", listing, max_tokens=max_tokens, temperature=0.0, purpose="review_batch")
     try: got = {int(v["i"]): v for v in _json.loads(re.search(r"\{.*\}", text, flags=re.S).group(0)).get("verdicts", []) if "i" in v}
     except Exception:
         got = {int(i): {"verdict": v, "reason": (rs or "")[:200]} for i, v, rs in re.findall(r'"i"\s*:\s*(\d+)\s*,\s*"verdict"\s*:\s*"(keep|strip)"(?:\s*,\s*"reason"\s*:\s*"([^"]*))?', text)}
         if not got: raise ValueError(f"no verdicts parseable; raw: {text[:160]!r}")
     return {local[j]: v for j, v in got.items() if j in local}, c
 
-def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_tokens: int = 12000, workers: int = 4) -> tuple[dict, float, str]:
+REVIEW_MEMO: dict = {}   # content-hash → (removed paths, status); process-local; same text + same sources ⇒ same verdicts. Never persisted.
+
+def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 16, max_tokens: int = 12000, workers: int = 4, role: str = "skeptic") -> tuple[dict, float, str]:
     """items = [(index, listing_text)]. Batches run in parallel; a failed batch is retried once in halves. Any batch still failing → 'unverified' (loud).
     Raw output of a failing batch is written to data/processed/review_failures.log for diagnosis."""
     from concurrent.futures import ThreadPoolExecutor
@@ -91,13 +93,13 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_
     chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
     def one(chunk):
         diag.bind_writer(_w)
-        try: return _judge_batch(chunk, system, max_tokens), None
+        try: return _judge_batch(chunk, system, max_tokens, role), None
         except Exception as e:
             out, err = {}, f"{type(e).__name__}: {str(e)[:300]}"; c_total = 0.0
             diag.emit("retry", what="review_batch", size=len(chunk), error=err[:80])
             for half in (chunk[: len(chunk) // 2 or 1], chunk[len(chunk) // 2 or 1:]):
                 if not half: continue
-                try: got, c = _judge_batch(half, system, max_tokens); out.update(got); c_total += c
+                try: got, c = _judge_batch(half, system, max_tokens, role); out.update(got); c_total += c
                 except Exception as e2:
                     err = f"{type(e2).__name__}: {str(e2)[:300]}"
                     try: (_pl.Path(__file__).resolve().parents[1] / "data" / "processed" / "review_failures.log").open("a").write(f"\n[{_t.strftime('%Y-%m-%d %H:%M:%S')}] {err}\n")
@@ -108,5 +110,5 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_
         for (got, c), err in ex.map(one, chunks):
             verdicts.update(got); cost += c
             if err: status = "unverified"; judge_lines.last_error = err
-    diag.emit("review", lines=len(items), batches=len(chunks), batch_size=batch, ms=round((_t.perf_counter() - _t0) * 1000), status=status)
+    diag.emit("review", lines=len(items), batches=len(chunks), batch_size=batch, role=role, ms=round((_t.perf_counter() - _t0) * 1000), status=status)
     return verdicts, cost, status

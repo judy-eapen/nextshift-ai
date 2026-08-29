@@ -13,3 +13,4 @@ data/processed/*.npy
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-journal
+data/processed/cache/

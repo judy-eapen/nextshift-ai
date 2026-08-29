@@ -139,6 +139,14 @@ def dev_block(S):
     if sk: st.markdown(f"**Review** — status `{sk.get('status')}` · {sk.get('total', 0)} lines · {len(sk.get('stripped', []))} removed · ratio {sk.get('ratio', 0):.2f} · rationale lines removed {sk.get('rationale_lines_removed', 0)}")
     if views.get("source_status"): st.markdown("**Sources** — " + " · ".join(f"{k}: `{v}`" for k, v in views["source_status"].items()))
     st.markdown(f"**Tracing** — LangSmith {'on' if tracing_on() else 'off'}")
+    from graph import diag as _d
+    ev = S.get("diag") or []
+    if ev:
+        s = _d.summarize(ev)
+        st.markdown(f"**Latency (this session)** — graph {s['total_graph_ms']/1000:.1f}s in nodes · {s['llm_calls']} model calls ({s['llm_ms']/1000:.1f}s) · reviewer {s['reviewer_calls']} calls ({s['reviewer_ms']/1000:.1f}s) · {s['tool_calls']} tool calls ({s['tool_ms']/1000:.1f}s) · cache {s['cache']} · tokens {s['tokens_in']}→{s['tokens_out']} · est. ${s['cost_usd']:.4f}")
+        st.markdown("**Slowest nodes** — " + " · ".join(f"{n} {ms/1000:.1f}s" for n, ms in s["top5"]))
+        with st.expander(f"Node timeline ({len(_d.phase_view(ev))})"): [st.markdown(f"<div class='bts-small'>{p['ms']:>7} ms  {p['name']}</div>", unsafe_allow_html=True) for p in _d.phase_view(ev)[-60:]]
+        with st.expander("Model calls"): [st.markdown(f"<div class='bts-small'>{e.get('ms', 0):>7} ms  {e.get('role')} · {e.get('purpose') or '—'} · {e.get('tokens_in', 0)}→{e.get('tokens_out', 0)} tok{' · FAILED' if not e.get('ok', True) else ''}</div>", unsafe_allow_html=True) for e in ev if e.get("diag") == "llm"][-60:]
     phases = S.get("phase_log") or []
     if phases:
         st.markdown("**Phase timeline (this run)**")

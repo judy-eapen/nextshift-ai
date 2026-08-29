@@ -8,8 +8,16 @@ BASE = "https://api-v2.onetcenter.org/online"
 def _h(): return {"X-API-Key": os.environ.get("ONET_API_KEY", "")}
 
 def onet_occupation(onet_soc: str) -> SourceResult:
-    """onet_soc like '11-2021.00'. Cards: description + bright outlook (+ technology skills if present)."""
+    """onet_soc like '11-2021.00'. Cards: description + bright outlook (+ technology skills if present). Cached 30 days by code + O*NET version."""
+    from . import cache
     if not os.environ.get("ONET_API_KEY"): return SourceResult(source="O*NET Web Services", ok=False, error="ONET_API_KEY not set")
+    key = cache.key_for("onet_ws", onet_soc=onet_soc)
+    if not cache.disabled() and (hit := cache.get("onet_ws", key)) is not None: return cache.load_result(hit)
+    r = _onet_occupation_live(onet_soc)
+    if r.ok and not cache.disabled(): cache.put("onet_ws", key, cache.dump_result(r))
+    return r
+
+def _onet_occupation_live(onet_soc: str) -> SourceResult:
     d, err = get_json(f"{BASE}/occupations/{onet_soc}", headers=_h())
     if err: return SourceResult(source="O*NET Web Services", ok=False, error=err)
     url = f"https://www.onetonline.org/link/summary/{onet_soc}"; cards = [

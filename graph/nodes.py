@@ -8,7 +8,7 @@ from pathlib import Path
 from langgraph.types import interrupt, Send
 from langgraph.config import get_stream_writer
 from tools.schema import Card, SourceResult
-from tools import polymarket, manifold, metaculus, exposure, fred, epoch, onet_ws, composite
+from tools import polymarket, manifold, metaculus, exposure, fred, epoch, onet_ws, composite, cache
 from tools import outlook as outlook_tool
 from . import llm, memory, diag
 from .state import State
@@ -88,10 +88,20 @@ def fan_out(state: State) -> list[Send]:
     for t in state["targets"]: sends += [Send("gather_outlook", {"persona": t["persona"]}), Send("gather_exposure", {"persona": t["persona"]})]
     return sends
 
+def _local_desc(p: dict) -> SourceResult:
+    """O*NET occupation description from the local occupation file (no network) — enough for a lightweight card."""
+    from tools.resolve import _occ_index
+    occ, _ = _occ_index(); code = p.get("onet_soc") or f"{p['soc']}.00"; row = occ[occ.onet_soc == code]
+    if row.empty: row = occ[occ.soc == p["soc"]]
+    if row.empty: return SourceResult(source="O*NET", ok=True, cards=[], unknowns=[f"O*NET description for {p['soc']}"])
+    r = row.iloc[0]; return SourceResult(source="O*NET", ok=True, cards=[Card(id=f"onet:desc:{r.onet_soc}", family="exposure", claim=f"{r.title}: {r.desc}", source="O*NET", url=f"https://www.onetonline.org/link/summary/{r.onet_soc}", as_of="2025-08-01", confidence=0.95, unit="text")])
+
 def gather_outlook(inp: dict) -> dict:
     _phase("gather")
     p = inp["persona"]; res = [("BLS", _call("BLS", outlook_tool.outlook_cards, p))]
-    if not p.get("composite"): res.append(("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, p.get("onet_soc") or f"{p['soc']}.00")))
+    if not p.get("composite"):
+        if inp.get("light"): res.append(("O*NET", _call("O*NET", _local_desc, p)))
+        else: res.append(("O*NET Web Services", _call("O*NET Web Services", onet_ws.onet_occupation, p.get("onet_soc") or f"{p['soc']}.00")))
     _say(f"Employment outlook for {p['title']}: " + ("found BLS 2025–35 projections" if res[0][1].cards else "no official projection — will say so"))
     return _collect(res, _occ_key(p), len(res))
 
@@ -119,14 +129,24 @@ def gather_forecasts(inp: dict) -> dict:
         topic = a["topic"].format(horizon=h); got = []
         if not a["platforms"]: unknowns.append(f"{a['id']}: no forecasting platform has a market on “{topic}”"); continue
         for plat in a["platforms"]:
-            r = _call(plat.capitalize(), fn[plat], a["queries"][plat].format(horizon=h), 4); calls += 1
+            q = a["queries"][plat].format(horizon=h); ck = cache.key_for("forecasts", platform=plat, query=q, horizon=h)
+            hit = None if cache.disabled() or _disabled(plat.capitalize()) else cache.get("forecasts", ck)
+            if hit is not None: r = cache.load_result(hit)
+            else:
+                r = _call(plat.capitalize(), fn[plat], q, 4); calls += 1
+                if r.ok and not cache.disabled(): cache.put("forecasts", ck, cache.dump_result(r))
             status[r.source] = "unavailable" if not r.ok else ("ok" if r.cards else status.get(r.source, "partial"))
             if not r.ok: errors.append(f"{r.source}: {r.error}")
             got += r.cards
         if not got: unknowns.append(f"{a['id']}: no open market found for “{topic}”"); continue
         try:
-            out, cost = llm.chat_json("planner", RELEVANCE_SYS, f"Anchor topic: {topic}\nMarkets:\n" + "\n".join(f"{i}. {c.claim}" for i, c in enumerate(got)), max_tokens=600, temperature=0.0); cost_total += cost
-            dec = out.get("decisions", []); keep = {int(d["i"]) for d in dec if d.get("verdict") == "keep"}; proxy = {int(d["i"]) for d in dec if d.get("verdict") == "proxy"} - keep
+            dk = cache.key_for("forecasts", anchor=a["id"], horizon=h, claims=[c.claim for c in got], kind="relevance")
+            dec = None if cache.disabled() else cache.get("forecasts", dk)
+            if dec is None:
+                out, cost = llm.chat_json("planner", RELEVANCE_SYS, f"Anchor topic: {topic}\nMarkets:\n" + "\n".join(f"{i}. {c.claim}" for i, c in enumerate(got)), max_tokens=600, temperature=0.0, purpose="forecast_relevance"); cost_total += cost
+                dec = out.get("decisions", [])
+                if not cache.disabled(): cache.put("forecasts", dk, dec)
+            keep = {int(d["i"]) for d in dec if d.get("verdict") == "keep"}; proxy = {int(d["i"]) for d in dec if d.get("verdict") == "proxy"} - keep
         except Exception as e: keep, proxy = set(range(len(got))), set(); errors.append(f"relevance filter failed for {a['id']}: {e}")
         for i, c in enumerate(got):
             if i in keep or i in proxy:
@@ -139,7 +159,13 @@ def gather_forecasts(inp: dict) -> dict:
 
 def gather_research(inp: dict) -> dict:
     _phase("gather")
-    res = [("Epoch AI", _call("Epoch AI", epoch.epoch_recent)), ("FRED", _call("FRED", fred.fred_series, "UNRATE"))]
+    def _c(name, fn, *args):
+        ck = cache.key_for("research", source=name, args=list(args)); hit = None if cache.disabled() or _disabled(name) else cache.get("research", ck)
+        if hit is not None: return cache.load_result(hit)
+        r = _call(name, fn, *args)
+        if r.ok and not cache.disabled(): cache.put("research", ck, cache.dump_result(r))
+        return r
+    res = [("Epoch AI", _c("Epoch AI", epoch.epoch_recent)), ("FRED", _c("FRED", fred.fred_series, "UNRATE"))]
     return _collect(res, None, 2)
 
 # ───────────────────────────── reconcile (code) ─────────────────────────────
@@ -148,8 +174,11 @@ def reconcile(state: State) -> dict:
     yr = _year(state["profile"].get("horizon")); seen, cards = set(), []
     for c in state["evidence"]:
         if c.id not in seen: seen.add(c.id); cards.append(c)
-    refs = {f"c{i+1:02d}": c.id for i, c in enumerate(cards)}
-    refs.update({f"u{i+1:02d}": f"unknown:{u}" for i, u in enumerate(dict.fromkeys(state.get("unknowns") or []))})
+    refs = dict(state.get("refs") or {}); have = set(refs.values()); nc = sum(1 for k in refs if k.startswith("c")); nu = sum(1 for k in refs if k.startswith("u"))
+    for c in cards:
+        if c.id not in have: nc += 1; refs[f"c{nc:02d}"] = c.id; have.add(c.id)
+    for u in dict.fromkeys(state.get("unknowns") or []):
+        if f"unknown:{u}" not in have: nu += 1; refs[f"u{nu:02d}"] = f"unknown:{u}"; have.add(f"unknown:{u}")
     inv = {v: k for k, v in refs.items()}
     dis = []
     for a in ANCHORS:
@@ -200,9 +229,13 @@ Return {"keep":[{"i":index,"why":"..."}]}"""
 
 def write_outlook(state: State) -> dict:
     _phase("outlook")
-    cards, refs, inv = state["evidence"], state["refs"], _inv(state); outlooks, changes = {}, {}; cost = 0.0
+    cards, refs, inv = state["evidence"], state["refs"], _inv(state); cost = 0.0
+    stage = state.get("evidence_stage"); only = set(state.get("deep_socs") or []) if stage == "deep" else None
+    outlooks, changes = (dict(state.get("outlooks") or {}), dict(state.get("changes") or {})) if stage == "deep" else ({}, {})
     for t in state["targets"]:
-        p = t["persona"]; occ = _occ_key(p); mine = [c for c in cards if c.occ == occ and c.id in inv]
+        p = t["persona"]; occ = _occ_key(p)
+        if only is not None and occ not in only: continue
+        mine = [c for c in cards if c.occ == occ and c.id in inv]
         stats = [c for c in mine if c.source == "BLS"]; tasks = [c for c in mine if c.unit == "penetration"]
         demand = _reading_demand(stats); change, share = _reading_change(tasks)
         keep_kinds = ("growth", "openings", "wage") if p.get("composite") else ("growth", "change", "openings", "emp2025", "wage")   # proxies: three lines each, the rest stays in evidence
@@ -212,18 +245,22 @@ def write_outlook(state: State) -> dict:
         proxy = next((u for u in state.get("unknowns", []) if u.startswith("BLS: no employment projection exists")), None) if p.get("composite") else None
         if proxy: facts.insert(0, f"No official projection exists for this job; the figures below are for the closest official categories [{inv.get('unknown:' + proxy, '?')}]")
         if tasks: facts.append(f"{sum(1 for x in tasks if (x.value or 0) >= 0.6)} of {len(tasks)} tasks already show heavy AI use in observed AI conversations (Anthropic Economic Index) " + " ".join(f"[{inv[x.id]}]" for x in sorted(tasks, key=lambda c: -(c.value or 0))[:3]))
-        try:
-            out, c_ = llm.chat_json("planner", OUTLOOK_SYS, f"Occupation: {p['title']}. Demand reading from projections: {demand}. Share of tasks with heavy AI use: {share:.0%}.\nEvidence:\n{_table(mine, refs)}", max_tokens=400); cost += c_
-            interp = [l for l in out.get("lines", []) if isinstance(l, str)][:3]
-        except Exception: interp = []
-        outlooks[occ] = {"soc": occ, "title": p["title"], "demand_reading": demand, "ai_change_reading": change, "facts": facts, "interpretation": interp, "education_entry": edu.claim.split("entry: ", 1)[-1].split(";")[0] if edu else None, "proxy_note": proxy}
+        interp = []
+        if tasks:   # no task evidence yet (lightweight cards) → facts only; the AI-change interpretation is written once deep evidence exists
+            try:
+                out, c_ = llm.chat_json("planner", OUTLOOK_SYS, f"Occupation: {p['title']}. Demand reading from projections: {demand}. Share of tasks with heavy AI use: {share:.0%}.\nEvidence:\n{_table(mine, refs)}", max_tokens=400, purpose="outlook_interpretation"); cost += c_
+                interp = [l for l in out.get("lines", []) if isinstance(l, str)][:3]
+            except Exception: interp = []
+        wage = next((c for c in stats if c.id.endswith(":wage")), None)
+        outlooks[occ] = {"soc": occ, "title": p["title"], "demand_reading": demand, "ai_change_reading": change if tasks else "pending", "facts": facts, "interpretation": interp, "education_entry": edu.claim.split("entry: ", 1)[-1].split(";")[0] if edu else None, "proxy_note": proxy,
+                         "growth_pct": next((c.value for c in stats if c.id.endswith(":growth")), None), "openings": next((c.value for c in stats if c.id.endswith(":openings")), None), "median_wage": wage.value if wage else None, "evidence_level": "deep" if tasks else "light"}
         changes[occ] = _work_change(occ, tasks, inv)
         _say(f"{p['title']}: demand {demand} (BLS projection) · AI-related change {change} (interpretation)")
     for occ, ch in changes.items():
-        cands = ch.pop("_candidates")
+        cands = ch.pop("_candidates", None)
         if not cands: continue
         try:
-            out, c_ = llm.chat_json("planner", MORE_IMPORTANT_SYS, "Tasks with little or no observed AI use today:\n" + "\n".join(f"{i}. {x['task']} [{x['ref']}]" for i, x in enumerate(cands)), max_tokens=700); cost += c_
+            out, c_ = llm.chat_json("planner", MORE_IMPORTANT_SYS, "Tasks with little or no observed AI use today:\n" + "\n".join(f"{i}. {x['task']} [{x['ref']}]" for i, x in enumerate(cands)), max_tokens=700, purpose="more_important"); cost += c_
             picks = {int(d["i"]): d.get("why", "") for d in out.get("keep", []) if "i" in d}
         except Exception: picks = {}
         for i, x in enumerate(cands): (ch["more_important"] if i in picks else ch["uncertain"]).append({**x, "why": picks.get(i, "")})
@@ -337,6 +374,7 @@ def skeptic(state: State) -> dict:
         kind = rv.classify(t, refs)
         if rv.certainty_violation(t): removed.append({"path": p, "sentence": t, "reason": "certainty about the future (lint)"}); continue
         if kind in ("heading", "unknown_only", "advice"): kept_paths.append(p); continue
+        if re.match(r"outlooks\.[^.]+\.facts\[", p) and kind == "fact": kept_paths.append(p); continue   # templated from BLS cards by code — deterministic, already cited
         if kind == "uncited": removed.append({"path": p, "sentence": t, "reason": "no evidence ref" + (" (contains a number)" if re.search(r"\d", t) else "")}); continue
         to_check.append((p, t, [r for r in rv.REF.findall(t) if r in refs]))
     verdicts, cost, status = {}, 0.0, "verified"
