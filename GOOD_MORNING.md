@@ -7,7 +7,7 @@
 - **Student path** compares up to 3 careers in one run (parallel fan-out), with a comparison table and "our read". Example: Graphic Designers −1.7% (declining) vs UX Designers +6.0% (growing) vs Clinical Psychologists.
 - **BLS Employment Projections 2025–35** wired in (your download) → real *Demand: growing / stable / declining*, openings, entry education. Composites (Product Manager) show closest official categories as *labelled proxies* plus an explicit unknown.
 - **Task-diff multipliers are gone.** Three groups: *AI will probably assist* (fact, current use) · *may become more important* (low use + a stated reason — tagged interpretation) · *still uncertain*.
-- **Evals: 13/13** — both journeys, edit at gate 1, reject at each gate (no writes), Polymarket outage, conflicting forecasts, broken reviewer model, second-run deltas, plus a 5-point answer-quality rubric judged by the reviewer model. `evals/results/20260828-232624.json` (main) + `…-234838.json` (reruns after fixes). Median ≈ 3 min, ≈ $0.01/plan.
+- **Evals: 13/13** — both journeys, edit at gate 1, reject at each gate (no writes), Polymarket outage, conflicting forecasts, broken reviewer model, second-run deltas, plus a 5-point answer-quality rubric judged by the reviewer model. `20260829-002835.json` — one clean run, all fixes in. Median ≈ 3 min, ≈ $0.01/plan.
 - **UI verified end to end in Streamlit** (AppTest): professional composite through both gates and save; student 3-way through both gates with reject → nothing written.
 - Architecture diagram (`design/architecture-diagram.png`), project doc draft (`docs/PROJECT_DOC.md`), 5-minute video script (`docs/VIDEO_SCRIPT.md`), sample outputs (`samples/`).
 

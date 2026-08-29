@@ -10,3 +10,6 @@ data/raw/
 data/briefs/
 evals/results/*.log
 data/processed/*.npy
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
