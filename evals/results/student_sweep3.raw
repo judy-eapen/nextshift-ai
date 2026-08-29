@@ -1,3 +1,6 @@
 ▶ s03 vague — I don't know ×5 … FAIL 538s turns=13 cands=10 stripped=21 review=verified $0.0635  failed: ['rubric_respects_constraints']
 ▶ s02 three careers in mind … FAIL 566s turns=8 cands=10 stripped=30 review=verified $0.0704  failed: ['existing_ideas_appear']
 ▶ s01 no career ideas … FAIL 628s turns=12 cands=10 stripped=36 review=verified $0.0746  failed: ['removed_absent', 'rubric_facts_vs_interpretation', 'rubric_respects_constraints']
+▶ s05 asks for more questions when ready … PASS 539s turns=9 cands=10 stripped=29 review=verified $0.0693
+▶ s07 corrects an earlier answer … PASS 654s turns=9 cands=10 stripped=35 review=verified $0.0843
+▶ s09 likes a field, dislikes its daily work … FAIL 608s turns=9 cands=9 stripped=26 review=verified $0.0754  failed: ['contradiction_recorded', 'rubric_respects_constraints']

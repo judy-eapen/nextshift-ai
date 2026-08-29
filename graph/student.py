@@ -138,6 +138,9 @@ Fields: interests · energizing_activities · demonstrated_strengths (ONLY with 
 not_yet_learned ("haven't tried/learned") · dislikes ("don't want to do this") · work_preferences · values · desired_impact · lifestyle_preferences · education_constraints · financial_constraints · location_constraints · time_constraints · existing_career_ideas · uncertainties.
 Be careful: "I'm bad at X" is claimed weakness → growth_areas or not_yet_learned, never a permanent limit. "I don't know" → uncertainties, nothing else. A skipped question adds nothing. Do not invent; do not stereotype from gender, background or school."""
 
+CONTRA_SYS = """You spot tensions in a student's career profile. Given what they are drawn to and the negatives/constraints they just added, list pairs that pull in different directions for career choice —
+e.g. drawn to medicine but faints at blood; loves biology labs but wants no more than 2 years of school; wants to help people but dislikes talking to strangers. Only real tensions, max 2. Return {"contradictions":[{"fields":["interests","dislikes"],"quote_a":"...","quote_b":"...","note":"one line"}]}"""
+
 def update_profile(state: StudentState) -> dict:
     prof = json.loads(json.dumps(state["profile"])); turns = state["turns"]; act = state.get("last_action")
     if act in ("skip", "recommend", "more") or not turns: return {"profile": prof}
@@ -161,6 +164,16 @@ def update_profile(state: StudentState) -> dict:
             try: prof["pidth"][k] = max(-1.0, min(1.0, float(v)))
             except Exception: pass
     for c in out.get("contradictions") or []: prof["contradictions"].append({**c, "turn": t["i"], "status": "open"})
+    # cross-turn check: a new dislike / constraint / growth area vs everything the student said they're drawn to
+    if any(f in touched for f in ("dislikes", "growth_areas", "not_yet_learned", "education_constraints", "financial_constraints", "location_constraints")) and (prof.get("interests") or prof.get("energizing_activities") or prof.get("existing_career_ideas")):
+        try:
+            likes = [f"{e['value']} — “{e['quote']}”" for f in ("interests", "energizing_activities", "existing_career_ideas") for e in prof.get(f, [])]
+            negs = [f"{f}: {e['value']} — “{e['quote']}”" for f in ("dislikes", "growth_areas", "not_yet_learned", "education_constraints", "financial_constraints", "location_constraints") for e in prof.get(f, []) if e.get("source_turn") == t["i"]]
+            out2, c2 = llm.chat_json("extractor", CONTRA_SYS, f"Drawn to:\n" + "\n".join(likes) + "\n\nNew negatives/constraints this turn:\n" + "\n".join(negs), max_tokens=300, temperature=0.0); cost += c2
+            known = {(c.get("quote_a", "")[:40], c.get("quote_b", "")[:40]) for c in prof["contradictions"]}
+            for c in out2.get("contradictions") or []:
+                if isinstance(c, dict) and (c.get("quote_a", "")[:40], c.get("quote_b", "")[:40]) not in known: prof["contradictions"].append({**c, "turn": t["i"], "status": "open"})
+        except Exception: pass
     prof["unresolved_questions"] = (prof.get("unresolved_questions") or [])[-4:] + [u for u in (out.get("unresolved_questions") or []) if isinstance(u, str)][:2]
     prof["important_quotes_or_examples"] = (prof.get("important_quotes_or_examples") or []) + [q for q in (out.get("quotes") or []) if isinstance(q, str)][:2]
     prof["confidence_by_field"] = _coverage(prof)
