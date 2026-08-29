@@ -81,16 +81,28 @@ def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int) -> 
         if not got: raise ValueError(f"no verdicts parseable; raw: {text[:160]!r}")
     return {local[j]: v for j, v in got.items() if j in local}, c
 
-def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 20, max_tokens: int = 12000) -> tuple[dict, float, str]:
-    """items = [(index, listing_text)]. Calls the reviewer in batches; a failed batch is retried once in halves. Any batch still failing → status 'unverified' (loud)."""
+def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 12, max_tokens: int = 12000, workers: int = 4) -> tuple[dict, float, str]:
+    """items = [(index, listing_text)]. Batches run in parallel; a failed batch is retried once in halves. Any batch still failing → 'unverified' (loud).
+    Raw output of a failing batch is written to data/processed/review_failures.log for diagnosis."""
+    from concurrent.futures import ThreadPoolExecutor
+    import pathlib as _pl, time as _t
     verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None
-    for b in range(0, len(items), batch):
-        chunk = items[b:b + batch]
-        try: got, c = _judge_batch(chunk, system, max_tokens); verdicts.update(got); cost += c
+    chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
+    def one(chunk):
+        try: return _judge_batch(chunk, system, max_tokens), None
         except Exception as e:
-            judge_lines.last_error = f"{type(e).__name__}: {str(e)[:200]}"
+            out, err = {}, f"{type(e).__name__}: {str(e)[:300]}"; c_total = 0.0
             for half in (chunk[: len(chunk) // 2 or 1], chunk[len(chunk) // 2 or 1:]):
                 if not half: continue
-                try: got, c = _judge_batch(half, system, max_tokens); verdicts.update(got); cost += c
-                except Exception as e2: status = "unverified"; judge_lines.last_error = f"{type(e2).__name__}: {str(e2)[:200]}"
+                try: got, c = _judge_batch(half, system, max_tokens); out.update(got); c_total += c
+                except Exception as e2:
+                    err = f"{type(e2).__name__}: {str(e2)[:300]}"
+                    try: (_pl.Path(__file__).resolve().parents[1] / "data" / "processed" / "review_failures.log").open("a").write(f"\n[{_t.strftime('%Y-%m-%d %H:%M:%S')}] {err}\n")
+                    except Exception: pass
+                    return (out, c_total), err
+            return (out, c_total), None
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for (got, c), err in ex.map(one, chunks):
+            verdicts.update(got); cost += c
+            if err: status = "unverified"; judge_lines.last_error = err
     return verdicts, cost, status

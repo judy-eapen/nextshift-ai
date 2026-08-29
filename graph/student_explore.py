@@ -45,7 +45,16 @@ def resolve_candidates(state: StudentState) -> dict:
     for c in cands:
         title = c.get("search_title") or c["label"]; about = " ".join(c["rationale"].get("why_included", "") if isinstance(c["rationale"].get("why_included"), str) else "")
         try:
-            r0 = rs.resolve(title, "", k=3); weak = r0["tier"] == 2 and not r0.get("confident", True)
+            r0 = rs.resolve(title, "", k=3)
+            if r0["tier"] != 1 and c["label"] != title:   # try the plain label too — exact O*NET titles beat semantic guesses
+                r1 = rs.resolve(c["label"], "", k=3)
+                if r1["tier"] == 1: r0 = r1
+            GENERIC = {"and", "or", "of", "the", "a", "an", "all", "other", "specialist", "manager", "worker", "coordinator", "assistant", "technician", "analyst", "director", "planner", "associate", "professional"}
+            def _overlap(a, b):
+                A = {x.lower().rstrip("s") for x in re.findall(r"[A-Za-z]+", a) if x.lower().rstrip("s") not in GENERIC}; B = {x.lower().rstrip("s") for x in re.findall(r"[A-Za-z]+", b) if x.lower().rstrip("s") not in GENERIC}
+                return bool(A & B)
+            top = r0["matches"][0] if r0.get("matches") else None; sim = (top or {}).get("similarity") or 0.0
+            weak = r0["tier"] == 2 and (sim < 0.55 or (not _overlap(title, top["title"]) and sim < 0.72))   # semantic match must be strong, or share a meaningful word
             r = rs.with_composites(r0, title, about if (c.get("needs_composite") or weak) else "")
             if r.get("composites") and (c.get("needs_composite") or r["tier"] == 0 or weak):
                 per = composite.persona_from(r["composites"][0], 2030); per.pop("horizon", None); c["resolution"] = "composite"
@@ -151,8 +160,20 @@ def review_object(state: StudentState, obj: dict, label: str) -> tuple[dict, dic
     _say(f"Reviewed {label}: {total} lines, {len(removed)} removed" + (" — UNVERIFIED" if status == "unverified" else ""))
     return obj, {"stripped": removed, "kept": kept, "total": total, "ratio": round(ratio, 3), "status": status, "model": llm.model_name("skeptic"), "attempt": 1, "escalated": False}, cost + c_fix
 
+def _check_rationale(rationale: dict, prefs: dict) -> tuple[dict, int]:
+    """Deterministic: a rationale line survives only if every [p:...] it cites exists and it cites at least one. Returns (cleaned, removed_count)."""
+    ref_re = re.compile(r"\[(p:[a-z_]+:\d+)\]"); removed = 0; out = {}
+    for k, v in rationale.items():
+        if isinstance(v, list):
+            keep = [l for l in v if isinstance(l, str) and ref_re.findall(l) and all(rf in prefs for rf in ref_re.findall(l))]; removed += len(v) - len(keep); out[k] = keep
+        elif isinstance(v, str): ok = bool(ref_re.findall(v)) and all(rf in prefs for rf in ref_re.findall(v)); out[k] = v if ok or k == "poor_fit_if" else ""; removed += 0 if ok or k == "poor_fit_if" else 1
+        else: out[k] = v
+    return out, removed
+
 def review_cards(state: StudentState) -> dict:
-    obj = {"candidates": [{"key": c["key"], "label": c["label"], "group": c["group"], "rationale": c["rationale"], "card": {k: v for k, v in c["card"].items() if k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "evidence_confidence")},
+    prefs = profile_refs(state["profile"]); rat_removed = 0
+    for c in state["candidates"]: c["rationale"], n_ = _check_rationale(c["rationale"], prefs); rat_removed += n_
+    obj = {"candidates": [{"key": c["key"], "label": c["label"], "group": c["group"], "card": {k: v for k, v in c["card"].items() if k in ("why_fit", "what_work_is_like", "how_ai_may_reshape", "human_capabilities", "tradeoff", "evidence_confidence")},
                            "more_important": [{"task": r["task"], "ref": r["ref"], "why": r.get("why", ""), "card_id": r["card_id"]} for r in c["card"]["more_important"]]} for c in state["candidates"]]}
     # 'why' reasons get their row ref + tag so they are judged as interpretation
     for c in obj["candidates"]:
@@ -162,7 +183,8 @@ def review_cards(state: StudentState) -> dict:
     for c in cands:
         r = by.get(c["key"]);
         if not r: continue
-        c["rationale"] = r["rationale"]; c["card"].update(r["card"]); c["card"]["more_important"] = r["more_important"]; c["review"] = {"removed": [x for x in sk["stripped"] if f"candidates[{reviewed['candidates'].index(r)}]" in x["path"]]}
+        c["card"].update(r["card"]); c["card"]["more_important"] = r["more_important"]; c["review"] = {"removed": [x for x in sk["stripped"] if f"candidates[{reviewed['candidates'].index(r)}]" in x["path"]]}
+    sk["rationale_lines_removed"] = rat_removed
     return {"candidates": cands, "skeptic": sk, "cost_usd": cost}
 
 # ───────────────────────────── C4 results + reactions ─────────────────────────────
