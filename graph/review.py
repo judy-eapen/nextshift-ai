@@ -83,14 +83,14 @@ def _judge_batch(chunk: list[tuple[int, str]], system: str, max_tokens: int, rol
 
 REVIEW_MEMO: dict = {}   # content-hash → (removed paths, status); process-local; same text + same sources ⇒ same verdicts. Never persisted.
 
-def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 16, max_tokens: int = 12000, workers: int = 4, role: str = "skeptic") -> tuple[dict, float, str]:
+def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 24, max_tokens: int = 12000, workers: int = 4, role: str = "skeptic") -> tuple[dict, float, str]:
     """items = [(index, listing_text)]. Batches run in parallel; a failed batch is retried once in halves. Any batch still failing → 'unverified' (loud).
     Raw output of a failing batch is written to data/processed/review_failures.log for diagnosis."""
     from concurrent.futures import ThreadPoolExecutor
     import pathlib as _pl, time as _t
     from . import diag
     verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None; _t0 = _t.perf_counter(); _buf: list = []
-    if role == "skeptic" and batch > 8: batch, workers = 8, max(workers, 6)   # thinking model: latency grows with batch size — small batches in parallel finish sooner for the same cost
+    if role == "skeptic": batch = max(batch, 24)   # thinking model: each call spends ~6k reasoning tokens (~60 s) almost regardless of batch size — measured 2026-08-29 — so FEWER, larger batches are both faster and cheaper
     chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
     def one(chunk):
         diag.bind_collector(_buf)

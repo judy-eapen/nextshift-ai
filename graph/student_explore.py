@@ -233,7 +233,7 @@ def add_citations(state: StudentState, obj: dict, refs_table: str) -> tuple[dict
         return obj, cost
     except Exception: return obj, 0.0
 
-def review_object(state: StudentState, obj: dict, label: str, role: str = "skeptic", batch: int = 16, repair: bool = True) -> tuple[dict, dict, float]:
+def review_object(state: StudentState, obj: dict, label: str, role: str = "skeptic", batch: int = 24, repair: bool = True) -> tuple[dict, dict, float]:
     """Structured review over any object. Returns (reviewed_obj, skeptic_record, cost). Reviewer failure → status 'unverified' (loud), never silent keep.
     role='skeptic' (thinking model) for shortlist / deep dive / deep cards; role='extractor' (fast) for lightweight initial cards whose lines are short cited rationales.
     Identical (text, sources) seen earlier in this process → the same verdicts are re-applied without a model call (REVIEW_MEMO)."""
@@ -305,7 +305,7 @@ def review_cards(state: StudentState) -> dict:
                                "more_important": [{"task": r["task"], "ref": r["ref"], "why": r.get("why", ""), "card_id": r["card_id"]} for r in c["card"]["more_important"]]} for c in scope]}
         for c in obj["candidates"]:   # 'why' reasons get their row ref + tag so they are judged as interpretation
             for r in c["more_important"]: r["why"] = (r["why"] + f" [{r['ref']}] [interpretation]") if r["why"] and "[" not in r["why"] else r["why"]
-        reviewed, sk, cost = review_object(state, obj, "career cards", role="skeptic", batch=16)
+        reviewed, sk, cost = review_object(state, obj, "career cards", role="skeptic", batch=24)
     cands = json.loads(json.dumps(state["candidates"])); by = {c["key"]: c for c in reviewed["candidates"]}
     for c in cands:
         r = by.get(c["key"])

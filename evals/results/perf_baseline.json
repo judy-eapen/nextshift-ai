@@ -1,0 +1,1024 @@
+{
+ "note": "Pre-optimization baseline, commit 408c972 (instrumentation only), serial runs 2026-08-29 15:46\u201316:30, shared Nebius endpoint (s01 overlapped one smoke run). Reviewer model calls were not captured in this baseline (worker-thread events fell back to a process-local list \u2014 fixed afterwards); reviewer duration is visible through the review_cards / build_shortlist / deep_dive / skeptic node times.",
+ "cases": {
+  "g01": {
+   "seconds": 135,
+   "pass": true,
+   "failed_checks": [],
+   "llm_calls": 9,
+   "llm_ms": 21614,
+   "reviewer_calls": 0,
+   "reviewer_ms": 0,
+   "tool_calls": 17,
+   "tool_ms": 7464,
+   "tokens_in": 8505,
+   "tokens_out": 1812,
+   "cost_usd": 0.0028,
+   "cache": {
+    "hit": 0,
+    "miss": 0
+   },
+   "top5": [
+    [
+     "node:skeptic",
+     95157
+    ],
+    [
+     "node:gather_forecasts",
+     12164
+    ],
+    [
+     "node:write_plan",
+     9717
+    ],
+    [
+     "node:write_outlook",
+     3068
+    ],
+    [
+     "node:understand",
+     2487
+    ]
+   ],
+   "segments": [
+    {
+     "kind": "understanding",
+     "wall_s": 2.6
+    },
+    {
+     "kind": "plan",
+     "wall_s": 120.1
+    },
+    {
+     "kind": "end",
+     "wall_s": 0.0
+    }
+   ],
+   "nodes_ms": {
+    "skeptic": {
+     "count": 1,
+     "ms": 95157
+    },
+    "gather_forecasts": {
+     "count": 1,
+     "ms": 12164
+    },
+    "write_plan": {
+     "count": 1,
+     "ms": 9717
+    },
+    "write_outlook": {
+     "count": 1,
+     "ms": 3068
+    },
+    "understand": {
+     "count": 1,
+     "ms": 2487
+    },
+    "gather_research": {
+     "count": 1,
+     "ms": 658
+    },
+    "gather_outlook": {
+     "count": 1,
+     "ms": 654
+    },
+    "gather_exposure": {
+     "count": 1,
+     "ms": 332
+    },
+    "load_memory": {
+     "count": 1,
+     "ms": 2
+    },
+    "record": {
+     "count": 1,
+     "ms": 2
+    },
+    "understanding_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "reconcile": {
+     "count": 1,
+     "ms": 0
+    },
+    "render": {
+     "count": 1,
+     "ms": 0
+    },
+    "plan_gate": {
+     "count": 2,
+     "ms": 0
+    }
+   }
+  },
+  "s01": {
+   "seconds": 515,
+   "pass": true,
+   "failed_checks": [],
+   "llm_calls": 51,
+   "llm_ms": 139837,
+   "reviewer_calls": 0,
+   "reviewer_ms": 0,
+   "tool_calls": 54,
+   "tool_ms": 19532,
+   "tokens_in": 77155,
+   "tokens_out": 13892,
+   "cost_usd": 0.0234,
+   "cache": {
+    "hit": 0,
+    "miss": 0
+   },
+   "top5": [
+    [
+     "node:review_cards",
+     198775
+    ],
+    [
+     "node:build_shortlist",
+     88911
+    ],
+    [
+     "node:deep_dive",
+     83722
+    ],
+    [
+     "node:analyze_fit",
+     25858
+    ],
+    [
+     "node:write_outlook",
+     23594
+    ]
+   ],
+   "segments": [
+    {
+     "kind": "interview",
+     "wall_s": 0.1
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.6
+    },
+    {
+     "kind": "interview",
+     "wall_s": 1.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.6
+    },
+    {
+     "kind": "interview",
+     "wall_s": 1.3
+    },
+    {
+     "kind": "interview",
+     "wall_s": 4.3
+    },
+    {
+     "kind": "interview",
+     "wall_s": 4.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 6.1
+    },
+    {
+     "kind": "understanding",
+     "wall_s": 7.8
+    },
+    {
+     "kind": "results",
+     "wall_s": 286.4
+    },
+    {
+     "kind": "discriminate",
+     "wall_s": 2.1
+    },
+    {
+     "kind": "shortlist",
+     "wall_s": 89.6
+    },
+    {
+     "kind": "deep_dive",
+     "wall_s": 83.7
+    },
+    {
+     "kind": "save",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "end",
+     "wall_s": 0.0
+    }
+   ],
+   "nodes_ms": {
+    "review_cards": {
+     "count": 1,
+     "ms": 198775
+    },
+    "build_shortlist": {
+     "count": 1,
+     "ms": 88911
+    },
+    "deep_dive": {
+     "count": 1,
+     "ms": 83722
+    },
+    "analyze_fit": {
+     "count": 1,
+     "ms": 25858
+    },
+    "write_outlook": {
+     "count": 1,
+     "ms": 23594
+    },
+    "update_profile": {
+     "count": 8,
+     "ms": 23229
+    },
+    "generate_candidates": {
+     "count": 1,
+     "ms": 16262
+    },
+    "gather_forecasts": {
+     "count": 1,
+     "ms": 11440
+    },
+    "resolve_candidates": {
+     "count": 1,
+     "ms": 10414
+    },
+    "gather_outlook": {
+     "count": 10,
+     "ms": 6749
+    },
+    "gather_exposure": {
+     "count": 10,
+     "ms": 5777
+    },
+    "render_understanding": {
+     "count": 1,
+     "ms": 4133
+    },
+    "select_question": {
+     "count": 8,
+     "ms": 3912
+    },
+    "update_from_reactions": {
+     "count": 1,
+     "ms": 1287
+    },
+    "gather_research": {
+     "count": 1,
+     "ms": 958
+    },
+    "discriminate": {
+     "count": 1,
+     "ms": 799
+    },
+    "apply_discriminators": {
+     "count": 1,
+     "ms": 645
+    },
+    "record": {
+     "count": 1,
+     "ms": 3
+    },
+    "render_results": {
+     "count": 1,
+     "ms": 1
+    },
+    "init_interview": {
+     "count": 1,
+     "ms": 0
+    },
+    "interview_gate": {
+     "count": 16,
+     "ms": 0
+    },
+    "evaluate_completeness": {
+     "count": 8,
+     "ms": 0
+    },
+    "understanding_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "reconcile": {
+     "count": 1,
+     "ms": 0
+    },
+    "reaction_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "discriminator_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "shortlist_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "explore_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "save_gate": {
+     "count": 2,
+     "ms": 0
+    }
+   }
+  },
+  "s02": {
+   "seconds": 687,
+   "pass": false,
+   "failed_checks": [
+    "existing_ideas_captured",
+    "existing_ideas_appear"
+   ],
+   "llm_calls": 65,
+   "llm_ms": 223447,
+   "reviewer_calls": 0,
+   "reviewer_ms": 0,
+   "tool_calls": 54,
+   "tool_ms": 15426,
+   "tokens_in": 123611,
+   "tokens_out": 13414,
+   "cost_usd": 0.0323,
+   "cache": {
+    "hit": 0,
+    "miss": 0
+   },
+   "top5": [
+    [
+     "node:review_cards",
+     220861
+    ],
+    [
+     "node:build_shortlist",
+     104862
+    ],
+    [
+     "node:deep_dive",
+     82288
+    ],
+    [
+     "node:resolve_candidates",
+     68854
+    ],
+    [
+     "node:update_profile",
+     39761
+    ]
+   ],
+   "segments": [
+    {
+     "kind": "interview",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 4.6
+    },
+    {
+     "kind": "interview",
+     "wall_s": 5.5
+    },
+    {
+     "kind": "interview",
+     "wall_s": 5.2
+    },
+    {
+     "kind": "interview",
+     "wall_s": 7.3
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.7
+    },
+    {
+     "kind": "interview",
+     "wall_s": 4.7
+    },
+    {
+     "kind": "interview",
+     "wall_s": 5.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.6
+    },
+    {
+     "kind": "understanding",
+     "wall_s": 19.9
+    },
+    {
+     "kind": "results",
+     "wall_s": 388.9
+    },
+    {
+     "kind": "discriminate",
+     "wall_s": 5.2
+    },
+    {
+     "kind": "shortlist",
+     "wall_s": 106.8
+    },
+    {
+     "kind": "deep_dive",
+     "wall_s": 82.3
+    },
+    {
+     "kind": "save",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "end",
+     "wall_s": 0.0
+    }
+   ],
+   "nodes_ms": {
+    "review_cards": {
+     "count": 1,
+     "ms": 220861
+    },
+    "build_shortlist": {
+     "count": 1,
+     "ms": 104862
+    },
+    "deep_dive": {
+     "count": 1,
+     "ms": 82288
+    },
+    "resolve_candidates": {
+     "count": 1,
+     "ms": 68854
+    },
+    "update_profile": {
+     "count": 10,
+     "ms": 39761
+    },
+    "generate_candidates": {
+     "count": 1,
+     "ms": 30904
+    },
+    "write_outlook": {
+     "count": 1,
+     "ms": 28670
+    },
+    "analyze_fit": {
+     "count": 1,
+     "ms": 28521
+    },
+    "render_understanding": {
+     "count": 1,
+     "ms": 13151
+    },
+    "select_question": {
+     "count": 10,
+     "ms": 11133
+    },
+    "gather_forecasts": {
+     "count": 1,
+     "ms": 11069
+    },
+    "gather_research": {
+     "count": 1,
+     "ms": 4830
+    },
+    "gather_outlook": {
+     "count": 10,
+     "ms": 3605
+    },
+    "update_from_reactions": {
+     "count": 1,
+     "ms": 3449
+    },
+    "apply_discriminators": {
+     "count": 1,
+     "ms": 1891
+    },
+    "discriminate": {
+     "count": 1,
+     "ms": 1687
+    },
+    "gather_exposure": {
+     "count": 10,
+     "ms": 299
+    },
+    "record": {
+     "count": 1,
+     "ms": 3
+    },
+    "render_results": {
+     "count": 1,
+     "ms": 1
+    },
+    "init_interview": {
+     "count": 1,
+     "ms": 0
+    },
+    "interview_gate": {
+     "count": 20,
+     "ms": 0
+    },
+    "evaluate_completeness": {
+     "count": 10,
+     "ms": 0
+    },
+    "understanding_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "reconcile": {
+     "count": 1,
+     "ms": 0
+    },
+    "reaction_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "discriminator_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "shortlist_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "explore_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "save_gate": {
+     "count": 2,
+     "ms": 0
+    }
+   }
+  },
+  "s15": {
+   "seconds": 281,
+   "pass": true,
+   "failed_checks": [],
+   "llm_calls": 58,
+   "llm_ms": 247351,
+   "reviewer_calls": 0,
+   "reviewer_ms": 0,
+   "tool_calls": 58,
+   "tool_ms": 10737,
+   "tokens_in": 94840,
+   "tokens_out": 14958,
+   "cost_usd": 0.0275,
+   "cache": {
+    "hit": 0,
+    "miss": 0
+   },
+   "top5": [
+    [
+     "node:update_profile",
+     97588
+    ],
+    [
+     "node:write_outlook",
+     34061
+    ],
+    [
+     "node:analyze_fit",
+     29973
+    ],
+    [
+     "node:select_question",
+     19912
+    ],
+    [
+     "node:generate_candidates",
+     17712
+    ]
+   ],
+   "segments": [
+    {
+     "kind": "interview",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 43.4
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.7
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 4.3
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.9
+    },
+    {
+     "kind": "interview",
+     "wall_s": 11.3
+    },
+    {
+     "kind": "interview",
+     "wall_s": 12.9
+    },
+    {
+     "kind": "interview",
+     "wall_s": 14.1
+    },
+    {
+     "kind": "interview",
+     "wall_s": 9.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 6.9
+    },
+    {
+     "kind": "understanding",
+     "wall_s": 13.2
+    },
+    {
+     "kind": "results",
+     "wall_s": 102.7
+    },
+    {
+     "kind": "discriminate",
+     "wall_s": 3.1
+    },
+    {
+     "kind": "shortlist",
+     "wall_s": 14.3
+    },
+    {
+     "kind": "deep_dive",
+     "wall_s": 14.4
+    },
+    {
+     "kind": "save",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "end",
+     "wall_s": 0.0
+    }
+   ],
+   "nodes_ms": {
+    "update_profile": {
+     "count": 11,
+     "ms": 97588
+    },
+    "write_outlook": {
+     "count": 1,
+     "ms": 34061
+    },
+    "analyze_fit": {
+     "count": 1,
+     "ms": 29973
+    },
+    "select_question": {
+     "count": 11,
+     "ms": 19912
+    },
+    "generate_candidates": {
+     "count": 1,
+     "ms": 17712
+    },
+    "gather_forecasts": {
+     "count": 1,
+     "ms": 14788
+    },
+    "deep_dive": {
+     "count": 1,
+     "ms": 14424
+    },
+    "build_shortlist": {
+     "count": 1,
+     "ms": 8645
+    },
+    "render_understanding": {
+     "count": 1,
+     "ms": 7922
+    },
+    "apply_discriminators": {
+     "count": 1,
+     "ms": 5609
+    },
+    "resolve_candidates": {
+     "count": 1,
+     "ms": 4717
+    },
+    "gather_outlook": {
+     "count": 10,
+     "ms": 4224
+    },
+    "update_from_reactions": {
+     "count": 1,
+     "ms": 1850
+    },
+    "review_cards": {
+     "count": 1,
+     "ms": 1352
+    },
+    "discriminate": {
+     "count": 1,
+     "ms": 1243
+    },
+    "gather_research": {
+     "count": 1,
+     "ms": 499
+    },
+    "gather_exposure": {
+     "count": 10,
+     "ms": 335
+    },
+    "record": {
+     "count": 1,
+     "ms": 3
+    },
+    "render_results": {
+     "count": 1,
+     "ms": 1
+    },
+    "init_interview": {
+     "count": 1,
+     "ms": 0
+    },
+    "interview_gate": {
+     "count": 22,
+     "ms": 0
+    },
+    "evaluate_completeness": {
+     "count": 11,
+     "ms": 0
+    },
+    "understanding_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "reconcile": {
+     "count": 1,
+     "ms": 0
+    },
+    "reaction_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "discriminator_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "shortlist_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "explore_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "save_gate": {
+     "count": 2,
+     "ms": 0
+    }
+   }
+  },
+  "s13": {
+   "seconds": 525,
+   "pass": true,
+   "failed_checks": [],
+   "llm_calls": 54,
+   "llm_ms": 238081,
+   "reviewer_calls": 0,
+   "reviewer_ms": 0,
+   "tool_calls": 54,
+   "tool_ms": 10333,
+   "tokens_in": 70437,
+   "tokens_out": 12683,
+   "cost_usd": 0.0214,
+   "cache": {
+    "hit": 0,
+    "miss": 0
+   },
+   "top5": [
+    [
+     "node:review_cards",
+     113732
+    ],
+    [
+     "node:build_shortlist",
+     98264
+    ],
+    [
+     "node:deep_dive",
+     91098
+    ],
+    [
+     "node:generate_candidates",
+     51064
+    ],
+    [
+     "node:write_outlook",
+     50180
+    ]
+   ],
+   "segments": [
+    {
+     "kind": "interview",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.2
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.4
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.2
+    },
+    {
+     "kind": "interview",
+     "wall_s": 3.8
+    },
+    {
+     "kind": "interview",
+     "wall_s": 5.0
+    },
+    {
+     "kind": "interview",
+     "wall_s": 2.4
+    },
+    {
+     "kind": "understanding",
+     "wall_s": 14.4
+    },
+    {
+     "kind": "results",
+     "wall_s": 273.6
+    },
+    {
+     "kind": "discriminate",
+     "wall_s": 3.9
+    },
+    {
+     "kind": "shortlist",
+     "wall_s": 99.6
+    },
+    {
+     "kind": "deep_dive",
+     "wall_s": 91.1
+    },
+    {
+     "kind": "save",
+     "wall_s": 0.0
+    },
+    {
+     "kind": "end",
+     "wall_s": 0.0
+    }
+   ],
+   "nodes_ms": {
+    "review_cards": {
+     "count": 1,
+     "ms": 113732
+    },
+    "build_shortlist": {
+     "count": 1,
+     "ms": 98264
+    },
+    "deep_dive": {
+     "count": 1,
+     "ms": 91098
+    },
+    "generate_candidates": {
+     "count": 1,
+     "ms": 51064
+    },
+    "write_outlook": {
+     "count": 1,
+     "ms": 50180
+    },
+    "analyze_fit": {
+     "count": 1,
+     "ms": 26771
+    },
+    "update_profile": {
+     "count": 9,
+     "ms": 24346
+    },
+    "gather_forecasts": {
+     "count": 1,
+     "ms": 23170
+    },
+    "render_understanding": {
+     "count": 1,
+     "ms": 9921
+    },
+    "resolve_candidates": {
+     "count": 1,
+     "ms": 8639
+    },
+    "select_question": {
+     "count": 9,
+     "ms": 5868
+    },
+    "gather_outlook": {
+     "count": 10,
+     "ms": 3772
+    },
+    "update_from_reactions": {
+     "count": 1,
+     "ms": 3120
+    },
+    "apply_discriminators": {
+     "count": 1,
+     "ms": 1362
+    },
+    "discriminate": {
+     "count": 1,
+     "ms": 734
+    },
+    "gather_research": {
+     "count": 1,
+     "ms": 486
+    },
+    "gather_exposure": {
+     "count": 10,
+     "ms": 238
+    },
+    "record": {
+     "count": 1,
+     "ms": 3
+    },
+    "init_interview": {
+     "count": 1,
+     "ms": 0
+    },
+    "interview_gate": {
+     "count": 18,
+     "ms": 0
+    },
+    "evaluate_completeness": {
+     "count": 9,
+     "ms": 0
+    },
+    "understanding_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "reconcile": {
+     "count": 1,
+     "ms": 0
+    },
+    "render_results": {
+     "count": 1,
+     "ms": 0
+    },
+    "reaction_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "discriminator_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "shortlist_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "explore_gate": {
+     "count": 2,
+     "ms": 0
+    },
+    "save_gate": {
+     "count": 2,
+     "ms": 0
+    }
+   }
+  }
+ }
+}
