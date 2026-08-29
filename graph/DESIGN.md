@@ -175,3 +175,32 @@ Goal: make the architecture inspectable from the UI without turning the result s
 ## Tests (`tests/`, pytest) — 67
 journey mapping for every stage/phase/flag · copy facts pinned to constants · AppTest: opening/closing the dialog keeps stage+payload and never constructs a graph · no secrets/env names/`<think>` in any rendered string · dev mode hidden without the flag, present with it, tracing forced off without it · UNVERIFIED and partial-evidence flags reach the journey · a11y roles/aria on every status glyph · understands-sections from state with `llm.chat` patched to raise · why-this-appeared uses reviewed rationale and never leaks removed sentences · exact/proxy/composite labels · cards stay answer-first · professional run details shared.
 Student evals gained explanation-layer checks: `composite_labelled`, `journey_unverified`, `run_details_partial`, `removed_absent_in_why`, `why_uses_profile_refs`.
+
+
+---
+# PERFORMANCE (Sat 2026-08-29 evening) — measured, then optimized
+
+Instrumentation first (`graph/diag.py`): every node is wrapped (`diag.timed`) and emits start/end + duration on the custom stream; `llm.chat` emits role, model, purpose, duration, tokens, cost, failures; `nodes._call` emits tool name, SOC, duration, ok; the reviewer emits batch/retry/status; caches emit hit/miss. Worker-thread events are buffered and flushed by the node thread. Consumers (UI → `S.diag`, evals → `perf` per case) summarize with `diag.summarize`; nothing is written to tracked files. Developer mode shows the summary and node timeline.
+
+## Baseline vs after (serial, same five cases; `evals/results/perf_baseline.json` → `perf_after.json`)
+| case | before | after | Δ | model calls | tool calls | cost (runner) |
+|---|---|---|---|---|---|---|
+| g01 professional | 135 s | 110 s | −19 % | 9 → 6 | 17 → 5 | $0.012 → $0.009 |
+| s01 student, no ideas | 515 s | 354 s | −31 % | 51 → 33 | 54 → 22 | $0.069 → $0.028 |
+| s02 student, three ideas | 687 s | 363 s | −47 % | 65 → 34 | 54 → 24 | $0.081 → $0.034 |
+| s13 BLS down | 525 s | 401 s | −24 % | 54 → 32 | 54 → 25 | $0.050 → $0.037 |
+| s15 reviewer down | 281 s | 82 s | −71 % | 58 → 37 | 58 → 25 | $0.028 → $0.011 |
+
+Interview turns: 2.2–4.7 s per substantive answer (median ≈ 2.3 s); skip / not-sure make no model call. Understanding: 8 s (was 25 s). Light results screen: 40 s (was ≈ 120 s to first cards). Baseline model-call counts exclude reviewer calls (not captured before the thread fix); baseline durations are correct.
+
+## What changed
+- **Interview (Phase 3):** curated question used directly (model only when a topic's bank is exhausted); contradiction call gated behind a deterministic screen; one extraction call per substantive answer.
+- **Level A / Level B evidence (Phase 4):** first-round cards use official outlook (local BLS parquet) + the local O*NET description + the cited rationale + deterministic mismatches; reviewed by the fast model (≈ 4 s). Task-level AI-use evidence, card prose, the outlook interpretation and the thinking reviewer run only for the reacted-to top three (or a career picked later). `reconcile` keeps existing `[cNN]` refs when deep evidence is appended. State: `evidence_stage`, `deep_socs`, `deep_done_socs`, `deep_dives`, `pending_after_deep`, `evidence_meta`.
+- **Caches (Phase 5, `tools/cache.py`):** versioned JSON under `data/processed/cache/` (gitignored), atomic writes, corrupt = miss; resolver (title + resolver version), O*NET web service (30 d), forecast searches + relevance decisions (6 h), Epoch/FRED (6 h). Personalized prose is never disk-cached; review verdicts are memoised in-process by content hash.
+- **Reviewer (Phase 6):** code-generated outlook facts skipped (kept, not judged); fast model for light cards; thinking model for deep cards / shortlist / deep dive; batch size **measured**: 8 → 145 s, 24 → 194 s, 12 × 4 workers → 95 s on g01 — pinned at 12. Failure behaviour unchanged (UNVERIFIED loud; removed content deleted in the rendered object).
+- **Token budgets (Phase 7):** generate_candidates 7000 → 4500 with ≤ 15-word lines; analyze_fit only for the deep set with per-career evidence tables (≤ 4500); deep dive 3000; understanding 900; per-occupation outlook calls run in parallel.
+- **Reuse (Phase 8):** deep dives memoised per career; invalidated by new reactions or a what-if that adds a constraint (which also recomputes the deterministic mismatch lines); back-to-results / back-to-shortlist render only; a pick outside the deep set deepens just that career.
+- **Feedback (Phase 9):** every student action runs inside `st.status` from the first millisecond and streams phase copy; the answer is a form; a duplicate submit is ignored; a failed resume keeps the typed answer and shows a retryable error.
+
+## Rejected / not done
+- Smaller parallel reviewer batches (measured slower and 4× the reasoning tokens). Capping the thinking model's max_tokens (truncated reasoning → parse failure → UNVERIFIED). A non-thinking reviewer for shortlist/deep dive (spec keeps the stronger model there). Re-running `analyze_fit` after a what-if constraint (expensive; the deterministic mismatch lines are recomputed instead).
