@@ -80,11 +80,11 @@ def run_one(graph, g):
     rubric = {}
     if "min_cards" in exp and plan.get("direct_answer") and not g.get("break_skeptic"):
         try:
-            rubric, _ = llm.chat_json("skeptic", RUBRIC, f"Concerns: {profile.get('concerns')} · Door: {profile['door']}\n\nPLAN:\n{body[:6000]}", max_tokens=6000, temperature=0.0)
+            rubric, _ = llm.chat_json("skeptic", RUBRIC, f"Concerns: {profile.get('concerns')} · Door: {profile['door']}\n\nPLAN:\n{body[:24000]}", max_tokens=8000, temperature=0.0)   # whole plan — the 30-day section sits after the outlook facts
             for k in ("answers_concerns", "facts_vs_interpretation", "no_guarantees", "no_invented_products", "actionable"): checks[f"rubric_{k}"] = bool(rubric.get(k))
         except Exception as e: rubric = {"error": repr(e)}
     return {"id": g["id"], "kind": g["kind"], "seconds": round(time.time() - t0), "cards": len(st.get("evidence") or []), "stripped": len(sk.get("stripped") or []), "uncited_final": len(uncited), "tool_calls": st.get("tool_calls"),
-            "cost_usd": round(st.get("cost_usd") or 0, 4), "demand": [o["demand_reading"] for o in ol], "exported": st.get("exported_path"), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "pass": all(checks.values())}
+            "cost_usd": round(st.get("cost_usd") or 0, 4), "demand": [o["demand_reading"] for o in ol], "deltas": len(st.get("deltas") or []), "exported": st.get("exported_path"), "error": err, "checks": checks, "rubric_notes": rubric.get("notes"), "pass": all(checks.values())}
 
 def _snapshot_count():
     import sqlite3; c = sqlite3.connect(memory.DB); n = c.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0]; c.close(); return n

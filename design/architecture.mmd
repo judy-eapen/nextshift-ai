@@ -1,82 +1,54 @@
 flowchart TB
-  subgraph UI["Streamlit web app"]
+  subgraph UI["Streamlit · NextShift AI"]
     direction LR
-    ASK["Ask<br/>question · occupation · horizon<br/>(professional / student door)"]
-    THINK["Decomposition panel<br/>(agent thinks in public)"]
-    TREE["Scenario tree · horizon slider<br/>disagreement overlay · task-diff board · landscape"]
-    BRIEF["Brief preview / export"]
+    START["Start<br/>I'm exploring careers · I'm preparing for change"]
+    INTAKE["Guided intake<br/>role · week · industry · concerns · horizon<br/>(student: interests · strengths · careers · constraints)"]
+    PLAN["Your plan<br/>1 outlook · 2 how the work changes · 3 for you<br/>4 30d / 6m / 1y · 5 other paths · 6 confidence<br/>7 ▸ how we reached this answer"]
   end
 
   subgraph GRAPH["LangGraph supervisor · SQLite checkpointer · LangSmith tracing"]
-    ORCH["Orchestrator<br/>decompose into measurable sub-questions"]
-    subgraph GATHER["Evidence gatherers (parallel, isolated context)"]
+    RES["Occupation resolver (pre-graph)<br/>exact title → semantic → composite from 18K task statements"]
+    UND["understand · PLANNER<br/>restate the person in plain words"]
+    HITL1{{"⏸ Understanding gate<br/>confirm / edit / reject · zero tool spend before this"}}
+    subgraph GATHER["Evidence gatherers · Send fan-out per occupation"]
       direction LR
-      GF["Forecasts"]
-      GE["Exposure"]
-      GS["Statistics"]
-      GR["Research"]
+      GO["outlook<br/>BLS projections 2025–35"]
+      GE["exposure<br/>O*NET tasks × AEI · AIOE"]
+      GF["forecasts<br/>+ relevance filter"]
+      GR["research<br/>Epoch · FRED"]
     end
-    REC["Reconciler<br/>merge cards · flag disagreement · mark unknowns"]
-    HITL1{{"Interrupt 1 · worldview gate<br/>human edits / approves assumptions"}}
-    SCEN["Scenario Builder<br/>3–4 branches · forecast-derived ranges"]
-    DIFF["Task-diff<br/>disappears / AI-supervised / grows"]
-    SKEP["Skeptic<br/>attack every claim · strip uncited · count"]
-    HITL2{{"Interrupt 2 · publish gate<br/>human approves brief"}}
-    RECD["Recorder<br/>evidence snapshot + profile"]
+    REC["reconcile (code)<br/>dedupe · refs · disagreements · unknowns · deltas vs snapshot"]
+    OUT["write_outlook<br/>demand from BLS only · AI change = labelled interpretation<br/>3 task groups: assists · more important · uncertain"]
+    WP["write_plan · PLANNER<br/>direct answer · for you · 30/6/12 · comparison (students) · confidence"]
+    SKEP["skeptic · different model family<br/>line-by-line: facts need cards · interpretation tagged · advice labelled"]
+    HITL2{{"⏸ Plan gate<br/>approve / edit / reject"}}
+    RECD["record · the only writer<br/>plan file · evidence snapshot · profile"]
   end
 
-  subgraph SRC["Live sources (read-only tools)"]
-    direction LR
-    subgraph S1["Forecasts"]
-      MET["Metaculus API"]
-      POLY["Polymarket Gamma"]
-    end
-    subgraph S2["Exposure"]
-      AIOE["AIOE CSV"]
-      AEI["Anthropic Economic Index"]
-      ONET["O*NET tasks"]
-    end
-    subgraph S3["Statistics"]
-      BLS["BLS OES + projections"]
-      FRED["FRED series"]
-    end
-    subgraph S4["Research"]
-      EPOCH["Epoch AI models CSV"]
-    end
+  subgraph SRC["Read-only tools · errors are data"]
+    direction TB
+    BLS["BLS OES + Employment Projections"]
+    ONET["O*NET tasks · Web Services"]
+    AEI["Anthropic Economic Index"]
+    AIOE["AIOE"]
+    MKT["Polymarket · Manifold · Metaculus"]
+    EPOCH["Epoch AI · FRED"]
   end
 
-  subgraph MEM["Memory"]
-    direction LR
-    SNAP[("Snapshot store<br/>cards + scenarios per run")]
-    PROF[("User profile<br/>occupation · horizon · door")]
-  end
+  MEM[("SQLite memory<br/>snapshots per approved run · profile")]
 
-  NEB["Nebius Token Factory<br/>evidence-card extraction · question matching"]
+  START --> INTAKE --> RES --> UND --> HITL1
+  HITL1 -- confirm / edit --> GATHER
+  HITL1 -- reject --> END1((end · nothing written))
+  GATHER --> REC --> OUT --> WP --> SKEP
+  SKEP -- ">30% unsupported, once" --> WP
+  SKEP --> PLAN --> HITL2
+  HITL2 -- approve / edit --> RECD --> MEM
+  HITL2 -- reject --> END2((end · nothing written))
+  MEM -. "next run: since your last plan" .-> REC
+  GATHER -- "read-only tool calls · retry ×2 · unavailable = badge, not a crash" --> SRC
 
-  ASK --> ORCH
-  ORCH --> GF & GE & GS & GR
-  GF --> S1
-  GE --> S2
-  GS --> S3
-  GR --> S4
-  GF & GE -.-> NEB
-  GF & GE & GS & GR --> REC
-  REC --> THINK
-  REC --> HITL1
-  HITL1 -->|approved| SCEN
-  SCEN --> DIFF --> SKEP
-  SKEP -->|"uncited > 30%: rebuild once"| SCEN
-  SKEP -->|pass| TREE
-  TREE --> HITL2
-  HITL2 -->|approved| BRIEF
-  HITL2 --> RECD
-  RECD --> SNAP & PROF
-  SNAP -.->|"next run: since you last looked"| ORCH
-  PROF -.-> ORCH
-
-  classDef human fill:#FDE9C4,stroke:#C77D12,color:#3A2A00
-  classDef mem fill:#E4E8FF,stroke:#2F4BD6,color:#141C2B
-  classDef ui fill:#F4F6F8,stroke:#8A94A6,color:#141C2B
+  classDef human fill:#E5A24A,stroke:#8a5a10,color:#111
+  classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
   class HITL1,HITL2 human
-  class SNAP,PROF mem
-  class ASK,THINK,TREE,BRIEF ui
+  class RECD write
