@@ -229,10 +229,11 @@ HARD RULES:
 - Never invent courses, certifications, products, employers or prices. Recommend capabilities and practical experiences ("run one discovery cycle with an AI research assistant and compare it against your usual method").
 - Plain English for a non-expert. Say which findings are about the occupation and which are about this person.
 Return JSON:
-{"direct_answer": "3-5 sentences answering the person's actual concerns first",
+{"direct_answer": "3-5 sentences answering EVERY stated concern in turn, by name (demand → change → learning → different path). If a concern cannot be answered from this run's evidence (e.g. 'different path' when no skill-similarity data exists), say so explicitly in one sentence rather than skipping it.",
  "outlook_takeaway": "1-2 sentences",
  "for_you": "3-5 sentences using their week/industry/interests/constraints",
- "d30": ["3-4 bullets"], "m6": ["3-4 bullets"], "y1": ["2-3 bullets"],
+ "d30": ["3-4 bullets — each ONE concrete activity this person can finish within two weeks, with a visible output: e.g. 'Run one user-research synthesis with an AI assistant and your usual method side by side; write a one-page comparison of what it missed.' Never 'explore', 'stay informed', 'consider'."],
+ "m6": ["3-4 bullets — each a capability to build plus the real project or responsibility where they'd build it"], "y1": ["2-3 bullets — a position they should be in a year from now and the evidence they'd have for it"],
  "adjacent": [], "adjacent_note": "one sentence: no adjacent path is recommended because this run has no skill-similarity evidence",
  "comparison": [{"title": "...", "outlook": "...", "ai_change": "...", "education": "...", "human_edge": "...", "uncertainty": "..."}],
  "our_read": "which direction(s) this person might lean toward and the tradeoffs, cited, tagged [interpretation]",

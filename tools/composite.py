@@ -44,7 +44,7 @@ def curated(title: str) -> dict | None:
             t, _ = _task_index(); rows = t.set_index("task")
             tasks = [{"task": s, "onet_soc": rows.loc[s, "onet_soc"], "title": rows.loc[s, "title"], "penetration": None if pd.isna(rows.loc[s, "penetration"]) else float(rows.loc[s, "penetration"]), "similarity": None}
                      for s in spec["tasks"] if s in rows.index]
-            return {"name": spec["name"], "slug": spec["slug"], "tasks": tasks, "note": spec["note"], "kind": "curated"}
+            return {"name": f"{title.strip().title()} (composite)", "slug": spec["slug"], "tasks": tasks, "note": spec["note"], "kind": "curated"}   # carry the person's own title
     return None
 
 def expand_description(title: str, about: str) -> list[str]:
