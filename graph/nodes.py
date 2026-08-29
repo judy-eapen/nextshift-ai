@@ -230,7 +230,7 @@ Return {"keep":[{"i":index,"why":"..."}]}"""
 def write_outlook(state: State) -> dict:
     _phase("outlook")
     cards, refs, inv = state["evidence"], state["refs"], _inv(state); cost = 0.0
-    stage = state.get("evidence_stage"); only = set(state.get("deep_socs") or []) if stage == "deep" else None
+    stage = state.get("evidence_stage"); only = set(state.get("deep_socs") or []) if stage == "deep" else None; interp_jobs = []
     outlooks, changes = (dict(state.get("outlooks") or {}), dict(state.get("changes") or {})) if stage == "deep" else ({}, {})
     for t in state["targets"]:
         p = t["persona"]; occ = _occ_key(p)
@@ -246,24 +246,34 @@ def write_outlook(state: State) -> dict:
         if proxy: facts.insert(0, f"No official projection exists for this job; the figures below are for the closest official categories [{inv.get('unknown:' + proxy, '?')}]")
         if tasks: facts.append(f"{sum(1 for x in tasks if (x.value or 0) >= 0.6)} of {len(tasks)} tasks already show heavy AI use in observed AI conversations (Anthropic Economic Index) " + " ".join(f"[{inv[x.id]}]" for x in sorted(tasks, key=lambda c: -(c.value or 0))[:3]))
         interp = []
-        if tasks:   # no task evidence yet (lightweight cards) → facts only; the AI-change interpretation is written once deep evidence exists
-            try:
-                out, c_ = llm.chat_json("planner", OUTLOOK_SYS, f"Occupation: {p['title']}. Demand reading from projections: {demand}. Share of tasks with heavy AI use: {share:.0%}.\nEvidence:\n{_table(mine, refs)}", max_tokens=400, purpose="outlook_interpretation"); cost += c_
-                interp = [l for l in out.get("lines", []) if isinstance(l, str)][:3]
-            except Exception: interp = []
+        if tasks: interp_jobs.append((occ, f"Occupation: {p['title']}. Demand reading from projections: {demand}. Share of tasks with heavy AI use: {share:.0%}.\nEvidence:\n{_table(mine, refs)}"))   # written in parallel below
         wage = next((c for c in stats if c.id.endswith(":wage")), None)
         outlooks[occ] = {"soc": occ, "title": p["title"], "demand_reading": demand, "ai_change_reading": change if tasks else "pending", "facts": facts, "interpretation": interp, "education_entry": edu.claim.split("entry: ", 1)[-1].split(";")[0] if edu else None, "proxy_note": proxy,
                          "growth_pct": next((c.value for c in stats if c.id.endswith(":growth")), None), "openings": next((c.value for c in stats if c.id.endswith(":openings")), None), "median_wage": wage.value if wage else None, "evidence_level": "deep" if tasks else "light"}
         changes[occ] = _work_change(occ, tasks, inv)
         _say(f"{p['title']}: demand {demand} (BLS projection) · AI-related change {change} (interpretation)")
-    for occ, ch in changes.items():
-        cands = ch.pop("_candidates", None)
-        if not cands: continue
+    # the per-occupation model calls (outlook interpretation, 'more important' reasons) are independent → run them in parallel
+    from concurrent.futures import ThreadPoolExecutor
+    mi_jobs = [(occ, ch.pop("_candidates", None)) for occ, ch in changes.items()]; mi_jobs = [(o, c) for o, c in mi_jobs if c]
+    buf: list = []
+    def _interp(job):
+        diag.bind_collector(buf); occ, user = job
+        try: out, c_ = llm.chat_json("planner", OUTLOOK_SYS, user, max_tokens=400, purpose="outlook_interpretation"); return occ, [l for l in out.get("lines", []) if isinstance(l, str)][:3], c_
+        except Exception: return occ, [], 0.0
+    def _more(job):
+        diag.bind_collector(buf); occ, cands = job
         try:
-            out, c_ = llm.chat_json("planner", MORE_IMPORTANT_SYS, "Tasks with little or no observed AI use today:\n" + "\n".join(f"{i}. {x['task']} [{x['ref']}]" for i, x in enumerate(cands)), max_tokens=700, purpose="more_important"); cost += c_
-            picks = {int(d["i"]): d.get("why", "") for d in out.get("keep", []) if "i" in d}
-        except Exception: picks = {}
-        for i, x in enumerate(cands): (ch["more_important"] if i in picks else ch["uncertain"]).append({**x, "why": picks.get(i, "")})
+            out, c_ = llm.chat_json("planner", MORE_IMPORTANT_SYS, "Tasks with little or no observed AI use today:\n" + "\n".join(f"{i}. {x['task']} [{x['ref']}]" for i, x in enumerate(cands)), max_tokens=700, purpose="more_important")
+            return occ, {int(d["i"]): d.get("why", "") for d in out.get("keep", []) if "i" in d}, c_
+        except Exception: return occ, {}, 0.0
+    if interp_jobs or mi_jobs:
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            f1 = [ex.submit(_interp, j) for j in interp_jobs]; f2 = [ex.submit(_more, j) for j in mi_jobs]
+            for f in f1: occ, lines, c_ = f.result(); outlooks[occ]["interpretation"] = lines; cost += c_
+            for f, (occ, cands) in zip(f2, mi_jobs):
+                _, picks, c_ = f.result(); cost += c_
+                for i, x in enumerate(cands): (changes[occ]["more_important"] if i in picks else changes[occ]["uncertain"]).append({**x, "why": picks.get(i, "")})
+        diag.flush(buf)
     return {"outlooks": outlooks, "changes": changes, "cost_usd": cost}
 
 def _work_change(occ: str, tasks: list[Card], inv: dict) -> dict:

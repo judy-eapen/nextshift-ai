@@ -15,6 +15,8 @@ def _writer():
 
 def emit(kind: str, **kw):
     ev = {"diag": kind, "t": time.time(), **kw}
+    col = getattr(_local, "collector", None)
+    if col is not None: col.append(ev); return          # worker thread: buffered, flushed by the node thread (stream writers are not thread-safe across contexts)
     w = _writer()
     if w:
         try: w(ev); return
@@ -27,6 +29,19 @@ def capture_writer():
 
 def bind_writer(w):
     _local.writer = w
+
+def bind_collector(lst: list | None):
+    """In a worker thread: buffer events into lst (None to unbind). The spawning node thread calls flush(lst) afterwards."""
+    _local.collector = lst
+
+def flush(lst: list):
+    for ev in lst:
+        w = _writer()
+        if w:
+            try: w(ev); continue
+            except Exception: pass
+        FALLBACK.append(ev)
+    lst.clear()
 
 @contextmanager
 def span(kind: str, **kw):

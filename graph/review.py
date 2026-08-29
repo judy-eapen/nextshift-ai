@@ -89,10 +89,11 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 16, max_
     from concurrent.futures import ThreadPoolExecutor
     import pathlib as _pl, time as _t
     from . import diag
-    verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None; _w = diag.capture_writer(); _t0 = _t.perf_counter()
+    verdicts, cost, status = {}, 0.0, "verified"; judge_lines.last_error = None; _t0 = _t.perf_counter(); _buf: list = []
+    if role == "skeptic" and batch > 8: batch, workers = 8, max(workers, 6)   # thinking model: latency grows with batch size — small batches in parallel finish sooner for the same cost
     chunks = [items[b:b + batch] for b in range(0, len(items), batch)]
     def one(chunk):
-        diag.bind_writer(_w)
+        diag.bind_collector(_buf)
         try: return _judge_batch(chunk, system, max_tokens, role), None
         except Exception as e:
             out, err = {}, f"{type(e).__name__}: {str(e)[:300]}"; c_total = 0.0
@@ -110,5 +111,6 @@ def judge_lines(items: list[tuple[int, str]], system: str, batch: int = 16, max_
         for (got, c), err in ex.map(one, chunks):
             verdicts.update(got); cost += c
             if err: status = "unverified"; judge_lines.last_error = err
+    diag.flush(_buf)
     diag.emit("review", lines=len(items), batches=len(chunks), batch_size=batch, role=role, ms=round((_t.perf_counter() - _t0) * 1000), status=status)
     return verdicts, cost, status

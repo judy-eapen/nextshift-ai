@@ -252,7 +252,7 @@ SECTION_TITLES = {"energizes": "What energizes you", "strengths_demonstrated": "
 
 def render_understanding(state: StudentState) -> dict:
     _phase("understanding"); prof = state["profile"]; dump = {f: [{"value": e["value"], "quote": e.get("quote", "")} for e in prof.get(f, [])] for f in FIELDS if prof.get(f)}
-    try: out, cost = llm.chat_json("planner", UNDERSTAND_SYS, f"Profile: {json.dumps(dump)}\nLeanings: {prof.get('pidth')}\nContradictions: {prof.get('contradictions')}\nUnresolved: {prof.get('unresolved_questions')}\nThin conversation: {state['completeness'].get('thin')}", max_tokens=1200)
+    try: out, cost = llm.chat_json("planner", UNDERSTAND_SYS, f"Profile: {json.dumps(dump)}\nLeanings: {prof.get('pidth')}\nContradictions: {prof.get('contradictions')}\nUnresolved: {prof.get('unresolved_questions')}\nThin conversation: {state['completeness'].get('thin')}", max_tokens=900, purpose="understanding")
     except Exception as e: out, cost = {"sections": {k: "(could not write this section)" for k in SECTION_TITLES}}, 0.0
     sections = {k: (out.get("sections") or {}).get(k, "You didn't mention this yet.") for k in SECTION_TITLES}
     prof = {**prof, "summary_sections": sections}

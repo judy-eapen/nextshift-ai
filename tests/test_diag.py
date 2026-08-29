@@ -32,3 +32,20 @@ def test_span_records_failure():
         with diag.span("tool", name="X"): raise ValueError("boom")
     except ValueError: pass
     assert diag.FALLBACK[-1]["ok"] is False and diag.FALLBACK[-1]["ms"] >= 0
+
+def test_worker_thread_events_are_collected_and_flushed():
+    import threading
+    diag.FALLBACK.clear(); buf = []
+    def work():
+        diag.bind_collector(buf); diag.emit("llm", role="skeptic", model="m", ms=5, ok=True); diag.bind_collector(None)
+    th = threading.Thread(target=work); th.start(); th.join()
+    assert len(buf) == 1 and diag.FALLBACK == []
+    diag.flush(buf); assert buf == [] and diag.FALLBACK[-1]["role"] == "skeptic"
+
+def test_thinking_reviewer_uses_small_parallel_batches(monkeypatch):
+    from graph import review as rv
+    seen = []
+    def fake(chunk, system, max_tokens, role="skeptic"): seen.append(len(chunk)); return {j: {"verdict": "keep"} for j in range(len(chunk))}, 0.0
+    monkeypatch.setattr(rv, "_judge_batch", fake)
+    rv.judge_lines([(i, f"line {i}") for i in range(20)], "sys", batch=16, role="skeptic"); assert max(seen) <= 8
+    seen.clear(); rv.judge_lines([(i, f"line {i}") for i in range(20)], "sys", batch=30, role="extractor"); assert seen == [20]

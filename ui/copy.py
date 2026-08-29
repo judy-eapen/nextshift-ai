@@ -37,13 +37,15 @@ def steps(door: str) -> list[dict]:
           "more_title": "Exact, proxy, composite",
           "more": "**Exact** — the government tracks this job under this name. **Proxy** — the numbers come from the closest official category, and we say which. **Composite** — for modern jobs with no official category, we assemble the job from official task statements and label every number as coming from the pieces. At most two directions may be composites."}
     s5 = {"n": 5, "title": "We gather evidence", "tags": ["code"],
-          "body": "For each occupation, in parallel: **BLS** (projected growth, yearly openings, wages, typical entry education) · **O\\*NET** (what people actually do) · **Anthropic Economic Index** (which of those tasks AI is already used for) · "
-                  "**AIOE** (an academic measure of AI exposure) · **forecasting platforms** (how fast people expect AI to progress — shown as a range, never averaged)" + (" · **your own answers** (why a direction fits *you*)." if student else "."),
+          "body": ("Two levels. First, for every direction: **BLS** (projected growth, yearly openings, wages, typical entry education) and the **O\\*NET** description, plus **your own answers** (why a direction fits *you*). "
+                   "Then, only for the careers you react to: **Anthropic Economic Index** (which tasks AI is already used for), **AIOE** (an academic measure of AI exposure) and the detailed task list. **Forecasting platforms** (how fast people expect AI to progress — a range, never averaged) are read once per session."
+                   if student else "For your occupation, in parallel: **BLS** (projected growth, yearly openings, wages, typical entry education) · **O\\*NET** (what people actually do) · **Anthropic Economic Index** (which of those tasks AI is already used for) · "
+                   "**AIOE** (an academic measure of AI exposure) · **forecasting platforms** (how fast people expect AI to progress — shown as a range, never averaged)."),
           "callout": "Current AI use is not treated as proof that a career will disappear. It tells us where AI already helps; what that means for jobs is marked as interpretation.",
           "more_title": "When a source is down", "more": "A source that fails is marked *unavailable* and the result carries a partial-evidence badge. Missing numbers stay \"unknown\" — nothing is estimated to fill a gap."}
     s6 = {"n": 6, "title": "We check the recommendations", "tags": ["code", "AI"],
           "body": "Two checks, in order. First a fixed rule removes any statement that doesn't point at a source — a piece of career data" + (" or something you said" if student else "") + ". "
-                  "Then a separate AI reviewer (a different model from the writer) reads every remaining line against its source and removes what doesn't hold up" + (", including advice that ignores a constraint you stated or presents an opinion as fact." if student else f"; if more than {UNCITED_LIMIT:.0%} is removed the plan is rewritten once."),
+                  "Then a separate AI reviewer (a different model from the writer) reads every remaining line against its source and removes what doesn't hold up" + (", including advice that ignores a constraint you stated or presents an opinion as fact. The short first-round cards get a fast reviewer; the detailed cards, shortlist and deep dive get the stronger, slower one." if student else f"; if more than {UNCITED_LIMIT:.0%} is removed the plan is rewritten once."),
           "more_title": "If the reviewer fails",
           "more": "Everything you see is marked **UNVERIFIED** — on screen, on the journey indicator, and in the saved file's name. We never claim a check happened when it didn't. What was removed is always listed under *How we reached this*."}
     s7 = {"n": 7, "title": "You decide what happens next", "tags": ["you"],
@@ -72,14 +74,15 @@ def saved_copy(door: str, tracing_on: bool) -> dict:
     }
 
 # ───────────────────────────── For builders ─────────────────────────────
-STUDENT_ARCH = ["Adaptive interview", "structured profile (evidence: value · quote · turn)", "code-based completeness decision", "⏸ human confirmation", "career generation", "occupation resolution (exact → semantic → composite)",
-                "parallel evidence gathering (Send × occupation)", "fit and tradeoff analysis", "structured independent review", "⏸ student reactions", "⏸ discriminating questions", "⏸ shortlist and deep dive (what-ifs loop)", "⏸ final approval and memory"]
+STUDENT_ARCH = ["Adaptive interview (curated questions; one extraction call per answer)", "structured profile (evidence: value · quote · turn)", "code-based completeness decision", "⏸ human confirmation", "career generation", "occupation resolution (exact → semantic → composite; cached)",
+                "Level A: official outlook + O*NET description per direction (parallel, local data) → deterministic cards → fast review", "⏸ student reactions", "Level B: task-level AI-use evidence for the reacted-to careers only → detailed cards → thinking review",
+                "⏸ discriminating questions", "⏸ shortlist and deep dive (what-ifs loop; deep dives reused until reactions or constraints change)", "⏸ final approval and memory"]
 PRO_ARCH = ["Guided intake", "occupation resolution (exact → semantic → composite)", "restate what was understood", "⏸ human confirmation", "parallel evidence gathering (outlook · exposure · forecasts · research)",
             "reconcile (dedupe · disagreements · unknowns · deltas vs last snapshot)", "outlook + three task groups (code)", "plan writer", "independent reviewer (rewrite once if > 30 % removed)", "⏸ plan approval and memory"]
 
 MODEL_WORK = ["Interpreting substantive free-text answers into profile evidence", "Wording the next interview question (topic chosen by code)", "Generating candidate careers with cited rationales",
               "Writing fit rationales, card prose and the plan", "Comparing tradeoffs (shortlist, what-ifs)", "Producing deep dives", "Reviewing interpretive claims (a different model from the writer)"]
-DETERMINISTIC = [f"Interview completeness and the next-question goal", f"Maximum interview turns ({MAX_TURNS})", "Graph routing between nodes and gates", "Occupation-data lookup and composite assembly",
+DETERMINISTIC = [f"Interview completeness, the next-question goal and the curated question itself", f"Maximum interview turns ({MAX_TURNS})", "Which careers get deep evidence (the reacted-to set) and cache keys (dataset versions + TTL)", "Graph routing between nodes and gates", "Occupation-data lookup and composite assembly",
                  "Employment-outlook readings (BLS projection only) and the three task groups (observed AI use thresholds)", "Citation/reference validation — uncited lines removed before any model judges them; rationale lines must cite the student's own words",
                  "Certainty-wording lint (\"will disappear\", \"perfect fit\" …) regardless of citations", "Practical-mismatch lines (entry education vs stated limits)", "Cache keys for embeddings and source calls", "Approval requirements: no analysis before gate 1, no write before the final gate",
                  "Write boundary: `record` is the only node that writes", "Failure flags: unavailable sources, unknowns, UNVERIFIED review"]
