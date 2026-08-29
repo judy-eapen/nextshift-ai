@@ -23,7 +23,7 @@ def _profile_table(profile: dict) -> str:
 
 # ───────────────────────────── C1 generate candidates ─────────────────────────────
 GEN_SYS = """You propose career directions for ONE student from their confirmed profile. Produce 8-10 varied directions in three groups: "strong" (3-4), "explore" (3-4), "unexpected" (1-2, each justified by a concrete profile item, not novelty).
-Use real occupation names as they appear in the US O*NET / BLS taxonomy where possible (e.g. "Occupational Therapists", "User Experience Designers", "Electricians", "Market Research Analysts"). Modern roles without a category are fine (say so in needs_composite).
+Use real occupation names as they appear in the US O*NET / BLS taxonomy (e.g. "Occupational Therapists", "Web and Digital Interface Designers", "Electricians", "Market Research Analysts", "Clinical and Counseling Psychologists"). At most TWO directions may be modern roles without an official category (mark needs_composite true); everything else must be a real occupation title, so the student gets real outlook data.
 For EACH direction give a transparent rationale — every line must cite the profile refs it rests on, like [p:interests:0]:
 matches_interests · uses_strengths · fits_preferences · constraints_ok · constraints_conflict · why_included · poor_fit_if (one honest line).
 If the profile lists existing_career_ideas, EVERY one of them must appear as a candidate — placed honestly in strong / explore, or in a fourth group "reconsider" with the reason — so the student sees how their own ideas hold up.
@@ -42,7 +42,7 @@ def generate_candidates(state: StudentState) -> dict:
     for i, e in enumerate(prof.get("existing_career_ideas") or []):
         idea = e["value"]; present = any(_tok(idea) & _tok(c["label"] + " " + str(c.get("search_title", ""))) for c in cands)
         if not present and len(cands) < MAX_CANDIDATES + 2:
-            cands.append({"label": idea.title(), "search_title": idea, "group": "reconsider", "needs_composite": False,
+            cands.append({"label": idea.title(), "search_title": idea, "group": "reconsider", "needs_composite": False, "prefer_official": True,
                           "rationale": {"why_included": f"You said this was already on your mind [p:existing_career_ideas:{i}]", "matches_interests": [], "uses_strengths": [], "fits_preferences": [], "constraints_ok": [], "constraints_conflict": [], "poor_fit_if": "The evidence below will show whether it holds up."}})
     for i, c in enumerate(cands): c["key"] = f"k{i+1}"; c["group"] = c.get("group") if c.get("group") in GROUP_LABEL else "explore"; c.setdefault("rationale", {})
     _say(f"Thought of {len(cands)} directions: {sum(c['group']=='strong' for c in cands)} strong · {sum(c['group']=='explore' for c in cands)} worth exploring · {sum(c['group']=='unexpected' for c in cands)} unexpected")
@@ -65,6 +65,7 @@ def resolve_candidates(state: StudentState) -> dict:
                 return bool(A & B)
             top = r0["matches"][0] if r0.get("matches") else None; sim = (top or {}).get("similarity") or 0.0
             weak = r0["tier"] == 2 and (sim < 0.55 or (not _overlap(title, top["title"]) and sim < 0.72))   # semantic match must be strong, or share a meaningful word
+            if c.get("prefer_official") and top and sim >= 0.5: weak = False; c["needs_composite"] = False   # a named idea like "psychology" → the closest real occupation (Psychologists), not a composite
             r = rs.with_composites(r0, title, about if (c.get("needs_composite") or weak) else "")
             if r.get("composites") and (c.get("needs_composite") or r["tier"] == 0 or weak):
                 per = composite.persona_from(r["composites"][0], 2030); per.pop("horizon", None); c["resolution"] = "composite"
@@ -77,6 +78,14 @@ def resolve_candidates(state: StudentState) -> dict:
             soc = c["persona"]["soc"]; seen_soc[soc] = seen_soc.get(soc, 0) + 1
             if seen_soc[soc] > 2: c["persona"] = None; c["resolution"] = "dropped (duplicate occupation)"
     keep = [c for c in cands if c.get("persona")]
+    comps = [c for c in keep if c.get("resolution") == "composite"]
+    for c in comps[2:]:   # cap composites at two: beyond that, fall back to the closest official occupation or drop
+        try:
+            r0 = rs.resolve(c.get("search_title") or c["label"], "", k=3); m = r0["matches"][0] if r0.get("matches") else None
+            if m and (m.get("similarity") or 1.0) >= 0.5: c["persona"] = {"soc": m["soc"], "onet_soc": m.get("onet_soc") or f"{m['soc']}.00", "title": m["title"], "matched_via": f"tier {r0['tier']}"}; c["resolution"] = f"official (tier {r0['tier']}, composite cap)"
+            else: c["persona"] = None; c["resolution"] = "dropped (composite cap)"
+        except Exception: c["persona"] = None; c["resolution"] = "dropped (composite cap)"
+    keep = [c for c in keep if c.get("persona")]
     majors = {c["persona"]["soc"][:2] for c in keep}
     if keep and len(majors) < 3:   # too narrow (e.g. ten UX-flavoured roles): ask for directions outside these groups, resolve them, add up to 3
         try:
