@@ -62,3 +62,22 @@ def test_needs_contra_check_rules():
     assert S._needs_contra_check(prof, ["education_constraints"], 3, False) is True      # named careers + a hard education limit
     assert S._needs_contra_check(prof, ["education_constraints"], 3, True) is False      # primary already found one
     assert S._needs_contra_check(prof, ["work_preferences"], 3, False) is False          # no negative touched
+
+def test_same_question_is_never_shown_twice(monkeypatch):
+    c = Counter({"question": S.GOALS["constraints"][2][0]}); monkeypatch.setattr(llm, "chat_json", c)   # model would echo the first question
+    st = fresh(); q1 = S.GOALS["constraints"][2][0]
+    st = turn(st, "I am open to it", goal="constraints"); st["turns"][-1]["question"] = q1
+    st["completeness"] = {**st["completeness"], "next_question_goal": "constraints"}
+    out = S.select_question(st); assert out["pending"]["question"] != q1 and out["pending"]["source"] == "curated" and c.calls == []
+    st = turn(st, "two years", goal="constraints"); st["turns"][-1]["question"] = out["pending"]["question"]
+    out2 = S.select_question(st); assert out2["pending"]["question"] not in {t["question"] for t in st["turns"]}
+
+def test_every_goal_has_at_least_two_curated_questions():
+    for g, (_, fields, bank) in S.GOALS.items():
+        if g != "clarify": assert len(bank) >= 2, g
+
+def test_exhausted_topic_is_not_repicked_while_others_remain():
+    st = fresh()
+    for i, g in enumerate(["constraints", "energizing", "constraints"], 1): st = turn(st, "vague", goal=g, i=i)
+    st["last_action"] = "answer"; comp = S.evaluate_completeness(st)["completeness"]
+    assert comp["next_question_goal"] not in ("constraints", None)

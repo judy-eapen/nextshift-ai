@@ -61,13 +61,18 @@ GOALS = {   # goal → (priority, fields it informs, fallback questions in order
     "interests": (2, ["interests"], ["Which subjects or topics do you keep coming back to, even when nobody asks you to?", "If you could spend a semester on one subject only, which one — and what about it?"]),
     "strengths_example": (3, ["demonstrated_strengths", "claimed_strengths"], ["What's something people come to you for help with? Can you think of a time it happened?", "Tell me about something you made, fixed, organized or figured out that you were quietly proud of."]),
     "negatives": (4, ["dislikes", "growth_areas", "not_yet_learned"], ["What kind of work or schoolwork drains you — and is that because you dislike it, or because it's hard right now?", "Is there anything you'd want to avoid in a job, even if it paid well?"]),
-    "pidth": (5, ["pidth", "work_preferences"], ["When you picture a good workday, which sounds closest: working with people, working with ideas, working with data, working with technology, or working with your hands? Pick one or two and say why."]),
-    "work_style": (6, ["work_preferences", "lifestyle_preferences"], ["Do you do your best work with a clear plan and structure, or when you can figure things out your own way? Alone, or on a team?"]),
-    "constraints": (7, ["education_constraints", "financial_constraints", "location_constraints", "time_constraints"], ["Practically speaking — how much school are you open to after high school, and does cost or staying near home matter a lot?"]),
+    "pidth": (5, ["pidth", "work_preferences"], ["When you picture a good workday, which sounds closest: working with people, working with ideas, working with data, working with technology, or working with your hands? Pick one or two and say why.",
+                                                 "Think of a school project you'd happily do again. Was the good part the people, the problem, the numbers, the tools, or making something with your hands?"]),
+    "work_style": (6, ["work_preferences", "lifestyle_preferences"], ["Do you do your best work with a clear plan and structure, or when you can figure things out your own way? Alone, or on a team?",
+                                                                    "When a group project goes well, what role did you end up playing — the organizer, the idea person, the one who finishes, the one who keeps everyone talking?"]),
+    "constraints": (7, ["education_constraints", "financial_constraints", "location_constraints", "time_constraints"], ["Practically speaking — how much school are you open to after high school, and does cost or staying near home matter a lot?",
+                                                                                                                       "If you had to choose: start earning in about two years, or spend four or more years in school first? And would cost or being far from home change that answer?"]),
     "values_impact": (8, ["values", "desired_impact"], ["When you imagine work that feels worth doing, what does it do for other people — or for you?", "What matters more to you right now: stability, creativity, helping people, making things, being an expert, earning well? Pick two."]),
-    "lifestyle": (9, ["lifestyle_preferences"], ["What kind of life do you want work to fit around — travel, a steady schedule, working from anywhere, being outdoors, building something of your own?"]),
-    "existing_ideas": (3, ["existing_career_ideas"], ["Are any careers already on your mind — even half-formed ones — or something a parent or teacher suggested?"]),
-    "uncertainties": (11, ["uncertainties"], ["What are you most unsure about when you think about all this?"]),
+    "lifestyle": (9, ["lifestyle_preferences"], ["What kind of life do you want work to fit around — travel, a steady schedule, working from anywhere, being outdoors, building something of your own?",
+                                                 "Picture yourself at 30 on a normal Tuesday. Where are you, and what does the day look like?"]),
+    "existing_ideas": (3, ["existing_career_ideas"], ["Are any careers already on your mind — even half-formed ones — or something a parent or teacher suggested?",
+                                                     "Is there a job you've ruled out, or one you'd secretly like if you thought you could do it?"]),
+    "uncertainties": (11, ["uncertainties"], ["What are you most unsure about when you think about all this?", "If you could get one question about your future answered right now, what would it be?"]),
     "clarify": (0, [], ["I noticed two things that seem to pull in different directions — can you help me understand how they fit together?"]),
 }
 
@@ -113,13 +118,17 @@ def select_question(state: StudentState) -> dict:
     if not turns: return {"pending": {"goal": goal, "question": bank[0]}}    # the fixed opener — no model call before the student has said anything
     # Normal path is deterministic: code picked the goal, the curated bank supplies the wording (contradiction clarifiers are templated from the quotes above).
     # The model writes a question ONLY when this goal's bank is exhausted and we still need to ask about it — a genuinely new angle is required.
-    if goal == "clarify" or asked < len(bank): return {"pending": {"goal": goal, "question": fallback, "source": "curated"}}
+    already = {t.get("question", "") for t in turns}
+    if goal == "clarify" or asked < len(bank):
+        if fallback in already: fallback = next((q for q in bank if q not in already), fallback)   # never show the same sentence twice
+        return {"pending": {"goal": goal, "question": fallback, "source": "curated"}}
     last = turns[-1]
     ctx = f"GOAL: {goal} (about: {', '.join(GOALS[goal][1])}).\nQUESTIONS ALREADY ASKED ON THIS TOPIC (do not repeat their angle): {bank}\nBASE QUESTION: {fallback}\nStudent's last answer (for an optional ≤8-word lead-in only; if it is '(not sure)' or '(skipped)' use NO lead-in): {last.get('answer', '')[:200]}"
     try:
         out, cost = llm.chat_json("planner", QUESTION_SYS, ctx, max_tokens=120, temperature=0.3, purpose="question_new_angle"); q = (out.get("question") or fallback).strip()
-        if len(q) > 260 or "?" not in q: q = fallback
+        if len(q) > 260 or "?" not in q or q in already: q = fallback
     except Exception: q, cost = fallback, 0.0
+    if q in already: q = "Let me ask that a different way — " + q[0].lower() + q[1:]   # last resort: still never an identical repeat
     return {"pending": {"goal": goal, "question": q, "source": "model"}, "cost_usd": cost}
 
 def interview_gate(state: StudentState) -> dict:
@@ -222,14 +231,15 @@ def evaluate_completeness(state: StudentState) -> dict:
     asked = {}; [asked.__setitem__(t["goal"], asked.get(t["goal"], 0) + 1) for t in turns]
     last_goal = turns[-1]["goal"] if turns else None
     def score(g):
-        pr, fields, _ = GOALS[g]
+        pr, fields, bank = GOALS[g]
         if g == "clarify": return 100 if open_contra and asked.get("clarify", 0) < 2 else -1
         if asked.get(g, 0) >= 2 or g == last_goal: return -1
+        if asked.get(g, 0) >= len(bank): return -0.5   # curated questions for this topic are used up — only if nothing else is left (then the model writes a new angle)
         gap = 3 - min(rank.index(cov.get(f, "none")) if f != "pidth" else rank.index(cov["pidth"]) for f in fields) if fields else 0
         core_bonus = 2 if any(f in ("energizing_activities", "interests", "demonstrated_strengths", "dislikes", "pidth", "education_constraints", "values") for f in fields) else 0
         if g == "existing_ideas" and asked.get(g, 0) == 0 and len(turns) >= 2: core_bonus = 3      # always ask once, early — students often already have names in mind
         return gap * 3 + core_bonus - pr * 0.2
-    goals = sorted((g for g in GOALS), key=score, reverse=True); nxt = goals[0] if score(goals[0]) > 0 else None
+    goals = sorted((g for g in GOALS), key=score, reverse=True); nxt = goals[0] if score(goals[0]) > 0 else (goals[0] if score(goals[0]) == -0.5 and rank.index(cov.get(GOALS[goals[0]][1][0], "none")) < 2 else None)
     ready = (not missing and asked.get("existing_ideas", 0) >= 1 and not any(c.get("blocking") for c in open_contra) and (nxt is None or substantive >= TARGET_TURNS[0])) or act == "recommend" or len(turns) >= state["max_turns"]
     if act == "more" and len(turns) < state["max_turns"]: ready = False
     reason = ("You asked for recommendations" if act == "recommend" else f"Reached the {state['max_turns']}-question limit" if len(turns) >= state["max_turns"] else
