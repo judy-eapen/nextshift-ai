@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">How NextShift AI works behind the scenes</title>
+  <desc id="desc">Career exploration is deterministic and uses a local catalog without a model. Guided analysis uses LangGraph to hold state, choose the next step, call evidence tools, pause for human decisions, and coordinate a writer and independent reviewer model.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0f16"/><stop offset="1" stop-color="#111b29"/></linearGradient>
+    <linearGradient id="agent" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#162536"/><stop offset=".5" stop-color="#201a31"/><stop offset="1" stop-color="#17261f"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000" flood-opacity=".25"/></filter>
+    <marker id="amberArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e5a24a"/></marker>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7fc8e8"/></marker>
+    <style>text{font-family:Inter,Arial,sans-serif;fill:#e9eef5}.eyebrow{font-size:16px;font-weight:800;letter-spacing:3px;fill:#e5a24a}.h1{font-size:39px;font-weight:820}.sub{font-size:18px;fill:#9eabba}.title{font-size:17px;font-weight:780}.body{font-size:14px;fill:#aeb9c8}.small{font-size:12px;fill:#8f9dad}.micro{font-size:11px;fill:#8996a5}.tag{font-size:11px;font-weight:850;letter-spacing:1.4px}.nodeTitle{font-size:14px;font-weight:780}.eq{font-size:19px;font-weight:800}.sourceTitle{font-size:14px;font-weight:800}.sourceBody{font-size:11.5px;fill:#9da9b8}</style>
+  </defs>
+  <rect width="1600" height="1120" rx="24" fill="url(#bg)"/>
+  <text x="64" y="54" class="eyebrow">NEXTSHIFT AI · HOW IT ACTUALLY WORKS</text>
+  <text x="64" y="101" class="h1">Two paths through the same career intelligence system</text>
+  <text x="64" y="137" class="sub">Browsing is fixed and instant. The agentic workflow begins only when you ask NextShift to interpret, research or personalize.</text>
+
+  <rect x="64" y="170" width="1472" height="104" rx="17" fill="url(#agent)" stroke="#40536a" filter="url(#shadow)"/>
+  <text x="90" y="203" class="tag" fill="#b48cff">WHAT IS THE AGENT?</text>
+  <text x="90" y="237" class="eq">Agent = language model + evidence tools + saved state + fixed rules + a bounded loop</text>
+  <line x1="942" y1="191" x2="942" y2="255" stroke="#40536a"/>
+  <text x="970" y="203" class="tag" fill="#e5a24a">WHAT DOES LANGGRAPH DO?</text>
+  <text x="970" y="229" class="title">It is the traffic controller—not the model.</text>
+  <text x="970" y="251" class="small">Keeps state · chooses the next node · calls tools · pauses for you · limits retries · resumes</text>
+
+  <g transform="translate(64 294)"><circle cx="8" cy="8" r="7" fill="#8fbf9f"/><text x="22" y="13" class="small">YOU decide</text><circle cx="132" cy="8" r="7" fill="#7fc8e8"/><text x="146" y="13" class="small">CODE is deterministic</text><circle cx="324" cy="8" r="7" fill="#b48cff"/><text x="338" y="13" class="small">MODEL is probabilistic</text><circle cx="534" cy="8" r="7" fill="#e5a24a"/><text x="548" y="13" class="small">TOOLS fetch evidence</text></g>
+
+  <!-- deterministic explorer lane -->
+  <rect x="64" y="330" width="718" height="468" rx="20" fill="#101923" stroke="#3d5b73"/>
+  <rect x="64" y="330" width="718" height="58" rx="20" fill="#162433"/><rect x="64" y="368" width="718" height="20" fill="#162433"/>
+  <text x="90" y="359" class="tag" fill="#7fc8e8">PATH A · EXPLORE A CAREER</text><text x="90" y="381" class="small">Fast, deterministic browsing · no agent and no model call</text>
+  <rect x="96" y="416" width="174" height="82" rx="14" fill="#15251f" stroke="#5f9074"/><text x="112" y="443" class="tag" fill="#8fbf9f">[YOU]</text><text x="112" y="469" class="nodeTitle">Search or browse</text><text x="112" y="488" class="micro">“helping animals”</text>
+  <path d="M273 457H317" stroke="#7fc8e8" stroke-width="3" marker-end="url(#blueArrow)"/>
+  <rect x="322" y="416" width="194" height="82" rx="14" fill="#152230" stroke="#4f718c"/><text x="338" y="443" class="tag" fill="#7fc8e8">[FIXED CODE]</text><text x="338" y="469" class="nodeTitle">Search the catalog</text><text x="338" y="488" class="micro">rank · filter · group</text>
+  <path d="M519 457H563" stroke="#7fc8e8" stroke-width="3" marker-end="url(#blueArrow)"/>
+  <rect x="568" y="416" width="182" height="82" rx="14" fill="#15251f" stroke="#5f9074"/><text x="584" y="443" class="tag" fill="#8fbf9f">[YOU]</text><text x="584" y="469" class="nodeTitle">Open and compare</text><text x="584" y="488" class="micro">save · react · explore</text>
+  <rect x="96" y="530" width="654" height="102" rx="14" fill="#18212d" stroke="#a67231"/><text x="116" y="557" class="tag" fill="#e5a24a">LOCAL EVIDENCE USED</text><text x="116" y="584" class="body">O*NET career facts + BLS jobs, wages and outlook + Anthropic task-use data + AIOE exposure</text><text x="116" y="610" class="small">Loaded from the cached 1,017-career catalog. No API or language model is needed.</text>
+  <rect x="96" y="660" width="654" height="102" rx="14" fill="#11202a" stroke="#4f718c"/><text x="116" y="687" class="tag" fill="#7fc8e8">DETERMINISTIC MEANS</text><text x="116" y="714" class="body">The same career data and query produce the same search, filters, labels and figures.</text><text x="116" y="740" class="small">Code applies published thresholds. It does not invent prose or decide what career fits you.</text>
+
+  <!-- agentic lane -->
+  <rect x="818" y="330" width="718" height="468" rx="20" fill="#121621" stroke="#6d5493"/>
+  <rect x="818" y="330" width="718" height="58" rx="20" fill="#211a30"/><rect x="818" y="368" width="718" height="20" fill="#211a30"/>
+  <text x="844" y="359" class="tag" fill="#b48cff">PATH B · ASK NEXTSHIFT FOR GUIDANCE</text><text x="844" y="381" class="small">Agentic: state + decisions + tools + models + human gates</text>
+  <rect x="848" y="412" width="154" height="72" rx="13" fill="#15251f" stroke="#5f9074"/><text x="864" y="438" class="tag" fill="#8fbf9f">[YOU]</text><text x="864" y="463" class="nodeTitle">Answer a question</text>
+  <path d="M1005 448H1037" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/>
+  <rect x="1042" y="412" width="184" height="72" rx="13" fill="#1d182b" stroke="#795ca7"/><text x="1058" y="438" class="tag" fill="#b48cff">[MODEL]</text><text x="1058" y="463" class="nodeTitle">Interpret the answer</text>
+  <path d="M1229 448H1261" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/>
+  <polygon points="1349,406 1434,448 1349,490 1264,448" fill="#172536" stroke="#e5a24a"/><text x="1349" y="443" text-anchor="middle" class="tag" fill="#7fc8e8">[CODE]</text><text x="1349" y="462" text-anchor="middle" class="small">Enough context?</text>
+  <path d="M1349 493V519H925V488" fill="none" stroke="#7fc8e8" stroke-width="2.5" marker-end="url(#blueArrow)"/><text x="1122" y="515" class="micro" fill="#7fc8e8">NO · choose the next topic and loop</text>
+  <path d="M1437 448H1492V548H1452" fill="none" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/><text x="1454" y="437" class="micro" fill="#e5a24a">YES</text>
+  <rect x="848" y="536" width="604" height="70" rx="13" fill="#182332" stroke="#b27d3a"/><text x="864" y="562" class="tag" fill="#e5a24a">LANGGRAPH FANS OUT TOOLS IN PARALLEL</text><text x="864" y="586" class="small">BLS outlook · O*NET tasks · AI exposure · forecasts · Epoch/FRED context</text>
+  <path d="M1150 609V634" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/>
+  <rect x="848" y="642" width="176" height="82" rx="13" fill="#1d182b" stroke="#795ca7"/><text x="864" y="668" class="tag" fill="#b48cff">[WRITER MODEL]</text><text x="864" y="694" class="nodeTitle">Draft guidance</text><text x="864" y="713" class="micro">probabilistic wording</text>
+  <path d="M1027 683H1051" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/>
+  <rect x="1056" y="642" width="176" height="82" rx="13" fill="#152230" stroke="#4f718c"/><text x="1072" y="668" class="tag" fill="#7fc8e8">[FIXED CODE]</text><text x="1072" y="694" class="nodeTitle">Validate citations</text><text x="1072" y="713" class="micro">deterministic guardrails</text>
+  <path d="M1235 683H1259" stroke="#e5a24a" stroke-width="3" marker-end="url(#amberArrow)"/>
+  <rect x="1264" y="642" width="188" height="82" rx="13" fill="#1d182b" stroke="#795ca7"/><text x="1280" y="668" class="tag" fill="#b48cff">[REVIEWER MODEL]</text><text x="1280" y="694" class="nodeTitle">Challenge each line</text><text x="1280" y="713" class="micro">separate model family</text>
+  <rect x="848" y="744" width="604" height="36" rx="18" fill="#173027" stroke="#5f9074"/><text x="1150" y="767" text-anchor="middle" class="small" fill="#b8e1c6">YOU confirm · react before deeper evidence · approve before saving</text>
+
+  <rect x="64" y="826" width="1472" height="88" rx="16" fill="#141d29" stroke="#d09342"/>
+  <text x="90" y="855" class="tag" fill="#e5a24a">LANGGRAPH'S JOB THROUGHOUT PATH B</text>
+  <text x="90" y="882" class="body">Remember state → route to the next node → run independent branches → wait at human gates → resume from checkpoints → stop bounded loops</text>
+  <text x="90" y="902" class="small">LangGraph does not “think.” Models interpret and write; tools retrieve; fixed code validates; LangGraph coordinates who acts next.</text>
+
+  <!-- sources -->
+  <text x="64" y="950" class="tag" fill="#e5a24a">WHAT EACH EVIDENCE SOURCE CONTRIBUTES</text>
+  <g filter="url(#shadow)">
+    <rect x="64" y="968" width="232" height="112" rx="13" fill="#182332" stroke="#4a667f"/><text x="82" y="994" class="sourceTitle">O*NET</text><text x="82" y="1017" class="sourceBody">Tasks · interests · work setting</text><text x="82" y="1036" class="sourceBody">knowledge · preparation · related jobs</text><text x="82" y="1062" class="micro">What is the work?</text>
+    <rect x="310" y="968" width="232" height="112" rx="13" fill="#182332" stroke="#4a667f"/><text x="328" y="994" class="sourceTitle">BLS</text><text x="328" y="1017" class="sourceBody">Jobs · wages · openings · education</text><text x="328" y="1036" class="sourceBody">growth or decline through 2035</text><text x="328" y="1062" class="micro">What is the market?</text>
+    <rect x="556" y="968" width="232" height="112" rx="13" fill="#1b1929" stroke="#795ca7"/><text x="574" y="994" class="sourceTitle">Anthropic Index</text><text x="574" y="1017" class="sourceBody">Observed AI use in specific tasks</text><text x="574" y="1036" class="sourceBody">current use—not predicted job loss</text><text x="574" y="1062" class="micro">Where is AI used now?</text>
+    <rect x="802" y="968" width="232" height="112" rx="13" fill="#1b1929" stroke="#795ca7"/><text x="820" y="994" class="sourceTitle">AIOE</text><text x="820" y="1017" class="sourceBody">Academic exposure index based</text><text x="820" y="1036" class="sourceBody">on abilities used by the occupation</text><text x="820" y="1062" class="micro">Which work is exposed?</text>
+    <rect x="1048" y="968" width="232" height="112" rx="13" fill="#211d18" stroke="#b27d3a"/><text x="1066" y="994" class="sourceTitle">Forecast markets</text><text x="1066" y="1017" class="sourceBody">Polymarket · Manifold · Metaculus</text><text x="1066" y="1036" class="sourceBody">ranges and disagreement</text><text x="1066" y="1062" class="micro">What might happen next?</text>
+    <rect x="1294" y="968" width="242" height="112" rx="13" fill="#211d18" stroke="#b27d3a"/><text x="1312" y="994" class="sourceTitle">Epoch AI + FRED</text><text x="1312" y="1017" class="sourceBody">AI capability/compute trends</text><text x="1312" y="1036" class="sourceBody">and U.S. unemployment context</text><text x="1312" y="1062" class="micro">What is the wider context?</text>
+  </g>
+</svg>

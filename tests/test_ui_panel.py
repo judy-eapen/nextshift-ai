@@ -37,7 +37,8 @@ def test_open_and_close_preserve_stage_and_payload():
 def test_dialog_shows_plain_language_steps_and_saved_copy():
     at = open_button(app_at()).click().run(); md = all_markdown(at)
     for s in ("We listen before recommending", "You confirm what we understood", "We check the recommendations", "You decide what happens next"): assert s in md
-    assert "How an answer becomes a career decision" in md and "official facts stay separate from AI interpretation" in md
+    assert "Path A explores careers using deterministic code" in md and "LangGraph stores state" in md
+    for source in ("O*NET", "BLS", "Anthropic Economic Index", "AIOE", "Prediction markets", "Epoch AI + FRED"): assert source in md
     assert "Current AI use is not treated as proof" in md and "Nothing is published or sent to an employer" in md and "developer tracing is off" in md
 
 def test_no_secrets_or_env_names_anywhere():

@@ -130,7 +130,7 @@ def test_behind_the_scenes_covers_the_explorer():
     at = app({"kind": "home"})
     assert any("How does NextShift create these results?" in b.label for b in at.button)
     at = next(b for b in at.sidebar.button if "behind the scenes" in b.label).click().run(); t = md(at)
-    assert "How an answer becomes a career decision" in t and "Structured occupational data builds the catalog" in t and "Deterministic code handles browsing" in t and "The student approves before a final plan is saved" in t and "1,017" in t
+    assert "Path A explores careers using deterministic code" in t and "LangGraph stores state" in t and "Structured occupational data builds the catalog" in t and "Deterministic code handles browsing" in t and "The student approves before a final plan is saved" in t and "1,017" in t
 
 def test_render_times_are_immediate():
     t0 = time.perf_counter(); app({"kind": "home"}); app({"kind": "search", "q": "nurse"}); app({"kind": "career", "id": "29-1141.00"}); dt = time.perf_counter() - t0

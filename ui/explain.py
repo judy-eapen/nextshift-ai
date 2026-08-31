@@ -22,25 +22,6 @@ CSS = """<style>
 .bts-callout { border-left:3px solid #E5A24A; background:#E5A24A14; padding:8px 12px; margin:8px 0; font-weight:600; }
 .bts-arch { font-family: 'IBM Plex Mono', monospace; font-size:12.5px; line-height:1.7; color:#E6EAF0; } .bts-arch .g { color:#E5A24A; }
 .bts-small { color:#8A94A6; font-size:12px; }
-.map-shell { background:#0D131B; border:1px solid #344255; border-radius:14px; padding:16px; margin:8px 0 18px; }
-.map-title { font-size:18px; font-weight:750; color:#E6EAF0; margin-bottom:3px; }
-.map-sub { color:#8A94A6; font-size:12px; margin-bottom:14px; }
-.map-flow { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; align-items:stretch; }
-.map-node { position:relative; border:1px solid #2A3544; background:#121821; border-radius:10px; padding:10px; min-height:105px; }
-.map-node:not(:last-child)::after { content:'\2192'; position:absolute; right:-9px; top:42%; z-index:2; color:#E5A24A; font-weight:800; }
-.map-node b { display:block; color:#E6EAF0; font-size:12px; margin:3px 0 5px; }
-.map-node span { display:block; color:#8A94A6; font-size:10.5px; line-height:1.35; }
-.map-role { color:#7FC8E8 !important; font-size:9.5px !important; letter-spacing:.12em; text-transform:uppercase; font-weight:700; }
-.map-role.ai { color:#B48CFF !important; } .map-role.you { color:#8FBF9F !important; } .map-role.data { color:#E5A24A !important; }
-.map-trust { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin-top:9px; }
-.map-chip { border-radius:8px; background:#18212D; padding:7px 9px; color:#AEB7C5; font-size:10.5px; }
-.map-chip b { color:#E6EAF0; }
-@media (max-width: 760px) {
-  .map-flow { grid-template-columns:1fr; }
-  .map-node { min-height:auto; }
-  .map-node:not(:last-child)::after { content:'\2193'; right:50%; top:auto; bottom:-14px; }
-  .map-trust { grid-template-columns:1fr 1fr; }
-}
 </style>"""
 
 # ───────────────────────────── developer mode + tracing ─────────────────────────────
@@ -105,10 +86,11 @@ def sidebar(S):
 def behind_the_scenes(S):
     st.markdown(CSS, unsafe_allow_html=True)
     door = "student" if S.get("door") == "student" else "professional"
-    t1, t2, t3 = st.tabs(["How NextShift works", "What is saved?", "For builders"])
-    with t1: tab_how(S, door)
-    with t2: tab_saved(S, door)
-    with t3: tab_builders(S, door)
+    t1, t2, t3, t4 = st.tabs(["How NextShift works", "Step by step", "What is saved?", "For builders"])
+    with t1: tab_overview(S, door)
+    with t2: tab_how(S, door)
+    with t3: tab_saved(S, door)
+    with t4: tab_builders(S, door)
 
 def _here(S, door) -> int | None:
     steps = journey(S); cur = next((i for i, s in enumerate(steps) if s["state"] == "current"), None)
@@ -120,9 +102,15 @@ def _inline(s: str) -> str:
     """Inline markdown (**bold**, *italic*) does not render inside an HTML block, so convert it; also unescape the O\\*NET escape."""
     return _I.sub(r"<i>\1</i>", _B.sub(r"<b>\1</b>", s)).replace("O\\*NET", "O*NET")
 
+def tab_overview(S, door):
+    """The default view is deliberately visual; detailed prose lives in the next tab."""
+    img = ROOT / "design" / "nextshift-how-it-works.svg"
+    st.image(str(img), width="stretch")
+    st.markdown("<div class='j-sr'>How NextShift actually works. Path A explores careers using deterministic code and a local catalog with no model call. Path B is an agentic workflow: LangGraph stores state, chooses the next node, calls evidence tools, runs branches in parallel, pauses for human decisions, limits loops, and resumes. Language models interpret answers, draft guidance and independently review claims; fixed code searches, routes and validates. Sources include O*NET, BLS, Anthropic Economic Index, AIOE, Prediction markets, and Epoch AI + FRED.</div>", unsafe_allow_html=True)
+    st.markdown("<p class='bts-small' style='text-align:center'>Green = your decisions · blue = deterministic code · purple = probabilistic model work · amber = evidence tools and orchestration</p>", unsafe_allow_html=True)
+
 def tab_how(S, door):
     st.markdown(f"<p class='bts-small'>{CP.INTRO}</p>", unsafe_allow_html=True)
-    architecture_map(door)
     if door == "student":
         with st.expander("If you started in the Career Explorer", expanded=S.get("stage") == "explore"):
             for s in CP.explorer_steps():
@@ -135,38 +123,6 @@ def tab_how(S, door):
         if s.get("callout"): st.markdown(f"<div class='bts-callout'>{s['callout']}</div>", unsafe_allow_html=True)
         with st.expander(s["more_title"]): st.markdown(s["more"])
     st.markdown(f"<p class='bts-small'>{CP.LEGEND}</p>", unsafe_allow_html=True)
-
-def architecture_map(door: str):
-    """A compact, responsive system map. Copy is pinned to the implemented boundaries; opening it performs no work."""
-    if door == "student":
-        nodes = [
-            ("you", "1 · You explore", "Search 1,017 careers, save possibilities, react, or ask for guidance."),
-            ("code", "2 · Code organizes", "Local O*NET + BLS catalog; deterministic search, families, filters and comparison."),
-            ("ai", "3 · Agent understands", "Interprets your answers and proposes directions; saved careers are clues, not choices."),
-            ("data", "4 · Tools find evidence", "BLS outlook · O*NET tasks · AEI/AIOE AI use · forecasts and research when requested."),
-            ("ai", "5 · Reviewer checks", "Fixed citation checks, then a separate model removes claims the evidence does not support."),
-        ]
-        ending = "You react, shortlist and approve before anything is saved"
-    else:
-        nodes = [
-            ("you", "1 · You describe work", "Role, real weekly tasks, industry and the future you want to examine."),
-            ("code", "2 · Code resolves it", "Exact occupation, semantic match, or a labelled composite from official tasks."),
-            ("data", "3 · Tools find evidence", "BLS outlook · O*NET tasks · AEI/AIOE AI use · forecasts and research in parallel."),
-            ("ai", "4 · Agent writes a plan", "Outlook, task changes and a 30-day / 6-month / 1-year preparation plan."),
-            ("ai", "5 · Reviewer checks", "A separate model tests each factual line against its evidence."),
-        ]
-        ending = "You approve or reject before the plan is saved"
-    cards = "".join(f"<div class='map-node'><span class='map-role {role}'>{'[you]' if role == 'you' else '[AI]' if role == 'ai' else '[data]' if role == 'data' else '[code]'}</span><b>{title}</b><span>{body}</span></div>" for role, title, body in nodes)
-    st.markdown(
-        "<div class='map-shell'><div class='map-title'>How an answer becomes a career decision</div>"
-        "<div class='map-sub'>The visible path through the system — official facts stay separate from AI interpretation.</div>"
-        f"<div class='map-flow'>{cards}</div>"
-        "<div class='map-trust'>"
-        "<div class='map-chip'><b>Evidence first</b><br>Facts carry a source and year</div>"
-        "<div class='map-chip'><b>No invented gaps</b><br>Missing information stays unknown</div>"
-        "<div class='map-chip'><b>Bounded workflow</b><br>Retries and loops have limits</div>"
-        f"<div class='map-chip'><b>Human in control</b><br>{ending}</div>"
-        "</div></div>", unsafe_allow_html=True)
 
 def tab_saved(S, door):
     c = CP.saved_copy(door, tracing_on())
