@@ -1,0 +1,243 @@
+<title>NextShift System Poster</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#EFF3F6; --card:#FFFFFF; --ink:#131A22; --muted:#5B6774; --line:#D7DFE6; --soft:#F6F9FB;
+    --amber:#B9761C; --amber-bg:#FBF3E6; --teal:#1E7C9F; --teal-bg:#E9F4F8; --green:#37734E; --green-bg:#EAF4EE;
+    --purple:#6E51B2; --purple-bg:#F1EDFA; --red:#B5533E; --red-bg:#FAEDEA;
+    --disp:'Archivo','IBM Plex Sans',system-ui,sans-serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  body{background:var(--paper); color:var(--ink); font-family:var(--body); font-size:13px; line-height:1.45; margin:0; padding:24px 12px;}
+  .wrap{overflow-x:auto;}
+  .poster{width:1680px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; display:grid; grid-template-columns:318px 1fr 330px; gap:14px; box-shadow:0 10px 40px rgba(19,26,34,.10);}
+  .head{grid-column:1/-1; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; border-bottom:3px solid var(--ink); padding:2px 4px 14px;}
+  .brand{display:flex; gap:14px; align-items:center;}
+  .mark{width:54px;height:54px;border-radius:12px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font:800 26px var(--disp);}
+  .brand h1{font:800 34px/1 var(--disp); margin:0; letter-spacing:-.01em;}
+  .brand .tag{font:600 15px var(--disp); color:var(--amber); margin-top:4px;}
+  .brand .sub{color:var(--muted); max-width:560px; margin-top:4px;}
+  .course{text-align:right; color:var(--muted); font-family:var(--mono); font-size:11.5px; line-height:1.7;}
+  .legend{grid-column:1/-1; display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:-4px 4px 0; color:var(--muted); font-size:12px;}
+  .pill{display:inline-block; border-radius:999px; padding:3px 11px; font:600 11.5px var(--body); border:1.5px solid;}
+  .p-green{color:var(--green); background:var(--green-bg); border-color:var(--green);} .p-amber{color:var(--amber); background:var(--amber-bg); border-color:var(--amber);}
+  .p-purple{color:var(--purple); background:var(--purple-bg); border-color:var(--purple);} .p-teal{color:var(--teal); background:var(--teal-bg); border-color:var(--teal);}
+  .col{display:flex; flex-direction:column; gap:14px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .card h2{font:700 14px var(--disp); text-transform:uppercase; letter-spacing:.08em; margin:0 0 10px; display:flex; gap:8px; align-items:center;}
+  .card h2 .dot{width:10px;height:10px;border-radius:3px;background:var(--amber);display:inline-block}
+  ul.tick{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+  ul.tick li{padding-left:22px;position:relative;}
+  ul.tick li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700;}
+  ul.feat{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  ul.feat li{display:flex;gap:9px;} ul.feat .ic{flex:0 0 20px;text-align:center}
+  .persona{background:var(--soft);border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;}
+  .persona .q{font:600 14px var(--disp);} .persona .step{padding-left:16px;position:relative;color:var(--muted);}
+  .persona .step::before{content:"→";position:absolute;left:0;color:var(--teal);font-weight:700;}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .metric{background:var(--soft);border-radius:10px;padding:9px 11px;}
+  .metric b{display:block;font:600 16px var(--mono);} .metric span{color:var(--muted);font-size:11.5px;}
+  /* center */
+  .center{display:flex;flex-direction:column;gap:12px;}
+  .center>.title{font:700 17px var(--disp);text-align:center;color:var(--ink);letter-spacing:.02em;margin-top:2px;}
+  .stage{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--soft);}
+  .stage h3{margin:0 0 8px;font:700 13px var(--disp);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .chip{font:500 10.5px var(--mono);border:1px solid var(--line);border-radius:6px;padding:2px 7px;background:var(--card);color:var(--muted);}
+  .xrail{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+  .xnode{background:var(--card);border:1.5px solid var(--green);border-radius:10px;padding:8px 10px;font-size:12px;}
+  .xnode b{display:block;font:600 12.5px var(--disp);color:var(--green);}
+  .arrow{ text-align:center;color:var(--muted);font-size:15px;line-height:.9; margin:-4px 0;}
+  .graphgrid{display:grid;grid-template-columns:188px 1fr 196px;gap:10px;align-items:start;}
+  .rail{display:flex;flex-direction:column;gap:8px;}
+  .rail .card{padding:10px 12px;} .rail h4{margin:0 0 6px;font:700 12px var(--disp);text-transform:uppercase;letter-spacing:.07em;}
+  .rail ul{margin:0;padding:0 0 0 2px;list-style:none;display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);}
+  .rail li b{color:var(--ink);font-weight:600;}
+  .pipe{display:flex;flex-direction:column;}
+  .node{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;gap:10px;align-items:flex-start;}
+  .node .n{flex:0 0 24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font:700 12px var(--disp);margin-top:1px;}
+  .node b{font:600 13px var(--disp);display:block;} .node span{color:var(--muted);font-size:11.8px;display:block;margin-top:1px;}
+  .node.gate{border-color:var(--teal);background:var(--teal-bg);} .node.gate .n{background:var(--teal);}
+  .node.ai{border-color:var(--purple);} .node.ai .n{background:var(--purple);}
+  .node.write{border-color:var(--green);background:var(--green-bg);} .node.write .n{background:var(--green);}
+  .branch{margin:2px 0 2px 34px;border-left:2px dashed var(--red);padding:2px 0 2px 10px;color:var(--red);font-size:11.5px;}
+  .tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .tools .chip{border-color:var(--purple);color:var(--purple);background:var(--purple-bg);}
+  .srcchips{display:flex;gap:6px;flex-wrap:wrap;}
+  /* right column */
+  ol.how{list-style:none;margin:0;padding:0;counter-reset:h;display:flex;flex-direction:column;gap:8px;}
+  ol.how li{counter-increment:h;padding-left:30px;position:relative;}
+  ol.how li::before{content:counter(h);position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;font:700 11px var(--disp);display:flex;align-items:center;justify-content:center;}
+  .stack{display:flex;gap:6px;flex-wrap:wrap;} .stack .chip{font-size:11px;color:var(--ink);}
+  .foot{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;border-top:3px solid var(--ink);padding-top:12px;}
+  .fcell{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--muted);}
+  .fcell .ic{flex:0 0 26px;height:26px;border-radius:8px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;}
+  .fcell b{color:var(--ink);display:block;font:600 12px var(--disp);}
+  .honest{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:0 8px 8px 0;padding:8px 10px;font-size:11.8px;color:#6B4B14;}
+</style>
+<div class="wrap"><div class="poster">
+  <div class="head">
+    <div class="brand">
+      <div class="mark">⟶</div>
+      <div>
+        <h1>NextShift AI</h1>
+        <div class="tag">What AI does to your work, with receipts.</div>
+        <div class="sub">A Career Explorer over every U.S. occupation plus an evidence-gathering agent that helps students discover a direction and professionals prepare for change — without ever inventing a number.</div>
+      </div>
+    </div>
+    <div class="course">Maven · Mastering Agentic AI · Week 3<br>Judy Darvin · AI Builder · 2026-08-30<br>github.com/judy-eapen/nextshift-ai</div>
+  </div>
+  <div class="legend"><b style="font:700 12px var(--disp)">EVERY LINE ON A CAREER PAGE IS LABELLED —</b>
+    <span class="pill p-green">Official source</span><span class="pill p-amber">Derived by a fixed rule</span><span class="pill p-purple">Written by AI · reviewed</span><span class="pill p-teal">Personal to you</span>
+    <span>— the model is never the source of a fact.</span>
+  </div>
+
+  <div class="col">
+    <div class="card"><h2><span class="dot"></span>What it does</h2>
+      <ul class="feat">
+        <li><span class="ic">🔭</span><div>Explore <b>1,017 real careers</b> instantly — search plain words, browse 16 families, 7 “what you like doing” traits, 18 school subjects</div></li>
+        <li><span class="ic">✨</span><div>Surfaces careers students never hear about, fast-growing and declining ones, and the difference between them</div></li>
+        <li><span class="ic">🧾</span><div>Career pages answer 15 questions; every figure names its source, year and retrieval date</div></li>
+        <li><span class="ic">🤖</span><div>Reviewed AI summaries on request — generated once, cached for everyone</div></li>
+        <li><span class="ic">💬</span><div>Adaptive interview for students; guided intake for professionals; saved careers become quoted evidence, never a choice</div></li>
+        <li><span class="ic">📋</span><div>Evidence-cited 30-day / 6-month / 1-year preparation plan, approved by the person before it is saved</div></li>
+      </ul>
+    </div>
+    <div class="card"><h2><span class="dot" style="background:var(--green)"></span>Key outcomes</h2>
+      <ul class="tick">
+        <li><b>0 model calls</b> while browsing, searching or comparing</li>
+        <li>Every factual line cites an evidence card [cNN]</li>
+        <li>A <b>different model family</b> reviews every claim</li>
+        <li>Missing data says “not available” — never estimated</li>
+        <li>Jobs with no official category become <b>labelled composites</b></li>
+        <li>Nothing written without explicit human approval</li>
+      </ul>
+    </div>
+    <div class="card"><h2><span class="dot" style="background:var(--teal)"></span>Example user</h2>
+      <div class="persona">
+        <div class="q">“I’m good at math, and I like helping people.”</div>
+        <div class="step">Search → Mathematicians, Statisticians in 7 ms</div>
+        <div class="step">Saves 3 careers, marks one “understand better”</div>
+        <div class="step">Interview asks: “visual creation, or working out what people need?”</div>
+        <div class="step">Shortlist → deep dive → ways to test it this semester</div>
+        <div class="step">Approves the exploration → saved, with its evidence</div>
+      </div>
+    </div>
+    <div class="card"><h2><span class="dot" style="background:var(--purple)"></span>Success metrics</h2>
+      <div class="metrics">
+        <div class="metric"><b>≈5 ms</b><span>search, no AI</span></div>
+        <div class="metric"><b>≈150 ms</b><span>any explorer screen</span></div>
+        <div class="metric"><b>≈$0.01</b><span>professional plan</span></div>
+        <div class="metric"><b>≈$0.03</b><span>full student exploration</span></div>
+        <div class="metric"><b>63 evals</b><span>27 explorer · 12 professional · 24 student</span></div>
+        <div class="metric"><b>164 tests</b><span>incl. “model is never a source”</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="title">SYSTEM ARCHITECTURE</div>
+    <div class="stage">
+      <h3>🖥️ Streamlit web app <span class="chip">Explore careers</span><span class="chip">Help me find my direction</span><span class="chip">Professional planning</span><span class="chip">Behind-the-scenes panel</span><span class="chip">Developer mode</span></h3>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="stage">
+      <h3>🔭 Career Explorer — deterministic, <span style="color:var(--green)">zero model calls</span></h3>
+      <div class="xrail">
+        <div class="xnode"><b>Catalog build · 1.5 s</b>O*NET 31.0 × BLS EP 2025–35 × AEI × AIOE → 1,017 records, provenance per field</div>
+        <div class="xnode"><b>Browse · search · filter</b>families · traits · subjects · collections · “matched: …” explanations</div>
+        <div class="xnode"><b>Career page</b>stat tiles + reviewed narrative brief · 15-question detail in 4 labelled layers</div>
+        <div class="xnode"><b>Save · react · compare ≤4</b>consistent rows, no score, no winner</div>
+      </div>
+    </div>
+    <div class="arrow">▼ &nbsp;<span style="font:500 11px var(--mono);color:var(--teal)">saved careers + reactions travel as quoted evidence — “saving is not choosing”</span>&nbsp; ▼</div>
+    <div class="graphgrid">
+      <div class="rail">
+        <div class="card"><h4>🗄️ Memory layer — SQLite</h4>
+          <ul>
+            <li><b>Checkpoints</b> every turn → resume, edit an earlier answer</li>
+            <li><b>Snapshots</b> per approved run → “since you last looked” deltas</li>
+            <li><b>Versioned caches</b> resolver · forecasts · O*NET WS · AI summaries</li>
+            <li><b>record</b> is the only node that ever writes a result</li>
+          </ul>
+        </div>
+        <div class="honest">Honesty rules: no official category → composite from 18K task statements, proxies labelled · no projection → “unknown”, never a guess · reviewer down → <b>UNVERIFIED</b>, loudly.</div>
+      </div>
+      <div class="pipe">
+        <div class="node gate"><div class="n">1</div><div><b>Adaptive interview ⏸ every turn</b><span>code picks the topic from coverage gaps &amp; contradictions; curated questions; model only interprets answers</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node gate"><div class="n">2</div><div><b>Understanding gate ⏸</b><span>the person confirms what was understood — before a single lookup is spent</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node ai"><div class="n">3</div><div><b>Candidates + occupation resolution</b><span>8–10 directions, rationale citing the student’s own words [p:field:i] · exact → semantic → composite</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node"><div class="n">4</div><div><b>Evidence gatherers — parallel fan-out per occupation</b>
+          <div class="tools"><span class="chip">BLS projections</span><span class="chip">O*NET tasks</span><span class="chip">Anthropic Economic Index</span><span class="chip">AIOE</span><span class="chip">Polymarket · Manifold · Metaculus</span><span class="chip">Epoch AI · FRED</span></div></div></div>
+        <div class="arrow">▼</div>
+        <div class="node"><div class="n">5</div><div><b>Reconcile — pure code</b><span>dedupe · disagreements shown, never averaged · unknowns kept · deltas vs last snapshot</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node ai"><div class="n">6</div><div><b>Writers</b><span>demand readings &amp; task groups computed in code · cards, shortlist, deep dive, plan written by the planner model — every line cites [cNN]</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node ai"><div class="n">7</div><div><b>Independent reviewer — different model family</b><span>lints first (certainty · absolute fit · numbers must sit on the cited card), then line-by-line verdicts</span></div></div>
+        <div class="branch">&gt;30% stripped → rewrite once → else escalate · reviewer unreachable → UNVERIFIED banner + filename tag</div>
+        <div class="arrow">▼</div>
+        <div class="node gate"><div class="n">8</div><div><b>Human approval ⏸</b><span>read, edit, approve or reject — reject writes nothing</span></div></div>
+        <div class="arrow">▼</div>
+        <div class="node write"><div class="n">✓</div><div><b>record — the only writer</b><span>plan / exploration file + evidence snapshot + profile memory</span></div></div>
+      </div>
+      <div class="rail">
+        <div class="card"><h4>🧠 Model layer — Nebius, open-weight</h4>
+          <ul>
+            <li><b>Qwen3-235B</b> planner &amp; writer</li>
+            <li><b>Qwen3-Next-80B Thinking</b> reviewer — deliberately a different family</li>
+            <li><b>Qwen3-30B</b> extractor (cheap, high volume)</li>
+            <li><b>Qwen3-Embedding-8B</b> occupation &amp; task matching</li>
+          </ul>
+        </div>
+        <div class="card"><h4>📚 Data sources</h4>
+          <div class="srcchips"><span class="chip">BLS EP 2025–35</span><span class="chip">BLS OES 2025</span><span class="chip">O*NET 31.0</span><span class="chip">Anthropic Economic Index</span><span class="chip">AIOE (Felten)</span><span class="chip">Polymarket</span><span class="chip">Manifold</span><span class="chip">Metaculus</span><span class="chip">Epoch AI</span><span class="chip">FRED</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card"><h2><span class="dot" style="background:var(--teal)"></span>How it works (high level)</h2>
+      <ol class="how">
+        <li>You browse a catalog built from official data — instantly, no AI involved</li>
+        <li>Every figure carries its source and year; gaps say “data not available”</li>
+        <li>You save careers and react; comparing shows the same rows for each, never a score</li>
+        <li>On request, a model summarizes a page — from its sourced facts only</li>
+        <li>Fixed checks and a second model strip anything unsupported</li>
+        <li>The interview uses what you saved as things you noticed, not chose</li>
+        <li>Evidence is gathered in parallel and disagreements are shown side by side</li>
+        <li>You approve before anything is saved; next time it shows what changed</li>
+      </ol>
+    </div>
+    <div class="card"><h2><span class="dot" style="background:var(--amber)"></span>Data &amp; trust</h2>
+      <ul class="tick">
+        <li>Evidence-first: every claim traces to a card with source + date</li>
+        <li>Outlook (BLS) kept separate from AI task use (observed, not a forecast) — a career can be both AI-heavy and growing</li>
+        <li>No “AI-proof”, no safety scores, no personality labels — linted out</li>
+        <li>Confidence, unknowns and disagreement shown, never averaged</li>
+        <li>Privacy: local files, no accounts, tracing off outside developer mode</li>
+      </ul>
+    </div>
+    <div class="card"><h2><span class="dot"></span>Tech stack</h2>
+      <div class="stack"><span class="chip">LangGraph</span><span class="chip">LangChain</span><span class="chip">Streamlit</span><span class="chip">Nebius Token Factory</span><span class="chip">Qwen3 (open-weight)</span><span class="chip">SQLite checkpoints</span><span class="chip">pandas · PyArrow</span><span class="chip">pydantic v2</span><span class="chip">pytest · AppTest</span><span class="chip">Playwright (QA)</span></div>
+    </div>
+    <div class="card"><h2><span class="dot" style="background:var(--red)"></span>Deliberately hard cases</h2>
+      <ul class="tick">
+        <li>“Product Manager” — no official category → composite, human ticks the tasks</li>
+        <li>Source outage → partial-evidence badge, run continues</li>
+        <li>Reviewer outage → UNVERIFIED, never silent</li>
+        <li>Declining career → openings still shown (“fewer jobs ≠ no way in”)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="fcell"><div class="ic">👩‍💻</div><div><b>Judy Darvin · AI Builder</b>Building agents that empower learners and professionals to decide with evidence.</div></div>
+    <div class="fcell"><div class="ic">🎯</div><div><b>What drives this project</b>Students only know a few dozen careers; headlines never say how confident anyone is or what to do next.</div></div>
+    <div class="fcell"><div class="ic">🔒</div><div><b>Privacy &amp; security</b>No accounts; files stay on the machine it runs on; reject at any gate and nothing is written.</div></div>
+    <div class="fcell"><div class="ic">🎓</div><div><b>Designed for people</b>Plain language first, receipts one click away, developer detail only in developer mode.</div></div>
+    <div class="fcell"><div class="ic">🚀</div><div><b>Future</b>Adjacent-career paths from O*NET skill similarity · precomputed summaries · accounts · watch-list alerts · Next.js front end.</div></div>
+  </div>
+</div></div>

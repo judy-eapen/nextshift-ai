@@ -1,0 +1,418 @@
+{
+ "summary": {
+  "passed": 25,
+  "total": 25,
+  "median_ms": 0.4,
+  "llm_calls": 0,
+  "network_calls": 0,
+  "catalog": {
+   "version": "cat1",
+   "records": 1017,
+   "direct": 867,
+   "detailed": 149,
+   "composite": 1,
+   "coverage": {
+    "emp_2025": 0.946,
+    "growth_pct": 0.946,
+    "openings_annual": 0.946,
+    "education_entry": 0.946,
+    "job_zone": 0.908,
+    "aioe": 0.79,
+    "observed_exposure": 0.884,
+    "ai_task_share": 0.909,
+    "median_wage": 0.94
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "x01",
+   "kind": "title",
+   "ms": 5.4,
+   "checks": {
+    "first": true,
+    "explained": true
+   },
+   "detail": [
+    "29-1141.00",
+    "29-1141.03",
+    "15-1211.01",
+    "29-1141.01",
+    "29-1141.02"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x02",
+   "kind": "title",
+   "ms": 5.3,
+   "checks": {
+    "first": true,
+    "explained": true
+   },
+   "detail": [
+    "15-1252.00",
+    "15-1299.07",
+    "15-1253.00",
+    "15-1254.00",
+    "composite:product-manager"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x03",
+   "kind": "title",
+   "ms": 5.2,
+   "checks": {
+    "first": true,
+    "explained": true
+   },
+   "detail": [
+    "27-1024.00",
+    "15-1254.00",
+    "27-1022.00",
+    "17-1021.00",
+    "27-1014.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x04",
+   "kind": "title",
+   "ms": 5.4,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "11-2021.00",
+    "composite:product-manager",
+    "11-9041.01",
+    "11-3051.02",
+    "11-3051.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x05",
+   "kind": "activity",
+   "ms": 5.0,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "45-2093.00",
+    "33-9011.00",
+    "19-1011.00",
+    "29-1131.00",
+    "31-9096.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x06",
+   "kind": "activity",
+   "ms": 5.9,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "49-3022.00",
+    "49-3023.00",
+    "49-3021.00",
+    "17-3027.01",
+    "53-6031.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x07",
+   "kind": "activity",
+   "ms": 5.6,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "45-2092.00",
+    "11-9013.00",
+    "19-1013.00",
+    "37-3011.00",
+    "37-1012.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x08",
+   "kind": "activity",
+   "ms": 5.0,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "25-2057.00",
+    "25-2011.00",
+    "25-2012.00",
+    "25-2058.00",
+    "19-3034.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x09",
+   "kind": "activity",
+   "ms": 4.9,
+   "checks": {
+    "in_top": true,
+    "explained": true
+   },
+   "detail": [
+    "15-1255.01",
+    "49-9091.00",
+    "27-1014.00",
+    "39-3099.00",
+    "33-3031.00"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x10",
+   "kind": "subject",
+   "ms": 0.4,
+   "checks": {
+    "expect_in": true,
+    "min_count": true
+   },
+   "detail": 135,
+   "pass": true
+  },
+  {
+   "id": "x11",
+   "kind": "subject",
+   "ms": 0.1,
+   "checks": {
+    "expect_in": true,
+    "min_count": true
+   },
+   "detail": 95,
+   "pass": true
+  },
+  {
+   "id": "x12",
+   "kind": "subject",
+   "ms": 0.1,
+   "checks": {
+    "expect_in": true,
+    "min_count": true
+   },
+   "detail": 104,
+   "pass": true
+  },
+  {
+   "id": "x13",
+   "kind": "collection",
+   "ms": 247.0,
+   "checks": {
+    "not_in": true,
+    "min_count": true,
+    "no_residual": true
+   },
+   "detail": 620,
+   "pass": true
+  },
+  {
+   "id": "x14",
+   "kind": "collection",
+   "ms": 0.3,
+   "checks": {
+    "growth": true,
+    "expect_in": true
+   },
+   "detail": 72,
+   "pass": true
+  },
+  {
+   "id": "x15",
+   "kind": "collection",
+   "ms": 0.2,
+   "checks": {
+    "class": true,
+    "expect_in": true
+   },
+   "detail": 225,
+   "pass": true
+  },
+  {
+   "id": "x16",
+   "kind": "collection",
+   "ms": 0.1,
+   "checks": {
+    "min_count": true,
+    "class": true,
+    "ai": true
+   },
+   "detail": 14,
+   "pass": true
+  },
+  {
+   "id": "x17",
+   "kind": "collection",
+   "ms": 0.3,
+   "checks": {
+    "min_count": true,
+    "ai_share": true
+   },
+   "detail": 287,
+   "pass": true
+  },
+  {
+   "id": "x18",
+   "kind": "record",
+   "ms": 0.0,
+   "checks": {
+    "kind": true,
+    "none:emp_2025": true,
+    "none:growth_pct": true,
+    "none:openings_annual": true,
+    "none:aioe": true,
+    "none:observed_exposure": true,
+    "growth_class": true,
+    "proxies": true
+   },
+   "detail": "Product Manager (composite)",
+   "pass": true
+  },
+  {
+   "id": "x19",
+   "kind": "record",
+   "ms": 0.0,
+   "checks": {
+    "kind": true,
+    "bls_note": true
+   },
+   "detail": "Video Game Designers",
+   "pass": true
+  },
+  {
+   "id": "x20",
+   "kind": "record",
+   "ms": 0.0,
+   "checks": {
+    "kind": true,
+    "growth_class": true,
+    "ai_class": true,
+    "related": true,
+    "tasks": true
+   },
+   "detail": "Software Developers",
+   "pass": true
+  },
+  {
+   "id": "x21",
+   "kind": "record",
+   "ms": 0.0,
+   "checks": {
+    "kind": true,
+    "growth_class": true,
+    "openings": true
+   },
+   "detail": "Graphic Designers",
+   "pass": true
+  },
+  {
+   "id": "x22",
+   "kind": "facts",
+   "ms": 0.4,
+   "checks": {
+    "unavailable": true,
+    "sourced": true,
+    "no_fabrication": true
+   },
+   "detail": [
+    "aioe",
+    "bls_factors",
+    "industries",
+    "licensing"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x23",
+   "kind": "facts",
+   "ms": 0.1,
+   "checks": {
+    "unavailable": true,
+    "sourced": true,
+    "no_fabrication": true
+   },
+   "detail": [
+    "aioe",
+    "bls_factors",
+    "education_entry",
+    "emp_change",
+    "employment_2025",
+    "employment_2035",
+    "growth_pct",
+    "industries",
+    "interests",
+    "job_zone",
+    "knowledge",
+    "licensing",
+    "median_wage",
+    "observed_exposure",
+    "openings_annual",
+    "related",
+    "work_activities",
+    "work_context"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x24",
+   "kind": "compare",
+   "ms": 0.2,
+   "checks": {
+    "rows": true,
+    "no_words": true
+   },
+   "detail": [
+    "Software Developers",
+    "Registered Nurses",
+    "Architects, Except Landscape and Naval",
+    "Graphic Designers"
+   ],
+   "pass": true
+  },
+  {
+   "id": "x25",
+   "kind": "family_coverage",
+   "ms": 1.6,
+   "checks": {
+    "all_have_family": true,
+    "min_per_family": true
+   },
+   "detail": {
+    "health": 123,
+    "tech": 47,
+    "science": 82,
+    "design": 39,
+    "business": 188,
+    "law": 31,
+    "education": 76,
+    "trades": 243,
+    "engineering": 88,
+    "environment": 68,
+    "media": 36,
+    "community": 28,
+    "transport": 81,
+    "hospitality": 63,
+    "safety": 70,
+    "emerging": 52
+   },
+   "pass": true
+  }
+ ]
+}

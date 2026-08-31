@@ -1,0 +1,1229 @@
+{
+  "summary": {
+    "passed": 2,
+    "total": 4,
+    "median_seconds": 341,
+    "total_cost_usd": 0.1349
+  },
+  "results": [
+    {
+      "id": "s01",
+      "seconds": 336,
+      "turns": 9,
+      "candidates": 10,
+      "cards": 151,
+      "stripped": 13,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Producer",
+        "Event Operations Manager"
+      ],
+      "cost_usd": 0.0338,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "turns_between": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true,
+        "no_fear_words": true,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "All criteria met: why_fit lines directly reference student's own words; BLS facts separated from interpretations; no career guarantees made; cost and education constraints acknowledged in practical_mismatch; experiments are low-cost and actionable without invented courses/schools.",
+      "diagnostics": [],
+      "perf": {
+        "total_graph_ms": 305128,
+        "nodes_ms": {
+          "build_shortlist": {
+            "count": 1,
+            "ms": 87251
+          },
+          "review_cards": {
+            "count": 1,
+            "ms": 81410
+          },
+          "deep_dive": {
+            "count": 1,
+            "ms": 72871
+          },
+          "generate_candidates": {
+            "count": 1,
+            "ms": 14713
+          },
+          "update_profile": {
+            "count": 9,
+            "ms": 13379
+          },
+          "resolve_candidates": {
+            "count": 1,
+            "ms": 8950
+          },
+          "analyze_fit": {
+            "count": 1,
+            "ms": 7141
+          },
+          "gather_outlook": {
+            "count": 10,
+            "ms": 5554
+          },
+          "render_understanding": {
+            "count": 1,
+            "ms": 4774
+          },
+          "review_cards_light": {
+            "count": 1,
+            "ms": 3577
+          },
+          "update_from_reactions": {
+            "count": 1,
+            "ms": 1838
+          },
+          "write_outlook_deep": {
+            "count": 1,
+            "ms": 1701
+          },
+          "apply_discriminators": {
+            "count": 1,
+            "ms": 689
+          },
+          "gather_exposure": {
+            "count": 2,
+            "ms": 640
+          },
+          "discriminate": {
+            "count": 1,
+            "ms": 603
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 32
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 3
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "init_interview": {
+            "count": 1,
+            "ms": 0
+          },
+          "select_question": {
+            "count": 9,
+            "ms": 0
+          },
+          "interview_gate": {
+            "count": 18,
+            "ms": 0
+          },
+          "evaluate_completeness": {
+            "count": 9,
+            "ms": 0
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 0
+          },
+          "analyze_fit_light": {
+            "count": 1,
+            "ms": 0
+          },
+          "render_results": {
+            "count": 1,
+            "ms": 0
+          },
+          "reaction_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile_deep": {
+            "count": 1,
+            "ms": 0
+          },
+          "refresh_results": {
+            "count": 1,
+            "ms": 0
+          },
+          "discriminator_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "shortlist_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "explore_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "save_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 30,
+        "llm_ms": 475816,
+        "llm_by_role": {
+          "planner": {
+            "calls": 23,
+            "ms": 65831,
+            "tokens_in": 53896,
+            "tokens_out": 8234,
+            "cost_usd": 0.0157,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "extractor": {
+            "calls": 1,
+            "ms": 3575,
+            "tokens_in": 468,
+            "tokens_out": 147,
+            "cost_usd": 0.0001,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 6,
+            "ms": 406410,
+            "tokens_in": 8410,
+            "tokens_out": 41872,
+            "cost_usd": 0.0201,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 6,
+        "reviewer_ms": 406410,
+        "tool_calls": 24,
+        "tool_ms": 6196,
+        "tools_failed": 0,
+        "tokens_in": 62774,
+        "tokens_out": 50253,
+        "cost_usd": 0.0359,
+        "cache": {
+          "hit": 16,
+          "miss": 15
+        },
+        "top5": [
+          [
+            "node:build_shortlist",
+            87251
+          ],
+          [
+            "node:review_cards",
+            81410
+          ],
+          [
+            "node:deep_dive",
+            72871
+          ],
+          [
+            "node:generate_candidates",
+            14713
+          ],
+          [
+            "node:update_profile",
+            13379
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "interview",
+            "wall_s": 0.1
+          },
+          {
+            "kind": "interview",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.1
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.6
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.6
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.4
+          },
+          {
+            "kind": "understanding",
+            "wall_s": 7.7
+          },
+          {
+            "kind": "results",
+            "wall_s": 27.9
+          },
+          {
+            "kind": "discriminate",
+            "wall_s": 93.0
+          },
+          {
+            "kind": "shortlist",
+            "wall_s": 88.0
+          },
+          {
+            "kind": "deep_dive",
+            "wall_s": 72.9
+          },
+          {
+            "kind": "save",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "s08",
+      "seconds": 356,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 155,
+      "stripped": 15,
+      "review_status": "verified",
+      "shortlist": [
+        "Medical Assistant",
+        "Occupational Therapist"
+      ],
+      "cost_usd": 0.0322,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "reaches_understanding": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "constraint_conflicts_marked": true,
+        "saved": true,
+        "why_uses_profile_refs": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": false,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "respects_constraints false because location constraint not addressed in all cards (e.g., Registered Nurse, Physical Therapist cards don't mention city location)",
+      "diagnostics": [],
+      "perf": {
+        "total_graph_ms": 299180,
+        "nodes_ms": {
+          "deep_dive": {
+            "count": 1,
+            "ms": 105777
+          },
+          "review_cards": {
+            "count": 1,
+            "ms": 72424
+          },
+          "build_shortlist": {
+            "count": 1,
+            "ms": 51158
+          },
+          "update_profile": {
+            "count": 8,
+            "ms": 32123
+          },
+          "resolve_candidates": {
+            "count": 1,
+            "ms": 9781
+          },
+          "generate_candidates": {
+            "count": 1,
+            "ms": 8241
+          },
+          "analyze_fit": {
+            "count": 1,
+            "ms": 5908
+          },
+          "review_cards_light": {
+            "count": 1,
+            "ms": 3424
+          },
+          "render_understanding": {
+            "count": 1,
+            "ms": 3282
+          },
+          "write_outlook_deep": {
+            "count": 1,
+            "ms": 2452
+          },
+          "apply_discriminators": {
+            "count": 1,
+            "ms": 2057
+          },
+          "discriminate": {
+            "count": 1,
+            "ms": 1259
+          },
+          "update_from_reactions": {
+            "count": 1,
+            "ms": 1202
+          },
+          "gather_exposure": {
+            "count": 2,
+            "ms": 46
+          },
+          "gather_outlook": {
+            "count": 10,
+            "ms": 26
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 10
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 5
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "render_results": {
+            "count": 1,
+            "ms": 1
+          },
+          "refresh_results": {
+            "count": 1,
+            "ms": 1
+          },
+          "init_interview": {
+            "count": 1,
+            "ms": 0
+          },
+          "select_question": {
+            "count": 8,
+            "ms": 0
+          },
+          "interview_gate": {
+            "count": 16,
+            "ms": 0
+          },
+          "evaluate_completeness": {
+            "count": 8,
+            "ms": 0
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 0
+          },
+          "analyze_fit_light": {
+            "count": 1,
+            "ms": 0
+          },
+          "reaction_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile_deep": {
+            "count": 1,
+            "ms": 0
+          },
+          "discriminator_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "shortlist_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "explore_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "save_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 32,
+        "llm_ms": 526988,
+        "llm_by_role": {
+          "planner": {
+            "calls": 20,
+            "ms": 75160,
+            "tokens_in": 31671,
+            "tokens_out": 7568,
+            "cost_usd": 0.0109,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "extractor": {
+            "calls": 4,
+            "ms": 25041,
+            "tokens_in": 1030,
+            "tokens_out": 284,
+            "cost_usd": 0.0002,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 8,
+            "ms": 426787,
+            "tokens_in": 9717,
+            "tokens_out": 43862,
+            "cost_usd": 0.0212,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 8,
+        "reviewer_ms": 426787,
+        "tool_calls": 25,
+        "tool_ms": 71,
+        "tools_failed": 0,
+        "tokens_in": 42418,
+        "tokens_out": 51714,
+        "cost_usd": 0.0323,
+        "cache": {
+          "hit": 16,
+          "miss": 16
+        },
+        "top5": [
+          [
+            "node:deep_dive",
+            105777
+          ],
+          [
+            "node:review_cards",
+            72424
+          ],
+          [
+            "node:build_shortlist",
+            51158
+          ],
+          [
+            "node:update_profile",
+            32123
+          ],
+          [
+            "node:resolve_candidates",
+            9781
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "interview",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "interview",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.4
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.2
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.9
+          },
+          {
+            "kind": "interview",
+            "wall_s": 4.4
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.5
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "understanding",
+            "wall_s": 23.0
+          },
+          {
+            "kind": "results",
+            "wall_s": 21.5
+          },
+          {
+            "kind": "discriminate",
+            "wall_s": 83.3
+          },
+          {
+            "kind": "shortlist",
+            "wall_s": 53.3
+          },
+          {
+            "kind": "deep_dive",
+            "wall_s": 105.8
+          },
+          {
+            "kind": "save",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": false
+    },
+    {
+      "id": "s19",
+      "seconds": 288,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 140,
+      "stripped": 13,
+      "review_status": "verified",
+      "shortlist": [
+        "Video Editor",
+        "Event Planner"
+      ],
+      "cost_usd": 0.0356,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "min_candidates": true,
+        "three_groups": true,
+        "saved": true,
+        "removed_absent": true,
+        "removed_absent_in_why": true,
+        "why_uses_profile_refs": true
+      },
+      "rubric_notes": null,
+      "diagnostics": [],
+      "perf": {
+        "total_graph_ms": 270225,
+        "nodes_ms": {
+          "deep_dive": {
+            "count": 1,
+            "ms": 76025
+          },
+          "review_cards": {
+            "count": 1,
+            "ms": 70899
+          },
+          "build_shortlist": {
+            "count": 1,
+            "ms": 68952
+          },
+          "update_profile": {
+            "count": 8,
+            "ms": 17159
+          },
+          "generate_candidates": {
+            "count": 1,
+            "ms": 8899
+          },
+          "analyze_fit": {
+            "count": 1,
+            "ms": 6610
+          },
+          "resolve_candidates": {
+            "count": 1,
+            "ms": 5735
+          },
+          "review_cards_light": {
+            "count": 1,
+            "ms": 5233
+          },
+          "render_understanding": {
+            "count": 1,
+            "ms": 3691
+          },
+          "update_from_reactions": {
+            "count": 1,
+            "ms": 2301
+          },
+          "apply_discriminators": {
+            "count": 1,
+            "ms": 2015
+          },
+          "write_outlook_deep": {
+            "count": 1,
+            "ms": 1912
+          },
+          "discriminate": {
+            "count": 1,
+            "ms": 691
+          },
+          "gather_outlook": {
+            "count": 10,
+            "ms": 42
+          },
+          "gather_exposure": {
+            "count": 2,
+            "ms": 40
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 13
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 5
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "init_interview": {
+            "count": 1,
+            "ms": 0
+          },
+          "select_question": {
+            "count": 8,
+            "ms": 0
+          },
+          "interview_gate": {
+            "count": 16,
+            "ms": 0
+          },
+          "evaluate_completeness": {
+            "count": 8,
+            "ms": 0
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 0
+          },
+          "analyze_fit_light": {
+            "count": 1,
+            "ms": 0
+          },
+          "render_results": {
+            "count": 1,
+            "ms": 0
+          },
+          "reaction_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile_deep": {
+            "count": 1,
+            "ms": 0
+          },
+          "refresh_results": {
+            "count": 1,
+            "ms": 0
+          },
+          "discriminator_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "shortlist_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "explore_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "save_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 31,
+        "llm_ms": 549346,
+        "llm_by_role": {
+          "planner": {
+            "calls": 21,
+            "ms": 65544,
+            "tokens_in": 39475,
+            "tokens_out": 7696,
+            "cost_usd": 0.0125,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "extractor": {
+            "calls": 2,
+            "ms": 6587,
+            "tokens_in": 767,
+            "tokens_out": 217,
+            "cost_usd": 0.0001,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 8,
+            "ms": 477215,
+            "tokens_in": 9884,
+            "tokens_out": 47782,
+            "cost_usd": 0.023,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 8,
+        "reviewer_ms": 477215,
+        "tool_calls": 25,
+        "tool_ms": 80,
+        "tools_failed": 0,
+        "tokens_in": 50126,
+        "tokens_out": 55695,
+        "cost_usd": 0.0356,
+        "cache": {
+          "hit": 16,
+          "miss": 15
+        },
+        "top5": [
+          [
+            "node:deep_dive",
+            76025
+          ],
+          [
+            "node:review_cards",
+            70899
+          ],
+          [
+            "node:build_shortlist",
+            68952
+          ],
+          [
+            "node:update_profile",
+            17159
+          ],
+          [
+            "node:generate_candidates",
+            8899
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "interview",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "interview",
+            "wall_s": 2.1
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.6
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.6
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 2.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.4
+          },
+          {
+            "kind": "interview",
+            "wall_s": 6.0
+          },
+          {
+            "kind": "understanding",
+            "wall_s": 4.7
+          },
+          {
+            "kind": "results",
+            "wall_s": 19.9
+          },
+          {
+            "kind": "discriminate",
+            "wall_s": 82.5
+          },
+          {
+            "kind": "shortlist",
+            "wall_s": 71.0
+          },
+          {
+            "kind": "deep_dive",
+            "wall_s": 76.1
+          },
+          {
+            "kind": "save",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "s21",
+      "seconds": 341,
+      "turns": 8,
+      "candidates": 10,
+      "cards": 134,
+      "stripped": 17,
+      "review_status": "verified",
+      "shortlist": [
+        "Licensed Practical Nurse",
+        "Emergency Medical Technician"
+      ],
+      "cost_usd": 0.0333,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_15min": true,
+        "no_write_before_approval": true,
+        "saved": true,
+        "experiments": false,
+        "why_uses_profile_refs": true,
+        "rubric_grounded_in_profile": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_respects_constraints": true,
+        "rubric_concrete_experiments": true
+      },
+      "rubric_notes": "LPN's why_fit directly references student's caregiving experience and specific skills (organizing meds, explaining clearly). BLS facts are clearly separated from AI interpretations. Tradeoffs and mismatches highlight realistic challenges without guarantees. Education levels and tradeoffs (e.g., OTA/PTA program length/cost) address student's constraints. Shadowing experiment is low-cost, local, and actionable.",
+      "diagnostics": [],
+      "perf": {
+        "total_graph_ms": 302623,
+        "nodes_ms": {
+          "build_shortlist": {
+            "count": 1,
+            "ms": 88708
+          },
+          "deep_dive": {
+            "count": 1,
+            "ms": 74286
+          },
+          "review_cards": {
+            "count": 1,
+            "ms": 67475
+          },
+          "update_profile": {
+            "count": 8,
+            "ms": 21847
+          },
+          "resolve_candidates": {
+            "count": 1,
+            "ms": 16569
+          },
+          "generate_candidates": {
+            "count": 1,
+            "ms": 13498
+          },
+          "analyze_fit": {
+            "count": 1,
+            "ms": 6452
+          },
+          "render_understanding": {
+            "count": 1,
+            "ms": 4541
+          },
+          "review_cards_light": {
+            "count": 1,
+            "ms": 4115
+          },
+          "write_outlook_deep": {
+            "count": 1,
+            "ms": 1984
+          },
+          "update_from_reactions": {
+            "count": 1,
+            "ms": 1723
+          },
+          "discriminate": {
+            "count": 1,
+            "ms": 651
+          },
+          "apply_discriminators": {
+            "count": 1,
+            "ms": 650
+          },
+          "gather_exposure": {
+            "count": 2,
+            "ms": 50
+          },
+          "gather_outlook": {
+            "count": 10,
+            "ms": 43
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 19
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 8
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "refresh_results": {
+            "count": 1,
+            "ms": 1
+          },
+          "init_interview": {
+            "count": 1,
+            "ms": 0
+          },
+          "select_question": {
+            "count": 8,
+            "ms": 0
+          },
+          "interview_gate": {
+            "count": 16,
+            "ms": 0
+          },
+          "evaluate_completeness": {
+            "count": 8,
+            "ms": 0
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 0
+          },
+          "analyze_fit_light": {
+            "count": 1,
+            "ms": 0
+          },
+          "render_results": {
+            "count": 1,
+            "ms": 0
+          },
+          "reaction_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile_deep": {
+            "count": 1,
+            "ms": 0
+          },
+          "discriminator_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "shortlist_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "explore_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "save_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 34,
+        "llm_ms": 525109,
+        "llm_by_role": {
+          "planner": {
+            "calls": 20,
+            "ms": 60869,
+            "tokens_in": 31342,
+            "tokens_out": 7383,
+            "cost_usd": 0.0107,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "extractor": {
+            "calls": 7,
+            "ms": 16882,
+            "tokens_in": 1714,
+            "tokens_out": 691,
+            "cost_usd": 0.0004,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 7,
+            "ms": 447358,
+            "tokens_in": 8794,
+            "tokens_out": 46545,
+            "cost_usd": 0.0223,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 7,
+        "reviewer_ms": 447358,
+        "tool_calls": 24,
+        "tool_ms": 91,
+        "tools_failed": 0,
+        "tokens_in": 41850,
+        "tokens_out": 54619,
+        "cost_usd": 0.0333,
+        "cache": {
+          "hit": 17,
+          "miss": 16
+        },
+        "top5": [
+          [
+            "node:build_shortlist",
+            88708
+          ],
+          [
+            "node:deep_dive",
+            74286
+          ],
+          [
+            "node:review_cards",
+            67475
+          ],
+          [
+            "node:update_profile",
+            21847
+          ],
+          [
+            "node:resolve_candidates",
+            16569
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "interview",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.4
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.2
+          },
+          {
+            "kind": "interview",
+            "wall_s": 4.6
+          },
+          {
+            "kind": "interview",
+            "wall_s": 3.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "interview",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "interview",
+            "wall_s": 5.3
+          },
+          {
+            "kind": "understanding",
+            "wall_s": 8.6
+          },
+          {
+            "kind": "results",
+            "wall_s": 34.2
+          },
+          {
+            "kind": "discriminate",
+            "wall_s": 78.4
+          },
+          {
+            "kind": "shortlist",
+            "wall_s": 89.4
+          },
+          {
+            "kind": "deep_dive",
+            "wall_s": 74.3
+          },
+          {
+            "kind": "save",
+            "wall_s": 0.0
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": false
+    }
+  ]
+}

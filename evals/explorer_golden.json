@@ -1,0 +1,267 @@
+{
+ "_comment": "Deterministic explorer evaluation \u2014 no model, no network. Each case names the catalog operation and what must be true. Run: python -m evals.run_explorer_evals",
+ "cases": [
+  {
+   "id": "x01",
+   "kind": "title",
+   "q": "Registered Nurses",
+   "expect_first": "29-1141.00"
+  },
+  {
+   "id": "x02",
+   "kind": "title",
+   "q": "software developer",
+   "expect_first": "15-1252.00"
+  },
+  {
+   "id": "x03",
+   "kind": "title",
+   "q": "graphic designer",
+   "expect_first": "27-1024.00"
+  },
+  {
+   "id": "x04",
+   "kind": "title",
+   "q": "product manager",
+   "expect_in_top": [
+    "composite:product-manager",
+    "11-2021.00"
+   ]
+  },
+  {
+   "id": "x05",
+   "kind": "activity",
+   "q": "helping animals",
+   "expect_in_top": [
+    "29-1131.00",
+    "29-2056.00",
+    "39-2011.00"
+   ]
+  },
+  {
+   "id": "x06",
+   "kind": "activity",
+   "q": "fixing cars",
+   "expect_in_top": [
+    "49-3023.00"
+   ]
+  },
+  {
+   "id": "x07",
+   "kind": "activity",
+   "q": "working outdoors with plants",
+   "expect_in_top": [
+    "37-3011.00",
+    "45-2092.00",
+    "19-1013.00"
+   ]
+  },
+  {
+   "id": "x08",
+   "kind": "activity",
+   "q": "helping kids learn",
+   "expect_in_top": [
+    "25-2012.00",
+    "25-2011.00",
+    "25-2021.00"
+   ]
+  },
+  {
+   "id": "x09",
+   "kind": "activity",
+   "q": "video games",
+   "expect_in_top": [
+    "15-1255.01"
+   ]
+  },
+  {
+   "id": "x10",
+   "kind": "subject",
+   "subject": "Biology",
+   "expect_in": [
+    "19-1023.00",
+    "29-1131.00"
+   ],
+   "min_count": 50
+  },
+  {
+   "id": "x11",
+   "kind": "subject",
+   "subject": "Computer science",
+   "expect_in": [
+    "15-1252.00"
+   ],
+   "min_count": 30
+  },
+  {
+   "id": "x12",
+   "kind": "subject",
+   "subject": "Psychology",
+   "expect_in": [
+    "19-3033.00",
+    "21-1014.00"
+   ],
+   "min_count": 30
+  },
+  {
+   "id": "x13",
+   "kind": "collection",
+   "name": "unknown",
+   "not_in": [
+    "29-1141.00",
+    "23-1011.00",
+    "15-1252.00"
+   ],
+   "min_count": 200,
+   "no_residual": true
+  },
+  {
+   "id": "x14",
+   "kind": "collection",
+   "name": "fast_growing",
+   "all_growth_at_least": 10,
+   "expect_in": [
+    "29-1171.00"
+   ]
+  },
+  {
+   "id": "x15",
+   "kind": "collection",
+   "name": "declining",
+   "all_class": "declining",
+   "expect_in": [
+    "43-9022.00"
+   ]
+  },
+  {
+   "id": "x16",
+   "kind": "collection",
+   "name": "growing_and_ai",
+   "all_class": "growing",
+   "all_ai": "substantial",
+   "min_count": 5
+  },
+  {
+   "id": "x17",
+   "kind": "collection",
+   "name": "human_intensive",
+   "min_count": 100,
+   "max_ai_share": 0.05
+  },
+  {
+   "id": "x18",
+   "kind": "record",
+   "id_": "composite:product-manager",
+   "kind_": "composite",
+   "none_fields": [
+    "emp_2025",
+    "growth_pct",
+    "openings_annual",
+    "aioe",
+    "observed_exposure"
+   ],
+   "growth_class": "unknown",
+   "has_proxies": true
+  },
+  {
+   "id": "x19",
+   "kind": "record",
+   "id_": "15-1255.01",
+   "kind_": "detailed",
+   "has_bls_note": true
+  },
+  {
+   "id": "x20",
+   "kind": "record",
+   "id_": "15-1252.00",
+   "kind_": "direct",
+   "growth_class": "growing",
+   "ai_class_in": [
+    "moderate",
+    "substantial"
+   ],
+   "min_related": 5,
+   "min_tasks": 10
+  },
+  {
+   "id": "x21",
+   "kind": "record",
+   "id_": "27-1024.00",
+   "kind_": "direct",
+   "growth_class": "declining",
+   "openings_positive": true
+  },
+  {
+   "id": "x22",
+   "kind": "facts",
+   "id_": "15-1252.00",
+   "unavailable_includes": [
+    "industries",
+    "licensing"
+   ],
+   "sourced": [
+    "employment_2025",
+    "growth_pct",
+    "openings_annual",
+    "education_entry",
+    "tasks"
+   ]
+  },
+  {
+   "id": "x23",
+   "kind": "facts",
+   "id_": "composite:product-manager",
+   "unavailable_includes": [
+    "employment_2025",
+    "growth_pct",
+    "industries",
+    "licensing"
+   ],
+   "sourced": [
+    "description",
+    "tasks"
+   ]
+  },
+  {
+   "id": "x24",
+   "kind": "compare",
+   "ids": [
+    "15-1252.00",
+    "29-1141.00",
+    "17-1011.00",
+    "27-1024.00"
+   ],
+   "rows": 11,
+   "no_words": [
+    "score",
+    "winner",
+    "best"
+   ]
+  },
+  {
+   "id": "x25",
+   "kind": "family_coverage",
+   "min_per_family": 20,
+   "all_have_family": true
+  },
+  {
+   "id": "x26",
+   "kind": "activity",
+   "q": "i am good at math",
+   "expect_in_top": [
+    "15-2021.00",
+    "15-2041.00"
+   ]
+  },
+  {
+   "id": "x27",
+   "kind": "activity",
+   "q": "I love helping people",
+   "expect_in_top": [
+    "21-1021.00",
+    "21-1093.00",
+    "21-1022.00"
+   ]
+  }
+ ]
+}

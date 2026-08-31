@@ -1,0 +1,175 @@
+{
+  "summary": {
+    "passed": 1,
+    "total": 1,
+    "median_seconds": 123,
+    "total_cost_usd": 0.011
+  },
+  "results": [
+    {
+      "id": "g06",
+      "kind": "professional",
+      "seconds": 123,
+      "cards": 160,
+      "stripped": 8,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.011,
+      "demand": [
+        "stable"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/11-9199_2030_20260830-001908.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "unknowns": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed: demand data from BLS projections and AI impact analysis directly respond to 'demand' concern. Official BLS data (e.g., +4.9% growth) is clearly separated from AI-related interpretations marked with [interpretation]. No guarantees made\u2014uses 'projects', 'indicating', and explicitly lists uncertainties (e.g., 'cannot be known now'). No invented products/courses; all 30-day actions are concrete, practical tasks (e.g., 'run bid evaluation comparison', 'map workflow').",
+      "perf": {
+        "total_graph_ms": 112888,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 95169
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 14037
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1830
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1456
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 279
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 72
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 36
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 5
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 7,
+        "llm_ms": 189327,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 18977,
+            "tokens_in": 9494,
+            "tokens_out": 1393,
+            "cost_usd": 0.0027,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 3,
+            "ms": 170350,
+            "tokens_in": 3699,
+            "tokens_out": 17210,
+            "cost_usd": 0.0083,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 3,
+        "reviewer_ms": 170350,
+        "tool_calls": 5,
+        "tool_ms": 351,
+        "tools_failed": 0,
+        "tokens_in": 13193,
+        "tokens_out": 18603,
+        "cost_usd": 0.011,
+        "cache": {
+          "hit": 18,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            95169
+          ],
+          [
+            "node:write_plan",
+            14037
+          ],
+          [
+            "node:write_outlook",
+            1830
+          ],
+          [
+            "node:understand",
+            1456
+          ],
+          [
+            "node:gather_exposure",
+            279
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.5
+          },
+          {
+            "kind": "plan",
+            "wall_s": 111.3
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    }
+  ]
+}

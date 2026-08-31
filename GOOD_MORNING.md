@@ -37,3 +37,16 @@ Instrumented every node, model and tool call (developer mode shows the timeline)
 - `python run_cli.py --composite "Product Manager" --auto` — professional path in the terminal.
 - `PYTHONPATH=. python -m evals.run_student_evals s01` — one full student journey with a simulated student (~9 min).
 - Reviewer failures are logged to `data/processed/review_failures.log`.
+
+
+## Overnight Aug 29→30 — Career Explorer (your brief + the grounded-hybrid clarification)
+Built and tested; details in `graph/DESIGN.md` → CAREER EXPLORER. Start screen now offers **Explore careers** · **Help me find my direction** · professional. Restart the app after pulling (`streamlit run ui/app.py`; it is running on :8599 now).
+- `tools/catalog.py` + `data/career_families.json` — 1,017-career catalog from local files (new O*NET files in data/raw, gitignored like the rest; `python -m tools.catalog --force` rebuilds in 1.5 s). 16 families, 18 subjects, 7 traits, 6 collections, search with "matched: …" explanations.
+- `tools/career_page.py` — four typed layers; the model only ever sees the page's evidence table; lints + the existing reviewer; cached under `data/processed/cache/interpretation/`. One live run: 109 s, 8 of 35 lines removed (all for good reasons).
+- `ui/explorer.py` — the screens; `graph/student_seed.py` — saved careers → interview evidence + targeted comparison questions.
+- Honest gaps shown as "Data not available from the current sources.": industries by occupation, licensing, specialty-level employment, composite figures.
+- `pytest tests` → 164 pass · `python -m evals.run_explorer_evals` → 27/27 · professional + student sweeps rerun overnight (results in `evals/results/`, see the final report in the chat).
+- Not committed — review `git status` and commit when you're happy.
+
+## Sunday-night session (Aug 30→31, with you)
+Search fixes from your catches ("good at math" ≠ Paper Goods; "doctor" umbrella banner; catch-alls demoted) · top-5 results in a 3-across grid · full-width layout · career page: silent load, stat tiles, ⓘ popover, details in expanders, and the **narrative At-a-glance** (p2) — precomputed for ~23 careers · explorer URLs are deep-linkable · your ⚙ header button merged (the stray `elif` broke the app briefly — pull before editing ui/explorer.py) · poster at design/nextshift-poster.html + artifact link in chat · docs and video script updated · all committed.

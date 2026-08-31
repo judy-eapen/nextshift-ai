@@ -53,12 +53,19 @@ def route(S, payload):
     kinds = {"interview": "s_interview", "understanding": "s_understanding", "results": "s_results", "discriminate": "s_discriminate", "shortlist": "s_shortlist", "deep_dive": "s_deep", "save": "s_save"}
     S.payload = payload; S.stage = kinds.get((payload or {}).get("kind"), "s_done"); st.rerun()
 
-def start(S):
-    S.thread_id = str(uuid.uuid4()); S.log = []; S.stage = "s_interview_run"; S.first_name = ""; st.rerun()
+def start(S, seed: dict | None = None):
+    """Begin the interview. `seed` (from the Career Explorer: saved careers + reactions) is passed to the graph as evidence the student can see — never as a choice."""
+    S.thread_id = str(uuid.uuid4()); S.log = []; S.stage = "s_interview_run"; S.first_name = ""; S.x_seed_payload = seed; S.x_return = None; st.rerun()
+
+def open_in_explorer(S, onet_soc: str | None, return_stage: str):
+    """Jump to a career page in the explorer and remember where to come back to (the interview thread is checkpointed; nothing is lost)."""
+    from ui import explorer; from tools import catalog as C
+    rid = onet_soc if onet_soc and C.get(onet_soc) else None
+    explorer.enter(S, {"kind": "career", "id": rid} if rid else {"kind": "home"}, return_to=return_stage)
 
 # ───────────────────────────── interview ─────────────────────────────
 def screen_interview_run(S):
-    with st.status("Getting ready…", expanded=False) as box: p = run(S, {"thread_id": S.thread_id}, box)
+    with st.status("Getting ready…", expanded=False) as box: p = run(S, {"thread_id": S.thread_id, "explorer_seed": S.get("x_seed_payload")}, box)
     route(S, p)
 
 def screen_interview(S):
@@ -76,6 +83,13 @@ def screen_interview(S):
             lvl = cov.get(key, "none"); g, aria = COVERAGE_GLYPH[lvl]
             st.markdown(f"<div class='small'><span role='img' aria-label='{aria}'>{g}</span> {lab}</div>", unsafe_allow_html=True)
         st.markdown("<div class='small' style='margin-top:6px'>A fixed rule picks the next topic from these gaps and the next question from a curated set; the AI reads your answers, it doesn't write the questions.</div>", unsafe_allow_html=True)
+        seed = S.get("x_seed_payload") or {}
+        if seed.get("saved"):
+            from graph.student_seed import seed_summary
+            st.markdown("<span class='kicker' style='margin-top:10px;display:block'>From your exploring</span>", unsafe_allow_html=True)
+            for line in seed_summary(seed)[:6]: st.markdown(f"<div class='small'>☆ {line}</div>", unsafe_allow_html=True)
+            st.markdown("<div class='small'>Treated as things you noticed, not as a choice. You can edit or remove them like any other answer.</div>", unsafe_allow_html=True)
+        if st.button("Browse the Career Explorer", key="iv_explore", help="Your place in the conversation is kept."): open_in_explorer(S, None, "s_interview")
     with col:
         st.markdown(f"### {p['question']}")
         if S.get("last_error"): st.warning("The last step didn't complete — your answer is still here. Send it again."); S.last_error = None
@@ -161,6 +175,7 @@ def screen_results(S):
             why = cols[3].text_input("What appeals — or doesn't?", key=f"why_{c['key']}", placeholder="e.g. I like the people part, not the paperwork", label_visibility="collapsed")
             if verdict: reactions[c["key"]] = {"key": c["key"], "verdict": verdict, "why": why}
             with st.expander("Why this appeared →"): why_this_appeared(c, v)
+            if not c["persona"].get("composite") and st.button("Open in the Career Explorer →", key=f"xo_{c['key']}", help="Sourced facts, tasks, outlook and related careers — your place here is kept."): open_in_explorer(S, c["persona"].get("onet_soc"), "s_results")
     with st.expander("How we reached this"): render_run_details(S, v, candidates=[c for g in v["groups"].values() for c in g])
     st.markdown("---"); st.markdown("### Which of these speaks to you, and what about it appeals?")
     b = st.columns([2, 1, 1])
@@ -246,7 +261,9 @@ def screen_done(S, reset):
     elif ap.get("understanding", {}).get("action") == "reject": st.warning("Stopped before any career data was gathered — nothing was saved.")
     elif ap.get("save", {}).get("action") == "reject": st.warning("Nothing was saved.")
     else: st.info("Session ended — nothing was saved.")
-    if st.button("Start again"): reset(); st.rerun()
+    b = st.columns(2)
+    if b[0].button("Browse the Career Explorer"): from ui import explorer; explorer.enter(S, {"kind": "home"})
+    if b[1].button("Start again"): reset(); st.rerun()
 
 SCREENS = {"s_interview_run": screen_interview_run, "s_interview": screen_interview, "s_understanding": screen_understanding, "s_results": screen_results, "s_discriminate": screen_discriminate,
            "s_shortlist": screen_shortlist, "s_deep": screen_deep, "s_save": screen_save}

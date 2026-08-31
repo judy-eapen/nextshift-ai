@@ -8,12 +8,12 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv; load_dotenv(ROOT / ".env")
 import streamlit as st, pandas as pd
 from langgraph.types import Command
-from ui import student_ui, explain
+from ui import student_ui, explain, explorer
 
-st.set_page_config(page_title="NextShift AI", page_icon="⟶", layout="centered")
+st.set_page_config(page_title="NextShift AI", page_icon="⟶", layout="wide")
 C = {"bg": "#0B0F14", "surface": "#121821", "line": "#2A3544", "ink": "#E6EAF0", "muted": "#8A94A6", "amber": "#E5A24A", "student": "#7FC8E8", "green": "#8FBF9F", "red": "#E07A5F", "purple": "#B48CFF"}
 st.markdown(f"""<style>
-.stApp {{ background:{C['bg']}; }} h1,h2,h3 {{ font-family: Archivo, 'IBM Plex Sans', sans-serif; letter-spacing:-0.01em; }}
+.stApp {{ background:{C['bg']}; }} .block-container {{ max-width:100%; padding-left:3rem; padding-right:3rem; }} h1,h2,h3 {{ font-family: Archivo, 'IBM Plex Sans', sans-serif; letter-spacing:-0.01em; }}
 .card {{ background:{C['surface']}; border:1px solid {C['line']}; border-radius:12px; padding:18px 20px; margin:10px 0; }}
 .kicker {{ color:{C['amber']}; font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }}
 .muted {{ color:{C['muted']}; font-size:14px; }} .small {{ color:{C['muted']}; font-size:12px; }}
@@ -32,9 +32,15 @@ S = st.session_state
 S.setdefault("stage", "start"); S.setdefault("door", None); S.setdefault("step", 0); S.setdefault("profile", {}); S.setdefault("targets", []); S.setdefault("log", [])
 HZ = {"1-2y": "Next 1–2 years", "2030": "By 2030", "2035": "By 2035"}
 
-def reset():
+def reset(keep_saved: bool = True):
+    """Start over. Saved careers and reactions from the Career Explorer survive unless the student clears them there."""
+    keep = {k: S[k] for k in ("x_saved", "x_reactions") if keep_saved and k in S}
     for k in list(S.keys()): del S[k]
-    S.stage = "start"
+    S.update(keep); S.stage = "start"
+    # Explorer views are mirrored into the URL for browser Back/Forward. Clear
+    # them here or the next rerun interprets ?x=... as a request to reopen it.
+    try: st.query_params.clear()
+    except Exception: pass
 
 def strip_refs(text) -> str:
     """Hide [cNN]/[uNN]/[interpretation]/[advice] tags from the reader; the evidence drawer still shows them."""
@@ -58,13 +64,19 @@ def screen_start():
     st.markdown("<span class='kicker'>NextShift AI</span>", unsafe_allow_html=True)
     st.markdown("## Plan your career for an AI-shaped job market.")
     st.markdown("<p class='muted'>Understand how demand for a career may change, how AI may reshape the work, and what you can do to prepare.</p>", unsafe_allow_html=True)
+    st.markdown(f"<span class='kicker' style='color:{C['student']}'>Students</span>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown(f"<div class='card' style='border-color:{C['student']}66'><span class='kicker' style='color:{C['student']}'>Students</span><h3 style='margin:6px 0'>I'm exploring careers</h3><p class='muted'>You don't need to know what you want yet — a short conversation, then directions worth exploring.</p></div>", unsafe_allow_html=True)
-        if st.button("Start exploring →", width="stretch"): S.door = "student"; student_ui.start(S)
+        st.markdown(f"<div class='card' style='border-color:{C['student']}66'><h3 style='margin:6px 0'>Explore careers</h3><p class='muted'>“Show me careers I may not know exist.” Browse about a thousand real occupations by what you like doing, by school subject or by family — instantly, no AI needed. Save and compare the ones worth a second look.</p></div>", unsafe_allow_html=True)
+        if st.button("Explore careers →", type="primary", width="stretch"): explorer.enter(S, {"kind": "home"})
     with c2:
-        st.markdown("<div class='card'><span class='kicker'>Professionals</span><h3 style='margin:6px 0'>I'm preparing for changes in my career</h3><p class='muted'>See what's coming for your role and what to do now.</p></div>", unsafe_allow_html=True)
-        if st.button("Start planning →", type="primary", width="stretch"): S.door = "professional"; S.profile = {"door": "professional"}; S.stage = "intake"; S.step = 0; st.rerun()
+        st.markdown(f"<div class='card' style='border-color:{C['student']}66'><h3 style='margin:6px 0'>Help me find my direction</h3><p class='muted'>“Ask me questions and help me discover what may fit.” A short conversation, one question at a time, then directions worth exploring — with evidence.</p></div>", unsafe_allow_html=True)
+        if st.button("Start the conversation →", width="stretch"): S.door = "student"; student_ui.start(S, seed=explorer.seed_from_state(S))
+    n_saved = len(S.get("x_saved") or [])
+    if n_saved: st.markdown(f"<p class='small'>☆ You have {n_saved} saved career{'s' if n_saved != 1 else ''} from earlier — they are kept.</p>", unsafe_allow_html=True)
+    st.markdown("<span class='kicker' style='margin-top:10px;display:block'>Professionals</span>", unsafe_allow_html=True)
+    st.markdown("<div class='card'><h3 style='margin:6px 0'>I'm preparing for changes in my career</h3><p class='muted'>See what's coming for your role and what to do now.</p></div>", unsafe_allow_html=True)
+    if st.button("Start planning →", width="stretch"): S.door = "professional"; S.profile = {"door": "professional"}; S.stage = "intake"; S.step = 0; st.rerun()
     st.markdown("<p class='small' style='margin-top:24px'>Evidence: BLS employment projections · O*NET tasks · Anthropic Economic Index · AIOE · Polymarket, Manifold, Metaculus · Epoch AI · FRED. Every plan is checked line by line and approved by you before it's saved.</p>", unsafe_allow_html=True)
 
 # ═══════════════════════════ INTAKE (guided turns) ═══════════════════════════
@@ -261,13 +273,19 @@ def screen_done():
     elif ap.get("understanding", {}).get("action") == "reject": st.warning("Stopped before analysis — nothing was gathered or saved.")
     elif ap.get("plan", {}).get("action") == "reject": st.warning("Plan not saved.")
     else: st.info("Run ended.")
-    if st.button("Start again"): reset(); st.rerun()
+    b = st.columns(2)
+    if S.get("x_from_explorer") and b[0].button("← Back to the Career Explorer"): S.door = "student"; S.stage = "explore"; S.x_from_explorer = None; S.x_return = None; st.rerun()
+    if b[1].button("Start again"): reset(); st.rerun()
 
 # ───────────────────────── sidebar (demo controls) + router ─────────────────────────
 with st.sidebar:
     explain.sidebar(S)
     if S.stage != "start" and st.button("↺ Start over"): reset(); st.rerun()
 
-if S.stage in student_ui.SCREENS: student_ui.SCREENS[S.stage](S)
+if S.stage == "start" and "x" in st.query_params:   # deep link: a shared explorer URL opens that page directly
+    v = explorer._qp_to_view({k: st.query_params.get(k) for k in explorer._QP_KEYS if k in st.query_params})
+    if v: explorer.init(S); S.door = "student"; S.stage = "explore"; S.x_view = v
+if S.stage == "explore": explorer.render(S)
+elif S.stage in student_ui.SCREENS: student_ui.SCREENS[S.stage](S)
 elif S.stage == "s_done": student_ui.screen_done(S, reset)
 else: {"start": screen_start, "intake": screen_intake, "understanding_run": screen_understanding_run, "understanding": screen_understanding, "working": screen_working, "plan": screen_plan, "done": screen_done}[S.stage]()

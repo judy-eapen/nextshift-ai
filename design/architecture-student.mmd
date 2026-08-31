@@ -1,7 +1,12 @@
 flowchart TB
+  subgraph XP["Career Explorer · deterministic, zero model calls (tools/catalog.py · tools/career_page.py)"]
+    direction LR
+    CAT["catalog build (offline, ≈1.5 s)<br/>O*NET 31.0 × BLS EP 2025–35 × AEI × AIOE<br/>1,017 careers · provenance per field"] --> BR["browse · search · filter<br/>16 families · 7 traits · 18 subjects · collections"] --> CP["career page · 4 labelled layers<br/>sourced facts → derived rules → AI-written & reviewed (cached) → personal"] --> SV2["save ☆ · react · compare ≤4 (no score)"]
+    CP -. "on request" .-> GEN["interpretation: model sees ONLY the page's evidence table<br/>lints (numbers on cards · no absolute fit/safety) → reviewer → cache"]
+  end
   subgraph UI["Streamlit · NextShift AI · student door"]
     direction LR
-    S0["Start<br/>“You don't need to know what career you want yet”"]
+    S0["Start<br/>Explore careers · Help me find my direction"]
     S1["Interview · one question at a time<br/>Send · I'm not sure · Skip · Recommend now · Ask me more · Edit an earlier answer"]
     S4["Career directions · 3 groups · reactions 😀 🤔 ✕ + why"]
     S7["Shortlist · 8 dimensions shown separately · Our read (interpretation)"]
@@ -37,6 +42,8 @@ flowchart TB
     XG -- save --> SV{{"⏸ save_gate"}} --> RECORD["record · the only writer<br/>profile · shortlist · reactions · experiments · snapshot"]
     SV -- reject --> E2((end · nothing written))
   end
+  S0 --> BR
+  SV2 -- "seed: saved careers + reactions<br/>(evidence, never a choice) + templated comparison questions" --> INIT
   S0 --> INIT
   IG -.-> S1
   RG -.-> S4

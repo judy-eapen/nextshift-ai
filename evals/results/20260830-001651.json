@@ -1,0 +1,1897 @@
+{
+  "summary": {
+    "passed": 11,
+    "total": 12,
+    "median_seconds": 104,
+    "total_cost_usd": 0.1368
+  },
+  "results": [
+    {
+      "id": "g01",
+      "kind": "professional",
+      "seconds": 202,
+      "cards": 39,
+      "stripped": 11,
+      "uncited_final": 0,
+      "tool_calls": 17,
+      "cost_usd": 0.0205,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/15-1252_2030_20260829-235721.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "projection": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed; facts and interpretations clearly labeled; no guarantees made; no invented products; 30-day plan has concrete actions like user-research synthesis comparison and documenting validation procedures.",
+      "perf": {
+        "total_graph_ms": 191587,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 2,
+            "ms": 162618
+          },
+          "write_plan": {
+            "count": 2,
+            "ms": 15246
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 9040
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1955
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1770
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 514
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 317
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 120
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 4
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 16,
+        "llm_ms": 351219,
+        "llm_by_role": {
+          "planner": {
+            "calls": 10,
+            "ms": 23471,
+            "tokens_in": 12829,
+            "tokens_out": 3122,
+            "cost_usd": 0.0044,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 6,
+            "ms": 327748,
+            "tokens_in": 8406,
+            "tokens_out": 32949,
+            "cost_usd": 0.0161,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 6,
+        "reviewer_ms": 327748,
+        "tool_calls": 17,
+        "tool_ms": 6395,
+        "tools_failed": 0,
+        "tokens_in": 21235,
+        "tokens_out": 36071,
+        "cost_usd": 0.0205,
+        "cache": {
+          "hit": 1,
+          "miss": 0,
+          "expired": 17
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            162618
+          ],
+          [
+            "node:write_plan",
+            15246
+          ],
+          [
+            "node:gather_forecasts",
+            9040
+          ],
+          [
+            "node:write_outlook",
+            1955
+          ],
+          [
+            "node:understand",
+            1770
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.9
+          },
+          {
+            "kind": "plan",
+            "wall_s": 188.9
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g02",
+      "kind": "professional",
+      "seconds": 81,
+      "cards": 53,
+      "stripped": 9,
+      "uncited_final": 0,
+      "tool_calls": 6,
+      "cost_usd": 0.0088,
+      "demand": [
+        "unknown"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/composite_product-manager_1-2y_20260829-235837.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "unknowns": true,
+        "proxy_labelled": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed using proxy data and clear interpretation labels; official data separated from AI interpretations; no guarantees of safety/decline; no invented products (general AI tools referenced); 30-day plan has specific, practical tasks with clear deliverables.",
+      "perf": {
+        "total_graph_ms": 65153,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 54706
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 7893
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1720
+          },
+          "understand": {
+            "count": 1,
+            "ms": 815
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 8
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 3
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 3
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 3
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 7,
+        "llm_ms": 130002,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 11485,
+            "tokens_in": 8997,
+            "tokens_out": 1675,
+            "cost_usd": 0.0028,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 3,
+            "ms": 118517,
+            "tokens_in": 3812,
+            "tokens_out": 11957,
+            "cost_usd": 0.006,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 3,
+        "reviewer_ms": 118517,
+        "tool_calls": 1,
+        "tool_ms": 3,
+        "tools_failed": 0,
+        "tokens_in": 12809,
+        "tokens_out": 13632,
+        "cost_usd": 0.0088,
+        "cache": {
+          "hit": 17,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            54706
+          ],
+          [
+            "node:write_plan",
+            7893
+          ],
+          [
+            "node:write_outlook",
+            1720
+          ],
+          [
+            "node:understand",
+            815
+          ],
+          [
+            "node:gather_forecasts",
+            8
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 0.8
+          },
+          {
+            "kind": "plan",
+            "wall_s": 64.3
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g03",
+      "kind": "professional",
+      "seconds": 91,
+      "cards": 53,
+      "stripped": 4,
+      "uncited_final": 0,
+      "tool_calls": 6,
+      "cost_usd": 0.0099,
+      "demand": [
+        "unknown"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/composite_product-manager_2030_20260830-000013.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "resolver_offers_composite": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses both 'change' (AI's impact on tasks) and 'pivot' (no evidence for alternative paths). Official data is clearly separated from interpretations with labels. No guarantees made; all statements are probabilistic. No specific products or courses named. 30-day plan includes concrete, practical steps like comparing AI vs manual analysis.",
+      "perf": {
+        "total_graph_ms": 75304,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 64508
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 7686
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1881
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1211
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 8
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 4
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 7,
+        "llm_ms": 156113,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 11956,
+            "tokens_in": 9005,
+            "tokens_out": 1588,
+            "cost_usd": 0.0028,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 3,
+            "ms": 144157,
+            "tokens_in": 4479,
+            "tokens_out": 14452,
+            "cost_usd": 0.0072,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 3,
+        "reviewer_ms": 144157,
+        "tool_calls": 1,
+        "tool_ms": 2,
+        "tools_failed": 0,
+        "tokens_in": 13484,
+        "tokens_out": 16040,
+        "cost_usd": 0.0099,
+        "cache": {
+          "hit": 17,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            64508
+          ],
+          [
+            "node:write_plan",
+            7686
+          ],
+          [
+            "node:write_outlook",
+            1881
+          ],
+          [
+            "node:understand",
+            1211
+          ],
+          [
+            "node:gather_forecasts",
+            8
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.2
+          },
+          {
+            "kind": "plan",
+            "wall_s": 74.1
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g04",
+      "kind": "professional",
+      "seconds": 151,
+      "cards": 159,
+      "stripped": 5,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0146,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 87,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/29-1141_2035_20260830-000229.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "ai_change_reading": true,
+        "no_fear_words": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Addresses both demand (BLS data) and change (AI task analysis); facts labeled separately from interpretations; no guarantees; real product examples (e.g., Ambient Scribe); 30-day steps are concrete and practical.",
+      "perf": {
+        "total_graph_ms": 120141,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 105210
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 8539
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 5473
+          },
+          "understand": {
+            "count": 1,
+            "ms": 882
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 16
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 8
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 5
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 3
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 2
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 9,
+        "llm_ms": 257311,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 16323,
+            "tokens_in": 9557,
+            "tokens_out": 1743,
+            "cost_usd": 0.003,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 5,
+            "ms": 240988,
+            "tokens_in": 5634,
+            "tokens_out": 24060,
+            "cost_usd": 0.0117,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 5,
+        "reviewer_ms": 240988,
+        "tool_calls": 5,
+        "tool_ms": 17,
+        "tools_failed": 0,
+        "tokens_in": 15191,
+        "tokens_out": 25803,
+        "cost_usd": 0.0146,
+        "cache": {
+          "hit": 16,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            105210
+          ],
+          [
+            "node:write_plan",
+            8539
+          ],
+          [
+            "node:write_outlook",
+            5473
+          ],
+          [
+            "node:understand",
+            882
+          ],
+          [
+            "node:gather_exposure",
+            16
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "plan",
+            "wall_s": 119.3
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g06",
+      "kind": "professional",
+      "seconds": 126,
+      "cards": 160,
+      "stripped": 6,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0142,
+      "demand": [
+        "stable"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/11-9199_2030_20260830-000455.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "unknowns": true,
+        "removed_absent_from_ui": false,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All criteria met: demand concern addressed with BLS data; official projections clearly labeled vs. AI interpretation; no guarantees made (uses probabilistic language); no specific courses/products invented; 30-day plan includes concrete tasks like side-by-side AI review comparison and documenting consultation with counsel.",
+      "perf": {
+        "total_graph_ms": 114985,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 101548
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 9930
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 2498
+          },
+          "understand": {
+            "count": 1,
+            "ms": 964
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 17
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 15
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 5
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 3
+          },
+          "record": {
+            "count": 1,
+            "ms": 3
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 2
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 8,
+        "llm_ms": 252261,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 14882,
+            "tokens_in": 9502,
+            "tokens_out": 1632,
+            "cost_usd": 0.0029,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 4,
+            "ms": 237379,
+            "tokens_in": 5417,
+            "tokens_out": 23458,
+            "cost_usd": 0.0114,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 4,
+        "reviewer_ms": 237379,
+        "tool_calls": 5,
+        "tool_ms": 16,
+        "tools_failed": 0,
+        "tokens_in": 14919,
+        "tokens_out": 25090,
+        "cost_usd": 0.0142,
+        "cache": {
+          "hit": 18,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            101548
+          ],
+          [
+            "node:write_plan",
+            9930
+          ],
+          [
+            "node:write_outlook",
+            2498
+          ],
+          [
+            "node:understand",
+            964
+          ],
+          [
+            "node:gather_forecasts",
+            17
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.0
+          },
+          {
+            "kind": "plan",
+            "wall_s": 114.0
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": false
+    },
+    {
+      "id": "g07",
+      "kind": "professional",
+      "seconds": 196,
+      "cards": 36,
+      "stripped": 4,
+      "uncited_final": 0,
+      "tool_calls": 9,
+      "cost_usd": 0.0189,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/43-4051_2030_20260830-000808.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "demand_reading": true,
+        "partial_badge": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All concerns addressed: demand (BLS data), change (AI task analysis), pivot (no recommendation due to insufficient evidence). Facts clearly separated from interpretation via labels. No guarantees used. No specific products named. 30-day plan has concrete, practical steps.",
+      "perf": {
+        "total_graph_ms": 182249,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 2,
+            "ms": 162036
+          },
+          "write_plan": {
+            "count": 2,
+            "ms": 15478
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 2201
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1753
+          },
+          "understand": {
+            "count": 1,
+            "ms": 761
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 12
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 3
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 12,
+        "llm_ms": 334179,
+        "llm_by_role": {
+          "planner": {
+            "calls": 7,
+            "ms": 20973,
+            "tokens_in": 11013,
+            "tokens_out": 2463,
+            "cost_usd": 0.0037,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 5,
+            "ms": 313206,
+            "tokens_in": 6854,
+            "tokens_out": 31482,
+            "cost_usd": 0.0152,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 5,
+        "reviewer_ms": 313206,
+        "tool_calls": 7,
+        "tool_ms": 13,
+        "tools_failed": 2,
+        "tokens_in": 17867,
+        "tokens_out": 33945,
+        "cost_usd": 0.0189,
+        "cache": {
+          "hit": 14,
+          "miss": 0,
+          "expired": 2
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            162036
+          ],
+          [
+            "node:write_plan",
+            15478
+          ],
+          [
+            "node:gather_forecasts",
+            2201
+          ],
+          [
+            "node:write_outlook",
+            1753
+          ],
+          [
+            "node:understand",
+            761
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 0.8
+          },
+          {
+            "kind": "plan",
+            "wall_s": 181.5
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g08",
+      "kind": "professional",
+      "seconds": 220,
+      "cards": 60,
+      "stripped": 10,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0189,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/27-3043_2030_20260830-001151.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "disagreement": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "Plan addresses both demand (BLS projections) and change (AI task integration). Projections and interpretations are clearly labeled. No guarantees made; uses 'projected' and 'uncertain' language. No specific courses/products named, only general AI tools. 30-day steps are concrete, practical tasks with clear deliverables.",
+      "perf": {
+        "total_graph_ms": 208780,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 2,
+            "ms": 181677
+          },
+          "write_plan": {
+            "count": 2,
+            "ms": 22773
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 3141
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1154
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 20
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 9
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 1
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 9,
+        "llm_ms": 338810,
+        "llm_by_role": {
+          "planner": {
+            "calls": 5,
+            "ms": 27961,
+            "tokens_in": 11890,
+            "tokens_out": 2393,
+            "cost_usd": 0.0038,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 4,
+            "ms": 310849,
+            "tokens_in": 6599,
+            "tokens_out": 31247,
+            "cost_usd": 0.0151,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 4,
+        "reviewer_ms": 310849,
+        "tool_calls": 5,
+        "tool_ms": 20,
+        "tools_failed": 0,
+        "tokens_in": 18489,
+        "tokens_out": 33640,
+        "cost_usd": 0.0189,
+        "cache": {
+          "hit": 18,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            181677
+          ],
+          [
+            "node:write_plan",
+            22773
+          ],
+          [
+            "node:write_outlook",
+            3141
+          ],
+          [
+            "node:understand",
+            1154
+          ],
+          [
+            "node:gather_exposure",
+            20
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.2
+          },
+          {
+            "kind": "plan",
+            "wall_s": 207.6
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g09",
+      "kind": "professional",
+      "seconds": 104,
+      "cards": 52,
+      "stripped": 7,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0109,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 15,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/13-2011_2035_20260830-001337.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "final_horizon": true,
+        "understanding_edited": true,
+        "removed_absent_from_ui": true,
+        "rubric_answers_concerns": true,
+        "rubric_facts_vs_interpretation": true,
+        "rubric_no_guarantees": true,
+        "rubric_no_invented_products": true,
+        "rubric_actionable": true
+      },
+      "rubric_notes": "All criteria met: plan addresses learning focus, separates facts from interpretations with labels, avoids guarantees, no invented products, and 30-day plan has concrete actions like reconciliation comparisons and audit summary revisions.",
+      "perf": {
+        "total_graph_ms": 95177,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 83013
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 9394
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1410
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1338
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 10
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 5
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 7,
+        "llm_ms": 186838,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 13387,
+            "tokens_in": 8267,
+            "tokens_out": 1388,
+            "cost_usd": 0.0025,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 3,
+            "ms": 173451,
+            "tokens_in": 4283,
+            "tokens_out": 17231,
+            "cost_usd": 0.0084,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 3,
+        "reviewer_ms": 173451,
+        "tool_calls": 5,
+        "tool_ms": 11,
+        "tools_failed": 0,
+        "tokens_in": 12550,
+        "tokens_out": 18619,
+        "cost_usd": 0.0109,
+        "cache": {
+          "hit": 16,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            83013
+          ],
+          [
+            "node:write_plan",
+            9394
+          ],
+          [
+            "node:write_outlook",
+            1410
+          ],
+          [
+            "node:understand",
+            1338
+          ],
+          [
+            "node:gather_exposure",
+            10
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.3
+          },
+          {
+            "kind": "plan",
+            "wall_s": 93.8
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g10",
+      "kind": "professional",
+      "seconds": 1,
+      "cards": 0,
+      "stripped": 0,
+      "uncited_final": 0,
+      "tool_calls": 0,
+      "cost_usd": 0.0001,
+      "demand": [],
+      "deltas": 0,
+      "exported": null,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "no_export": true,
+        "no_gathering_after_reject": true
+      },
+      "rubric_notes": null,
+      "perf": {
+        "total_graph_ms": 1473,
+        "nodes_ms": {
+          "understand": {
+            "count": 1,
+            "ms": 1472
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 1,
+        "llm_ms": 1472,
+        "llm_by_role": {
+          "planner": {
+            "calls": 1,
+            "ms": 1472,
+            "tokens_in": 253,
+            "tokens_out": 98,
+            "cost_usd": 0.0001,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          }
+        },
+        "reviewer_calls": 0,
+        "reviewer_ms": 0,
+        "tool_calls": 0,
+        "tool_ms": 0,
+        "tools_failed": 0,
+        "tokens_in": 253,
+        "tokens_out": 98,
+        "cost_usd": 0.0001,
+        "cache": {
+          "hit": 0,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:understand",
+            1472
+          ],
+          [
+            "node:load_memory",
+            1
+          ],
+          [
+            "node:understanding_gate",
+            0
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.5
+          },
+          {
+            "kind": "plan",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g11",
+      "kind": "professional",
+      "seconds": 77,
+      "cards": 51,
+      "stripped": 5,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0081,
+      "demand": [
+        "stable"
+      ],
+      "deltas": 11,
+      "exported": null,
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "no_export": true,
+        "no_snapshot": true
+      },
+      "rubric_notes": null,
+      "perf": {
+        "total_graph_ms": 76495,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 59237
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 12380
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 3102
+          },
+          "understand": {
+            "count": 1,
+            "ms": 1749
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 8
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 8
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 5
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 5
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 6,
+        "llm_ms": 134766,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 18907,
+            "tokens_in": 8379,
+            "tokens_out": 1291,
+            "cost_usd": 0.0024,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 2,
+            "ms": 115859,
+            "tokens_in": 3054,
+            "tokens_out": 11581,
+            "cost_usd": 0.0057,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 2,
+        "reviewer_ms": 115859,
+        "tool_calls": 5,
+        "tool_ms": 13,
+        "tools_failed": 0,
+        "tokens_in": 11433,
+        "tokens_out": 12872,
+        "cost_usd": 0.0081,
+        "cache": {
+          "hit": 16,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            59237
+          ],
+          [
+            "node:write_plan",
+            12380
+          ],
+          [
+            "node:write_outlook",
+            3102
+          ],
+          [
+            "node:understand",
+            1749
+          ],
+          [
+            "node:gather_forecasts",
+            8
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 1.8
+          },
+          {
+            "kind": "plan",
+            "wall_s": 74.7
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g12",
+      "kind": "professional",
+      "seconds": 11,
+      "cards": 60,
+      "stripped": 2,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0021,
+      "demand": [
+        "declining"
+      ],
+      "deltas": 1,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/25-2021_2035_20260830-001514_UNVERIFIED.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "min_cards": true,
+        "zero_uncited": true,
+        "direct_answer": true,
+        "skeptic_fallback_flagged": true,
+        "removed_absent_from_ui": true
+      },
+      "rubric_notes": null,
+      "perf": {
+        "total_graph_ms": 10974,
+        "nodes_ms": {
+          "write_plan": {
+            "count": 1,
+            "ms": 7490
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1913
+          },
+          "understand": {
+            "count": 1,
+            "ms": 855
+          },
+          "skeptic": {
+            "count": 1,
+            "ms": 688
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 11
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 9
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 10,
+        "llm_ms": 13483,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 11795,
+            "tokens_in": 7158,
+            "tokens_out": 1185,
+            "cost_usd": 0.0021,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 6,
+            "ms": 1688,
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "cost_usd": 0.0,
+            "retries": 0,
+            "failed": 6,
+            "model": "not/a-real-model"
+          }
+        },
+        "reviewer_calls": 6,
+        "reviewer_ms": 1688,
+        "tool_calls": 5,
+        "tool_ms": 10,
+        "tools_failed": 0,
+        "tokens_in": 7158,
+        "tokens_out": 1185,
+        "cost_usd": 0.0021,
+        "cache": {
+          "hit": 16,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:write_plan",
+            7490
+          ],
+          [
+            "node:write_outlook",
+            1913
+          ],
+          [
+            "node:understand",
+            855
+          ],
+          [
+            "node:skeptic",
+            688
+          ],
+          [
+            "node:gather_forecasts",
+            11
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "plan",
+            "wall_s": 10.1
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    },
+    {
+      "id": "g13",
+      "kind": "professional",
+      "seconds": 97,
+      "cards": 39,
+      "stripped": 5,
+      "uncited_final": 0,
+      "tool_calls": 7,
+      "cost_usd": 0.0098,
+      "demand": [
+        "growing"
+      ],
+      "deltas": 0,
+      "exported": "/Users/judydarvin/Desktop/Projects/nextshift-ai/data/briefs/15-1252_2030_20260830-001651.md",
+      "error": null,
+      "checks": {
+        "no_error": true,
+        "under_10min": true,
+        "deltas_computed": true
+      },
+      "rubric_notes": null,
+      "perf": {
+        "total_graph_ms": 96542,
+        "nodes_ms": {
+          "skeptic": {
+            "count": 1,
+            "ms": 84902
+          },
+          "write_plan": {
+            "count": 1,
+            "ms": 9146
+          },
+          "write_outlook": {
+            "count": 1,
+            "ms": 1616
+          },
+          "understand": {
+            "count": 1,
+            "ms": 852
+          },
+          "gather_forecasts": {
+            "count": 1,
+            "ms": 10
+          },
+          "gather_exposure": {
+            "count": 1,
+            "ms": 7
+          },
+          "load_memory": {
+            "count": 1,
+            "ms": 4
+          },
+          "gather_research": {
+            "count": 1,
+            "ms": 2
+          },
+          "record": {
+            "count": 1,
+            "ms": 2
+          },
+          "gather_outlook": {
+            "count": 1,
+            "ms": 1
+          },
+          "understanding_gate": {
+            "count": 2,
+            "ms": 0
+          },
+          "reconcile": {
+            "count": 1,
+            "ms": 0
+          },
+          "render": {
+            "count": 1,
+            "ms": 0
+          },
+          "plan_gate": {
+            "count": 2,
+            "ms": 0
+          }
+        },
+        "llm_calls": 6,
+        "llm_ms": 173776,
+        "llm_by_role": {
+          "planner": {
+            "calls": 4,
+            "ms": 12326,
+            "tokens_in": 6438,
+            "tokens_out": 1184,
+            "cost_usd": 0.002,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          },
+          "skeptic": {
+            "calls": 2,
+            "ms": 161450,
+            "tokens_in": 3200,
+            "tokens_out": 16373,
+            "cost_usd": 0.0078,
+            "retries": 0,
+            "failed": 0,
+            "model": "Qwen/Qwen3-Next-80B-A3B-Thinking"
+          }
+        },
+        "reviewer_calls": 2,
+        "reviewer_ms": 161450,
+        "tool_calls": 5,
+        "tool_ms": 8,
+        "tools_failed": 0,
+        "tokens_in": 9638,
+        "tokens_out": 17557,
+        "cost_usd": 0.0098,
+        "cache": {
+          "hit": 18,
+          "miss": 0
+        },
+        "top5": [
+          [
+            "node:skeptic",
+            84902
+          ],
+          [
+            "node:write_plan",
+            9146
+          ],
+          [
+            "node:write_outlook",
+            1616
+          ],
+          [
+            "node:understand",
+            852
+          ],
+          [
+            "node:gather_forecasts",
+            10
+          ]
+        ],
+        "segments": [
+          {
+            "kind": "understanding",
+            "wall_s": 0.9
+          },
+          {
+            "kind": "plan",
+            "wall_s": 95.7
+          },
+          {
+            "kind": "end",
+            "wall_s": 0.0
+          }
+        ]
+      },
+      "pass": true
+    }
+  ]
+}

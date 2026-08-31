@@ -40,6 +40,7 @@ class StudentState(TypedDict, total=False):
     # later phases (C–E) reuse the professional gatherers, so the same reducers live here
     targets: list[dict]; candidates: list[dict]; reactions: list[dict]; discriminators: list[Turn]; shortlist: list[str]; rejected: list[dict]; selected: Optional[str]; deep_dive: dict
     experiments_planned: list[str]; exploration_log: list[dict]
+    explorer_seed: Optional[dict]; seed_questions: list[str]      # from the Career Explorer: saved careers + reactions (evidence, never a choice) and templated comparison questions
     evidence_stage: str; deep_socs: list[str]; deep_done_socs: list[str]; deep_dives: dict; pending_after_deep: Optional[str]; evidence_meta: dict
     evidence: Annotated[list[Card], operator.add]; unknowns: Annotated[list[str], operator.add]; errors: Annotated[list[str], operator.add]
     source_status: Annotated[dict, merge_dicts]; tool_calls: Annotated[int, operator.add]; cost_usd: Annotated[float, operator.add]
@@ -74,6 +75,7 @@ GOALS = {   # goal → (priority, fields it informs, fallback questions in order
                                                      "Is there a job you've ruled out, or one you'd secretly like if you thought you could do it?"]),
     "uncertainties": (11, ["uncertainties"], ["What are you most unsure about when you think about all this?", "If you could get one question about your future answered right now, what would it be?"]),
     "clarify": (0, [], ["I noticed two things that seem to pull in different directions — can you help me understand how they fit together?"]),
+    "saved_careers": (2, ["work_preferences", "existing_career_ideas"], ["Looking at the careers you saved while browsing, what do you think they have in common for you?", "Which of the careers you saved would you most want to try for a week, and why that one?"]),
 }
 
 def _coverage(profile: StudentProfile) -> dict:
@@ -102,8 +104,13 @@ def _learned_summary(profile: StudentProfile) -> list[str]:
 # ───────────────────────────── nodes ─────────────────────────────
 def init_interview(state: StudentState) -> dict:
     prof: StudentProfile = {f: [] for f in FIELDS}; prof.update({"pidth": {}, "important_quotes_or_examples": [], "confidence_by_field": {}, "unresolved_questions": [], "contradictions": [], "summary_sections": {}})
-    _say("Starting the conversation — no career names needed.")
-    return {"door": "student", "thread_id": state.get("thread_id") or str(uuid.uuid4()), "profile": prof, "turns": [], "max_turns": MAX_TURNS, "completeness": {"ready": False, "coverage": _coverage(prof), "next_question_goal": "energizing"},
+    seed = state.get("explorer_seed") or None; seed_qs: list[str] = []
+    if seed:   # from the Career Explorer: saved careers become evidence the student can see and edit; saving is never treated as a decision
+        from .student_seed import seed_evidence, seed_questions
+        for f, items in seed_evidence(seed).items(): prof[f] = prof.get(f, []) + items
+        seed_qs = seed_questions(seed); _say(f"Starting from the {len(seed.get('saved', []))} career(s) you saved while browsing — as things you noticed, not as a choice.")
+    else: _say("Starting the conversation — no career names needed.")
+    return {"explorer_seed": seed, "seed_questions": seed_qs, "door": "student", "thread_id": state.get("thread_id") or str(uuid.uuid4()), "profile": prof, "turns": [], "max_turns": MAX_TURNS, "completeness": {"ready": False, "coverage": _coverage(prof), "next_question_goal": "energizing"},
             "last_action": "", "candidates": [], "reactions": [], "shortlist": [], "rejected": [], "exploration_log": [], "experiments_planned": [], "evidence": [], "unknowns": [], "errors": [], "tool_calls": 0, "cost_usd": 0.0, "source_status": {}}
 
 QUESTION_SYS = """You are a warm, plain-spoken career-discovery interviewer talking with a high-school or early-college student. You are given a BASE QUESTION that targets a specific goal.
@@ -115,7 +122,9 @@ def select_question(state: StudentState) -> dict:
     asked = sum(1 for t in turns if t.get("goal") == goal); bank = GOALS[goal][2]
     fallback = bank[min(asked, len(bank) - 1)]
     if goal == "clarify" and prof.get("contradictions"): c = prof["contradictions"][-1]; fallback = f"Earlier you said “{c.get('quote_a', '')[:80]}”, and also “{c.get('quote_b', '')[:80]}”. How do those fit together for you?"
-    if not turns: return {"pending": {"goal": goal, "question": bank[0]}}    # the fixed opener — no model call before the student has said anything
+    if goal == "saved_careers":   # templated from the saved careers' catalog profiles (graph/student_seed.py) — deterministic, then the curated bank
+        bank = list(state.get("seed_questions") or []) + bank; fallback = bank[min(asked, len(bank) - 1)]
+    if not turns: return {"pending": {"goal": goal, "question": bank[0], "source": "curated"}}    # the fixed opener — no model call before the student has said anything
     # Normal path is deterministic: code picked the goal, the curated bank supplies the wording (contradiction clarifiers are templated from the quotes above).
     # The model writes a question ONLY when this goal's bank is exhausted and we still need to ask about it — a genuinely new angle is required.
     already = {t.get("question", "") for t in turns}
@@ -237,10 +246,14 @@ def evaluate_completeness(state: StudentState) -> dict:
         if asked.get(g, 0) >= len(bank): return -0.5   # curated questions for this topic are used up — only if nothing else is left (then the model writes a new angle)
         gap = 3 - min(rank.index(cov.get(f, "none")) if f != "pidth" else rank.index(cov["pidth"]) for f in fields) if fields else 0
         core_bonus = 2 if any(f in ("energizing_activities", "interests", "demonstrated_strengths", "dislikes", "pidth", "education_constraints", "values") for f in fields) else 0
-        if g == "existing_ideas" and asked.get(g, 0) == 0 and len(turns) >= 2: core_bonus = 3      # always ask once, early — students often already have names in mind
+        if g == "existing_ideas" and asked.get(g, 0) == 0 and len(turns) >= 2: core_bonus = 0 if state.get("explorer_seed") else 3      # always ask once, early — unless the explorer seed already lists their ideas
+        if g == "saved_careers":
+            n_seed = len(state.get("seed_questions") or [])
+            if not n_seed or asked.get(g, 0) >= min(2, n_seed): return -1     # only with a seed; at most two targeted questions
+            return 20 if len(turns) >= 1 else -1                               # early, right after the opener (contradiction clarifiers still win at 100)
         return gap * 3 + core_bonus - pr * 0.2
     goals = sorted((g for g in GOALS), key=score, reverse=True); nxt = goals[0] if score(goals[0]) > 0 else (goals[0] if score(goals[0]) == -0.5 and rank.index(cov.get(GOALS[goals[0]][1][0], "none")) < 2 else None)
-    ready = (not missing and asked.get("existing_ideas", 0) >= 1 and not any(c.get("blocking") for c in open_contra) and (nxt is None or substantive >= TARGET_TURNS[0])) or act == "recommend" or len(turns) >= state["max_turns"]
+    ready = (not missing and (asked.get("existing_ideas", 0) >= 1 or bool(state.get("explorer_seed"))) and not any(c.get("blocking") for c in open_contra) and (nxt is None or substantive >= TARGET_TURNS[0])) or act == "recommend" or len(turns) >= state["max_turns"]
     if act == "more" and len(turns) < state["max_turns"]: ready = False
     reason = ("You asked for recommendations" if act == "recommend" else f"Reached the {state['max_turns']}-question limit" if len(turns) >= state["max_turns"] else
               "Enough information to generate a varied, defensible shortlist." if ready else f"Still unclear: {', '.join(missing) or 'a few details'}")

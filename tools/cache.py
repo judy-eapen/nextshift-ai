@@ -10,8 +10,8 @@ from typing import Any, Callable
 DIR = Path(__file__).resolve().parents[1] / "data" / "processed" / "cache"
 
 # dataset / code versions that participate in keys — bump when the underlying data or logic changes
-VERSIONS = {"onet": "31.0", "bls": "ep2025-35", "exposure": "aei-2025-03+aioe-2023", "resolver": "r3", "forecasts": "f1", "research": "r1"}
-TTL = {"forecasts": 6 * 3600, "research": 6 * 3600, "onet_ws": 30 * 24 * 3600, "resolver": None}   # None = no expiry (data-versioned)
+VERSIONS = {"onet": "31.0", "bls": "ep2025-35", "exposure": "aei-2025-03+aioe-2023", "resolver": "r3", "forecasts": "f1", "research": "r1", "interpretation": "i1"}
+TTL = {"forecasts": 6 * 3600, "research": 6 * 3600, "onet_ws": 30 * 24 * 3600, "resolver": None, "interpretation": None}   # None = no expiry (data-versioned); interpretation = reviewed, generic career explanations (no student words)
 
 def _emit(ns: str, result: str, key: str):
     try:

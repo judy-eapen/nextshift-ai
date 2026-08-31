@@ -1,0 +1,31 @@
+{
+ "measured_at": "2026-08-30T00:03:02",
+ "before": {
+  "student_time_to_first_career_content": "interview (8\u201312 answers \u00d7 ~2.3 s model time + typing) \u2192 understanding 8 s \u2192 first cards \u2248 40 s of model/tool time; no career could be seen before the interview finished",
+  "llm_calls_before_any_career_seen": "\u2265 10 (one per substantive answer + understanding + candidate generation + light review)",
+  "source": "graph/DESIGN.md PERFORMANCE section; evals/results/perf_after.json",
+  "perf_after_cases": {}
+ },
+ "after": {
+  "catalog_build_s": 1.5,
+  "catalog_cold_load_ms": 130.4,
+  "search_index_build_ms": 218.3,
+  "search_title_ms": 4.98,
+  "search_meaning_ms": 5.05,
+  "browse_family_ms": 0.11,
+  "collection_unknown_ms": 232.5,
+  "detail_view_model_ms": 0.07,
+  "career_page_layers_ms": 0.39,
+  "compare_4_ms": 0.05,
+  "llm_calls_while_browsing": 0,
+  "apptest_full_script_render_ms": {
+   "home_cold": 1016,
+   "family": 158,
+   "search": 164,
+   "career": 162,
+   "compare": 149
+  },
+  "interpretation_generate_first_time_s": 109,
+  "interpretation_cached_ms": 0.15
+ }
+}

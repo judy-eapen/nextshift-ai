@@ -56,6 +56,20 @@ def steps(door: str) -> list[dict]:
                    if student else "Nothing is added to your saved record until you press *Approve & save*. Reject, and nothing is written.")}
     return [s1, s2, s3, s4, s5, s6, s7]
 
+# ───────────────────────────── Career Explorer (student entry point) ─────────────────────────────
+def explorer_steps() -> list[dict]:
+    """Six plain-language steps for the explorer, pinned to implementation facts (tests/test_explorer.py checks them against tools/catalog and tools/career_page)."""
+    from tools import catalog as C
+    m = C.manifest()
+    return [
+        {"n": 1, "title": "Structured occupational data builds the catalog", "tags": ["code"], "body": f"Official files — O\\*NET 31.0 descriptions, tasks, work activities, work context, interests and related occupations; BLS Employment Projections 2025–35; the Anthropic Economic Index task-use data; AIOE — are joined once into a local catalog of {m['records']:,} careers ({m['direct']} official occupations, {m['detailed']} specialties, {m['composite']} composite). No model touches it."},
+        {"n": 2, "title": "Deterministic code handles browsing, searching and filtering", "tags": ["code"], "body": "Families, school subjects, 'what you like doing' traits, collections and search are fixed rules over that catalog (data/career_families.json). A career page's facts and figures come only from the sources named next to them; a missing figure says so."},
+        {"n": 3, "title": "The agent helps interpret preferences and compare tradeoffs", "tags": ["AI"], "body": "Only on request: a model may write a plain explanation, an illustrative day, 'you may enjoy this if…' lines and a task-by-task reading of how AI may touch the work — from the sourced facts on the page and nothing else, with every line citing them. Saved careers and reactions can seed the guided conversation as things you noticed, not as a choice."},
+        {"n": 4, "title": "Research tools gather deeper evidence only when requested", "tags": ["code"], "body": "The deeper AI-era analysis runs the same evidence gatherers the professional journey uses (outlook, task-level AI use, forecasts, research), cached and versioned."},
+        {"n": 5, "title": "A separate reviewer checks evidence-backed model output", "tags": ["code", "AI"], "body": "Fixed checks first (a line must cite a source; a number must sit on its cited card; no certainty or absolute-fit language), then a different model reviews the factual lines. Reflective suggestions are labelled, not fact-checked."},
+        {"n": 6, "title": "The student approves before a final plan is saved", "tags": ["you"], "body": "Browsing writes nothing to your saved record. A plan or exploration is saved only when you approve it at the final gate."},
+    ]
+
 # journey step index → explanation step number, so the panel can say "you are here"
 STUDENT_JOURNEY_TO_STEP = {0: 1, 1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 6: 7, 7: 7, 8: 7}
 PRO_JOURNEY_TO_STEP = {0: 1, 1: 3, 2: 5, 3: 5, 4: 6, 5: 6, 6: 7}
@@ -74,15 +88,17 @@ def saved_copy(door: str, tracing_on: bool) -> dict:
     }
 
 # ───────────────────────────── For builders ─────────────────────────────
-STUDENT_ARCH = ["Adaptive interview (curated questions; one extraction call per answer)", "structured profile (evidence: value · quote · turn)", "code-based completeness decision", "⏸ human confirmation", "career generation", "occupation resolution (exact → semantic → composite; cached)",
+STUDENT_ARCH = ["Career Explorer: local catalog (O*NET · BLS · AEI · AIOE) → deterministic browse/search/filter → career page in four labelled layers (sourced facts · derived by rule · AI-written & reviewed, cached · personal) → save / react / compare → optional hand-off with the saved careers as evidence",
+                "Adaptive interview (curated questions; one extraction call per answer)", "structured profile (evidence: value · quote · turn)", "code-based completeness decision", "⏸ human confirmation", "career generation", "occupation resolution (exact → semantic → composite; cached)",
                 "Level A: official outlook + O*NET description per direction (parallel, local data) → deterministic cards → fast review", "⏸ student reactions", "Level B: task-level AI-use evidence for the reacted-to careers only → detailed cards → thinking review",
                 "⏸ discriminating questions", "⏸ shortlist and deep dive (what-ifs loop; deep dives reused until reactions or constraints change)", "⏸ final approval and memory"]
 PRO_ARCH = ["Guided intake", "occupation resolution (exact → semantic → composite)", "restate what was understood", "⏸ human confirmation", "parallel evidence gathering (outlook · exposure · forecasts · research)",
             "reconcile (dedupe · disagreements · unknowns · deltas vs last snapshot)", "outlook + three task groups (code)", "plan writer", "independent reviewer (rewrite once if > 30 % removed)", "⏸ plan approval and memory"]
 
-MODEL_WORK = ["Interpreting substantive free-text answers into profile evidence", "Wording the next interview question (topic chosen by code)", "Generating candidate careers with cited rationales",
+MODEL_WORK = ["Career-page explanation and comparison text, from the page's sourced facts only (on request; cached; reviewed)", "Interpreting substantive free-text answers into profile evidence", "Wording the next interview question (topic chosen by code)", "Generating candidate careers with cited rationales",
               "Writing fit rationales, card prose and the plan", "Comparing tradeoffs (shortlist, what-ifs)", "Producing deep dives", "Reviewing interpretive claims (a different model from the writer)"]
-DETERMINISTIC = [f"Interview completeness, the next-question goal and the curated question itself", f"Maximum interview turns ({MAX_TURNS})", "Which careers get deep evidence (the reacted-to set) and cache keys (dataset versions + TTL)", "Graph routing between nodes and gates", "Occupation-data lookup and composite assembly",
+DETERMINISTIC = ["Career catalog build, families, subjects, traits, collections, search ranking and every figure on a career page (tools/catalog.py, data/career_families.json)", "Career-page lints: uncited factual line removed; a number must appear on its cited card; certainty and absolute-fit language removed before any model reviews (tools/career_page.py)",
+                 f"Interview completeness, the next-question goal and the curated question itself", f"Maximum interview turns ({MAX_TURNS})", "Which careers get deep evidence (the reacted-to set) and cache keys (dataset versions + TTL)", "Graph routing between nodes and gates", "Occupation-data lookup and composite assembly",
                  "Employment-outlook readings (BLS projection only) and the three task groups (observed AI use thresholds)", "Citation/reference validation — uncited lines removed before any model judges them; rationale lines must cite the student's own words",
                  "Certainty-wording lint (\"will disappear\", \"perfect fit\" …) regardless of citations", "Practical-mismatch lines (entry education vs stated limits)", "Cache keys for embeddings and source calls", "Approval requirements: no analysis before gate 1, no write before the final gate",
                  "Write boundary: `record` is the only node that writes", "Failure flags: unavailable sources, unknowns, UNVERIFIED review"]

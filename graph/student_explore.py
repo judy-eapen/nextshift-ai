@@ -538,6 +538,6 @@ def record(state: StudentState) -> dict:
     path = out_dir / f"student_{re.sub(r'[^A-Za-z0-9]+', '-', (dd.get('label') or 'exploration').lower())}_{time.strftime('%Y%m%d-%H%M%S')}{tag}.md"; path.write_text("\n".join(md))
     first = cands[state["shortlist"][0]]["persona"]["soc"] if state["shortlist"] else "student"
     memory.save_snapshot(state["thread_id"], first, "2035", state["evidence"], {"profile": {k: v for k, v in state["profile"].items() if k != "summary_sections"}, "summary_sections": state["profile"].get("summary_sections"), "shortlist": state["shortlist"], "reactions": state["reactions"], "rejected": state.get("rejected", []),
-                                                                                 "experiments": state.get("experiments_planned", []), "exploration_log": state.get("exploration_log", []), "review_status": (state.get("skeptic") or {}).get("status")}, cands[state["shortlist"][0]]["persona"] if state["shortlist"] else {})
+                                                                                 "experiments": state.get("experiments_planned", []), "exploration_log": state.get("exploration_log", []), "review_status": (state.get("skeptic") or {}).get("status"), "explorer_seed": state.get("explorer_seed")}, cands[state["shortlist"][0]]["persona"] if state["shortlist"] else {})
     _say(f"Saved your exploration ({path.name}) — profile, shortlist, reactions and planned experiments")
     return {"exported_path": str(path)}
