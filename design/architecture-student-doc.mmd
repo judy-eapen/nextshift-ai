@@ -1,0 +1,23 @@
+flowchart TB
+  subgraph XP["Career Explorer — deterministic, zero model calls"]
+    direction LR
+    CAT["Catalog build 1.5 s<br/>O*NET 31.0 × BLS EP 2025–35 × AEI × AIOE<br/>1,017 careers · provenance per field"] --> BR["Browse · search · filter<br/>16 families · 7 traits · 18 subjects"]
+    BR --> CP["Career page<br/>stat tiles + reviewed narrative brief<br/>15-question detail, 4 labelled layers"]
+    CP --> SV["Save · react · compare ≤4<br/>(no score)"]
+  end
+  SV -- "saved careers = quoted evidence<br/>(saving is not choosing)" --> IV
+  subgraph G["LangGraph · one thread · 7 human gates ⏸ · SQLite checkpoints"]
+    direction LR
+    IV["Interview loop<br/>code picks topics · ⏸ every turn"] --> UG{{"⏸ confirm what<br/>was understood"}}
+    UG --> GC["candidates 8–10<br/>cite the student's words"] --> RC["resolve: exact →<br/>semantic → composite"]
+    RC --> LA["Level A (parallel)<br/>BLS outlook + O*NET description<br/>light cards · fast review"] --> RG{{"⏸ reactions"}}
+    RG --> LB["Level B: task-level AI use<br/>for reacted-to careers only<br/>detailed cards · thinking reviewer"]
+    LB --> SL["shortlist · 8 dimensions"] --> SG{{"⏸ pick · what-if · save"}} --> DD["deep dive incl.<br/>test this career"] --> FG{{"⏸ final approval"}}
+    FG --> REC["record — the only writer<br/>file + snapshot + memory"]
+  end
+  UG -. "reject → nothing written" .-> E1((" "))
+  FG -. "reject → nothing written" .-> E2((" "))
+  classDef gate fill:#E5A24A,stroke:#8a5a10,color:#111
+  classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
+  class UG,RG,SG,FG gate
+  class REC write

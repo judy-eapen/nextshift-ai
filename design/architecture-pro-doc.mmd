@@ -1,0 +1,22 @@
+flowchart TB
+  subgraph IN["Intake + gate 1"]
+    direction LR
+    A["Guided intake<br/>role · real week · industry · concerns"] --> B["Occupation resolution<br/>exact → semantic → composite<br/>(18K O*NET task statements)"] --> C["understand:<br/>restate what was understood"] --> D{{"⏸ GATE 1<br/>confirm before any tool spend"}}
+  end
+  subgraph EV["Parallel evidence (Send fan-out)"]
+    direction LR
+    E1["BLS projections<br/>2025–35 + OES"] ~~~ E2["O*NET tasks ×<br/>Anthropic Economic Index · AIOE"] ~~~ E3["Forecasts: Polymarket ·<br/>Manifold · Metaculus"] ~~~ E4["Research:<br/>Epoch AI · FRED"]
+  end
+  subgraph PL["Plan + gate 2"]
+    direction LR
+    F["reconcile (code)<br/>dedupe · disagreements never averaged<br/>unknowns · deltas vs last snapshot"] --> G2["write_outlook (code)<br/>demand reading · task groups"] --> H["write_plan<br/>planner model, every line cited"] --> I["skeptic — reviewer on a<br/>different model family"] --> J{{"⏸ GATE 2<br/>approve · edit · reject"}} --> K["record — the only writer<br/>plan + snapshot + memory"]
+  end
+  D -- "confirm" --> EV
+  D -. "reject → zero tool calls" .-> X1((" "))
+  EV --> F
+  I -. ">30% stripped → rewrite once" .-> H
+  J -. "reject → nothing written" .-> X2((" "))
+  classDef gate fill:#E5A24A,stroke:#8a5a10,color:#111
+  classDef write fill:#8FBF9F,stroke:#3d6b4b,color:#111
+  class D,J gate
+  class K write
